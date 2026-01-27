@@ -1,0 +1,583 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+
+    <!-- Elemento raíz: factura -->
+    <xs:element name="factura">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="infoTributaria" type="infoTributaria"/>
+                <xs:element name="infoFactura" type="infoFactura"/>
+                <xs:element name="detalles" type="detalles"/>
+                <xs:element name="reembolsos" type="reembolsos" minOccurs="0"/>
+                <xs:element name="retenciones" type="retenciones" minOccurs="0"/>
+                <xs:element name="infoAdicional" type="infoAdicional" minOccurs="0"/>
+                <xs:any namespace="http://www.w3.org/2000/09/xmldsig#" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attribute name="id" type="xs:string" use="required"/>
+            <xs:attribute name="version" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Tipo: infoTributaria -->
+    <xs:complexType name="infoTributaria">
+        <xs:sequence>
+            <xs:element name="ambiente" type="ambiente"/>
+            <xs:element name="tipoEmision" type="tipoEmision"/>
+            <xs:element name="razonSocial" type="razonSocial"/>
+            <xs:element name="nombreComercial" type="nombreComercial" minOccurs="0"/>
+            <xs:element name="ruc" type="numeroRuc"/>
+            <xs:element name="claveAcceso" type="claveAcceso"/>
+            <xs:element name="codDoc" type="codDoc"/>
+            <xs:element name="estab" type="establecimiento"/>
+            <xs:element name="ptoEmi" type="puntoEmision"/>
+            <xs:element name="secuencial" type="secuencial"/>
+            <xs:element name="dirMatriz" type="direccion"/>
+            <xs:element name="agenteRetencion" type="agenteRetencion" minOccurs="0"/>
+            <xs:element name="contribuyenteRimpe" type="contribuyenteRimpe" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: infoFactura -->
+    <xs:complexType name="infoFactura">
+        <xs:sequence>
+            <xs:element name="fechaEmision" type="fecha"/>
+            <xs:element name="dirEstablecimiento" type="direccion" minOccurs="0"/>
+            <xs:element name="contribuyenteEspecial" type="contribuyenteEspecial" minOccurs="0"/>
+            <xs:element name="obligadoContabilidad" type="obligadoContabilidad" minOccurs="0"/>
+            <xs:element name="comercioExterior" type="comercioExterior" minOccurs="0"/>
+            <xs:element name="incoTermFactura" type="incoTermFactura" minOccurs="0"/>
+            <xs:element name="lugarIncoTerm" type="lugarIncoTerm" minOccurs="0"/>
+            <xs:element name="paisOrigen" type="codigoPais" minOccurs="0"/>
+            <xs:element name="puertoEmbarque" type="puerto" minOccurs="0"/>
+            <xs:element name="puertoDestino" type="puerto" minOccurs="0"/>
+            <xs:element name="paisDestino" type="codigoPais" minOccurs="0"/>
+            <xs:element name="paisAdquisicion" type="codigoPais" minOccurs="0"/>
+            <xs:element name="tipoIdentificacionComprador" type="tipoIdentificacion"/>
+            <xs:element name="guiaRemision" type="guiaRemision" minOccurs="0"/>
+            <xs:element name="razonSocialComprador" type="razonSocial"/>
+            <xs:element name="identificacionComprador" type="identificacion"/>
+            <xs:element name="direccionComprador" type="direccion" minOccurs="0"/>
+            <xs:element name="totalSinImpuestos" type="decimalPositivo"/>
+            <xs:element name="totalSubsidio" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="incoTermTotalSinImpuestos" type="incoTermTotalSinImpuestos" minOccurs="0"/>
+            <xs:element name="totalDescuento" type="decimalPositivo"/>
+            <xs:element name="codDocReembolso" type="codDoc" minOccurs="0"/>
+            <xs:element name="totalComprobantesReembolso" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="totalBaseImponibleReembolso" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="totalImpuestoReembolso" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="totalConImpuestos" type="totalConImpuestos"/>
+            <xs:element name="compensaciones" type="compensaciones" minOccurs="0"/>
+            <xs:element name="propina" type="decimalPositivo"/>
+            <xs:element name="fleteInternacional" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="seguroInternacional" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="gastosAduaneros" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="gastosTransporteOtros" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="importeTotal" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="importetotal" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="moneda" type="moneda"/>
+            <xs:element name="placa" type="placa" minOccurs="0"/>
+            <xs:element name="pagos" type="pagos"/>
+            <xs:element name="valorRetIva" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="valorRetRenta" type="decimalPositivo" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: detalles -->
+    <xs:complexType name="detalles">
+        <xs:sequence>
+            <xs:element name="detalle" type="detalle" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: detalle -->
+    <xs:complexType name="detalle">
+        <xs:sequence>
+            <xs:element name="codigoPrincipal" type="codigoPrincipal"/>
+            <xs:element name="codigoAuxiliar" type="codigoAuxiliar" minOccurs="0"/>
+            <xs:element name="descripcion" type="descripcion"/>
+            <xs:element name="unidadMedida" type="unidadMedida" minOccurs="0"/>
+            <xs:element name="cantidad" type="cantidad"/>
+            <xs:element name="precioUnitario" type="precioUnitario"/>
+            <xs:element name="descuento" type="decimalPositivo"/>
+            <xs:element name="precioTotalSinImpuesto" type="decimalPositivo"/>
+            <xs:element name="detallesAdicionales" type="detallesAdicionales" minOccurs="0"/>
+            <xs:element name="impuestos" type="impuestos"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: impuestos -->
+    <xs:complexType name="impuestos">
+        <xs:sequence>
+            <xs:element name="impuesto" type="impuesto" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: impuesto -->
+    <xs:complexType name="impuesto">
+        <xs:sequence>
+            <xs:element name="codigo" type="codigoImpuesto"/>
+            <xs:element name="codigoPorcentaje" type="codigoPorcentaje"/>
+            <xs:element name="tarifa" type="decimalPositivo"/>
+            <xs:element name="baseImponible" type="decimalPositivo"/>
+            <xs:element name="valor" type="decimalPositivo"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: totalConImpuestos -->
+    <xs:complexType name="totalConImpuestos">
+        <xs:sequence>
+            <xs:element name="totalImpuesto" type="totalImpuesto" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: totalImpuesto -->
+    <xs:complexType name="totalImpuesto">
+        <xs:sequence>
+            <xs:element name="codigo" type="codigoImpuesto"/>
+            <xs:element name="codigoPorcentaje" type="codigoPorcentaje"/>
+            <xs:element name="descuentoAdicional" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="baseImponible" type="decimalPositivo"/>
+            <xs:element name="tarifa" type="decimalPositivo" minOccurs="0"/>
+            <xs:element name="valor" type="decimalPositivo"/>
+            <xs:element name="valorDevolucionIva" type="decimalPositivo" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: pagos -->
+    <xs:complexType name="pagos">
+        <xs:sequence>
+            <xs:element name="pago" type="pago" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: pago -->
+    <xs:complexType name="pago">
+        <xs:sequence>
+            <xs:element name="formaPago" type="formaPago"/>
+            <xs:element name="total" type="decimalPositivo"/>
+            <xs:element name="plazo" type="plazo" minOccurs="0"/>
+            <xs:element name="unidadTiempo" type="unidadTiempo" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: infoAdicional -->
+    <xs:complexType name="infoAdicional">
+        <xs:sequence>
+            <xs:element name="campoAdicional" type="campoAdicional" maxOccurs="15"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: campoAdicional -->
+    <xs:complexType name="campoAdicional">
+        <xs:simpleContent>
+            <xs:extension base="campoAdicionalValor">
+                <xs:attribute name="nombre" type="campoAdicionalNombre" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <!-- Tipo: detallesAdicionales -->
+    <xs:complexType name="detallesAdicionales">
+        <xs:sequence>
+            <xs:element name="detAdicional" type="detAdicional" maxOccurs="3"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: detAdicional -->
+    <xs:complexType name="detAdicional">
+        <xs:attribute name="nombre" type="nombre" use="required"/>
+        <xs:attribute name="valor" type="valor" use="required"/>
+    </xs:complexType>
+
+    <!-- Tipo: reembolsos -->
+    <xs:complexType name="reembolsos">
+        <xs:sequence>
+            <xs:element name="reembolsoDetalle" type="reembolsoDetalle" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: reembolsoDetalle -->
+    <xs:complexType name="reembolsoDetalle">
+        <xs:sequence>
+            <xs:element name="tipoIdentificacionProveedorReembolso" type="tipoIdentificacion"/>
+            <xs:element name="identificacionProveedorReembolso" type="identificacion"/>
+            <xs:element name="codPaisPagoProveedorReembolso" type="codigoPais" minOccurs="0"/>
+            <xs:element name="tipoProveedorReembolso" type="tipoProveedorReembolso"/>
+            <xs:element name="codDocReembolso" type="codDoc"/>
+            <xs:element name="estabDocReembolso" type="establecimiento"/>
+            <xs:element name="ptoEmiDocReembolso" type="puntoEmision"/>
+            <xs:element name="secuencialDocReembolso" type="secuencial"/>
+            <xs:element name="fechaEmisionDocReembolso" type="fecha"/>
+            <xs:element name="numeroautorizacionDocReemb" type="numeroAutorizacion"/>
+            <xs:element name="detalleImpuestos" type="detalleImpuestos"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: detalleImpuestos -->
+    <xs:complexType name="detalleImpuestos">
+        <xs:sequence>
+            <xs:element name="detalleImpuesto" type="detalleImpuesto" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: detalleImpuesto -->
+    <xs:complexType name="detalleImpuesto">
+        <xs:sequence>
+            <xs:element name="codigo" type="codigoImpuesto"/>
+            <xs:element name="codigoPorcentaje" type="codigoPorcentaje"/>
+            <xs:element name="tarifa" type="decimalPositivo"/>
+            <xs:element name="baseImponibleReembolso" type="decimalPositivo"/>
+            <xs:element name="impuestoReembolso" type="decimalPositivo"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: retenciones -->
+    <xs:complexType name="retenciones">
+        <xs:sequence>
+            <xs:element name="retencion" type="retencion" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: retencion -->
+    <xs:complexType name="retencion">
+        <xs:sequence>
+            <xs:element name="codigo" type="codigoRetencion"/>
+            <xs:element name="codigoPorcentaje" type="codigoPorcentajeRetencion"/>
+            <xs:element name="tarifa" type="decimalPositivo"/>
+            <xs:element name="valor" type="decimalPositivo"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: compensaciones -->
+    <xs:complexType name="compensaciones">
+        <xs:sequence>
+            <xs:element name="compensacion" type="compensacion" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipo: compensacion -->
+    <xs:complexType name="compensacion">
+        <xs:sequence>
+            <xs:element name="codigo" type="codigoCompensacion"/>
+            <xs:element name="tarifa" type="decimalPositivo"/>
+            <xs:element name="valor" type="decimalPositivo"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Tipos simples -->
+    <xs:simpleType name="ambiente">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[1-2]"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="tipoEmision">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[1]"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="razonSocial">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="300"/>
+            <xs:pattern value="[^(\r?\n)]*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="nombreComercial">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="300"/>
+            <xs:pattern value="[^(\r?\n)]*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="numeroRuc">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{13}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="claveAcceso">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{49}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codDoc">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="establecimiento">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{3}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="puntoEmision">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{3}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="secuencial">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{9}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="direccion">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="300"/>
+            <xs:pattern value="[^(\r?\n)]*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="agenteRetencion">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="1"/>
+            <xs:pattern value="[0-9]*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="contribuyenteRimpe">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="40"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="fecha">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{2}/[0-9]{2}/[0-9]{4}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="contribuyenteEspecial">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="13"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="obligadoContabilidad">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="SI"/>
+            <xs:enumeration value="NO"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="comercioExterior">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="EXPORTADOR"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="incoTermFactura">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="10"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="lugarIncoTerm">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="300"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codigoPais">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{3}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="puerto">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="300"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="incoTermTotalSinImpuestos">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="10"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="tipoIdentificacion">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="04|05|06|07|08|09"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="guiaRemision">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{3}-[0-9]{3}-[0-9]{9}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="identificacion">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="20"/>
+            <xs:pattern value="[0-9a-zA-Z]+"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="decimalPositivo">
+        <xs:restriction base="xs:decimal">
+            <xs:minInclusive value="0"/>
+            <xs:totalDigits value="14"/>
+            <xs:fractionDigits value="2"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="moneda">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="15"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="placa">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="20"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="formaPago">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="plazo">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="14"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="unidadTiempo">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="10"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codigoPrincipal">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="25"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codigoAuxiliar">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="25"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="descripcion">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="300"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="unidadMedida">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="50"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="cantidad">
+        <xs:restriction base="xs:decimal">
+            <xs:minExclusive value="0"/>
+            <xs:totalDigits value="18"/>
+            <xs:fractionDigits value="6"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="precioUnitario">
+        <xs:restriction base="xs:decimal">
+            <xs:minInclusive value="0"/>
+            <xs:totalDigits value="18"/>
+            <xs:fractionDigits value="6"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codigoImpuesto">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{1,2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codigoPorcentaje">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{1,4}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codigoRetencion">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{1,2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codigoPorcentajeRetencion">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{1,5}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="codigoCompensacion">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9]{1,2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="campoAdicionalNombre">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="300"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="campoAdicionalValor">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="300"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="nombre">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="300"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="valor">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:maxLength value="300"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="tipoProveedorReembolso">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="01|02"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="numeroAutorizacion">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="10"/>
+            <xs:maxLength value="49"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

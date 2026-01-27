@@ -12,14 +12,23 @@
         "ext-soap": "*",
         "psr/log": "^3.0"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
     "autoload": {
         "psr-4": {
             "Teran\\Sri\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Teran\\Sri\\Tests\\": "tests/"
         }
     },
     "config": {
         "sort-packages": true,
         "optimize-autoloader": true
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
