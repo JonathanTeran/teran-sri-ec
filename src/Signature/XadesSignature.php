@@ -7,20 +7,72 @@ namespace Teran\Sri\Signature;
 use Teran\Sri\Exceptions\SignatureException;
 use DOMDocument;
 use DOMElement;
+use OpenSSLAsymmetricKey;
+use OpenSSLCertificate;
 
+/**
+ * XAdES-BES Digital Signature for Ecuador SRI Electronic Documents
+ *
+ * Compatible with certificates from all Ecuadorian providers:
+ * - Security Data
+ * - Uanataca
+ * - ANF AC Ecuador
+ * - Banco Central del Ecuador
+ * - Consejo de la Judicatura
+ * - Eclipsoft
+ * - Datilmedia
+ *
+ * @see https://www.sri.gob.ec/facturacion-electronica
+ */
 class XadesSignature
 {
+    // XML Digital Signature Namespaces
     private const NS_DS = 'http://www.w3.org/2000/09/xmldsig#';
     private const NS_XADES = 'http://uri.etsi.org/01903/v1.3.2#';
+
+    // Canonicalization Algorithms
     private const ALG_C14N = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
+    private const ALG_C14N_EXCLUSIVE = 'http://www.w3.org/2001/10/xml-exc-c14n#';
+
+    // Digest Algorithms
     private const ALG_SHA1 = 'http://www.w3.org/2000/09/xmldsig#sha1';
+    private const ALG_SHA256 = 'http://www.w3.org/2001/04/xmlenc#sha256';
+
+    // Signature Algorithms RSA
     private const ALG_RSA_SHA1 = 'http://www.w3.org/2000/09/xmldsig#rsa-sha1';
+    private const ALG_RSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
+
+    // Signature Algorithms ECDSA
+    private const ALG_ECDSA_SHA1 = 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha1';
+    private const ALG_ECDSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256';
+
+    // XAdES Types
     private const ALG_ENVELOPED = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature';
     private const TYPE_SIGNED_PROPS = 'http://uri.etsi.org/01903#SignedProperties';
+
+    // Key Types
+    private const KEY_TYPE_RSA = OPENSSL_KEYTYPE_RSA;
+    private const KEY_TYPE_EC = OPENSSL_KEYTYPE_EC;
 
     private string $p12Content;
     private string $password;
     private array $certs = [];
+    private array $extraCerts = [];
+    private string $digestAlgorithm = 'sha1';
+    private bool $validated = false;
+
+    /**
+     * Known Ecuadorian certificate providers for debugging
+     */
+    private const KNOWN_PROVIDERS = [
+        'Security Data' => ['securitydata', 'security data'],
+        'Uanataca' => ['uanataca'],
+        'ANF AC Ecuador' => ['anf', 'anfac'],
+        'Banco Central del Ecuador' => ['bce', 'banco central'],
+        'Consejo de la Judicatura' => ['consejo de la judicatura', 'judicatura'],
+        'Eclipsoft' => ['eclipsoft'],
+        'Datilmedia' => ['datilmedia'],
+    ];
 
     public function __construct(string $p12Content, string $password)
     {
@@ -29,13 +81,87 @@ class XadesSignature
         $this->loadCertificate();
     }
 
+    /**
+     * Load and parse the P12/PFX certificate
+     */
     private function loadCertificate(): void
     {
+        // Try to read the PKCS12 file
         if (!openssl_pkcs12_read($this->p12Content, $this->certs, $this->password)) {
-            throw new SignatureException("No se pudo leer el certificado .p12. Verifique la contraseña.");
+            $error = openssl_error_string();
+            throw new SignatureException(
+                "No se pudo leer el certificado .p12. " .
+                "Verifique la contraseña y que el archivo no esté corrupto. " .
+                "Error OpenSSL: " . ($error ?: 'desconocido')
+            );
+        }
+
+        // Verify required components exist
+        if (empty($this->certs['cert'])) {
+            throw new SignatureException("El certificado P12 no contiene un certificado público.");
+        }
+
+        if (empty($this->certs['pkey'])) {
+            throw new SignatureException("El certificado P12 no contiene una clave privada.");
+        }
+
+        // Store extra certificates (intermediate CAs) if present
+        if (!empty($this->certs['extracerts'])) {
+            $this->extraCerts = $this->certs['extracerts'];
         }
     }
 
+    /**
+     * Set the digest algorithm (sha1 or sha256)
+     * Note: SRI Ecuador currently requires SHA-1
+     */
+    public function setDigestAlgorithm(string $algorithm): self
+    {
+        $allowed = ['sha1', 'sha256'];
+        if (!in_array(strtolower($algorithm), $allowed, true)) {
+            throw new SignatureException("Algoritmo de digest no soportado: $algorithm. Use: " . implode(', ', $allowed));
+        }
+        $this->digestAlgorithm = strtolower($algorithm);
+        return $this;
+    }
+
+    /**
+     * Validate the certificate before signing
+     */
+    public function validateCertificate(): self
+    {
+        $info = $this->getCertificateInfo();
+
+        // Check if certificate is expired
+        if ($info['isExpired']) {
+            throw new SignatureException(
+                "El certificado ha expirado. " .
+                "Fecha de expiración: " . $info['validTo']->format('Y-m-d H:i:s')
+            );
+        }
+
+        // Check if certificate is not yet valid
+        if ($info['validFrom'] > new \DateTimeImmutable()) {
+            throw new SignatureException(
+                "El certificado aún no es válido. " .
+                "Válido desde: " . $info['validFrom']->format('Y-m-d H:i:s')
+            );
+        }
+
+        // Warn if certificate expires soon (within 30 days)
+        $daysUntilExpiry = $info['daysUntilExpiry'];
+        if ($daysUntilExpiry !== null && $daysUntilExpiry <= 30) {
+            // Just a warning, don't throw - log it if logger is available
+            error_log("Advertencia: El certificado expira en $daysUntilExpiry días.");
+        }
+
+        $this->validated = true;
+        return $this;
+    }
+
+    /**
+     * Sign the XML document with XAdES-BES
+     */
     public function sign(string $xmlContent): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
@@ -43,125 +169,166 @@ class XadesSignature
         $dom->formatOutput = false;
 
         if (!$dom->loadXML($xmlContent)) {
-            throw new SignatureException("Error al cargar el XML para la firma.");
+            throw new SignatureException("Error al cargar el XML para la firma. Verifique que sea XML válido.");
         }
 
-        // Obtener el ID del documento raíz
+        // Get the document ID attribute
         $docId = $dom->documentElement->getAttribute('id') ?: 'comprobante';
 
-        // Generar UUIDs únicos
+        // Generate unique IDs for all signature components
         $uuid = $this->generateUuid();
-        $signatureId = "Signature-$uuid";
-        $signatureValueId = "SignatureValue-$uuid";
-        $signedInfoId = "SignedInfo-$uuid";
-        $keyInfoId = "Certificate-$uuid";
-        $signedPropertiesId = "SignedProperties-$uuid";
-        $objectId = "SignatureObject-$uuid";
-        $docRefId = "DocumentRef-$uuid";
-        $signedPropsRefId = "SignedPropertiesRef-$uuid";
-        $keyInfoRefId = "CertificateRef-$uuid";
+        $ids = [
+            'signature' => "Signature-$uuid",
+            'signatureValue' => "SignatureValue-$uuid",
+            'signedInfo' => "SignedInfo-$uuid",
+            'keyInfo' => "Certificate-$uuid",
+            'signedProperties' => "SignedProperties-$uuid",
+            'object' => "SignatureObject-$uuid",
+            'docRef' => "DocumentRef-$uuid",
+            'signedPropsRef' => "SignedPropertiesRef-$uuid",
+            'keyInfoRef' => "CertificateRef-$uuid",
+        ];
 
-        // Extraer información del certificado
+        // Extract certificate information
         $certInfo = $this->extractCertificateInfo();
 
-        // 1. Crear nodo Signature
+        // Determine signature algorithm based on key type
+        $signatureAlgorithm = $this->getSignatureAlgorithm($certInfo['keyType']);
+        $digestAlgorithmUri = $this->getDigestAlgorithmUri();
+        $opensslAlgorithm = $this->getOpensslAlgorithm();
+
+        // 1. Create Signature node
         $signature = $dom->createElementNS(self::NS_DS, 'ds:Signature');
-        $signature->setAttribute('Id', $signatureId);
+        $signature->setAttribute('Id', $ids['signature']);
         $dom->documentElement->appendChild($signature);
 
-        // 2. Construir SignedInfo
+        // 2. Build SignedInfo
         $signedInfo = $dom->createElement('ds:SignedInfo');
-        $signedInfo->setAttribute('Id', $signedInfoId);
+        $signedInfo->setAttribute('Id', $ids['signedInfo']);
         $signature->appendChild($signedInfo);
 
-        // Métodos de canonicalización y firma
+        // Canonicalization and Signature methods
         $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:CanonicalizationMethod', self::ALG_C14N));
-        $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:SignatureMethod', self::ALG_RSA_SHA1));
+        $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:SignatureMethod', $signatureAlgorithm));
 
-        // Referencia al documento
+        // Reference to document
         $refDoc = $dom->createElement('ds:Reference');
-        $refDoc->setAttribute('Id', $docRefId);
+        $refDoc->setAttribute('Id', $ids['docRef']);
         $refDoc->setAttribute('URI', "#$docId");
         $signedInfo->appendChild($refDoc);
 
         $transforms = $dom->createElement('ds:Transforms');
         $transforms->appendChild($this->createAlgorithmNode($dom, 'ds:Transform', self::ALG_ENVELOPED));
         $refDoc->appendChild($transforms);
-        $refDoc->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', self::ALG_SHA1));
+        $refDoc->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
         $refDoc->appendChild($dom->createElement('ds:DigestValue', $this->getDigest($dom->C14N())));
 
-        // Construir KeyInfo primero (necesitamos su hash)
-        $keyInfo = $this->buildKeyInfo($dom, $keyInfoId, $certInfo);
+        // Build KeyInfo first (we need its hash)
+        $keyInfo = $this->buildKeyInfo($dom, $ids['keyInfo'], $certInfo);
 
-        // Construir SignedProperties primero (necesitamos su hash)
-        $signedProps = $this->buildSignedProperties($dom, $signedPropertiesId, $docRefId, $certInfo);
+        // Build SignedProperties first (we need its hash)
+        $signedProps = $this->buildSignedProperties($dom, $ids['signedProperties'], $ids['docRef'], $certInfo);
 
-        // Referencia a SignedProperties
+        // Reference to SignedProperties
         $refProps = $dom->createElement('ds:Reference');
-        $refProps->setAttribute('Id', $signedPropsRefId);
+        $refProps->setAttribute('Id', $ids['signedPropsRef']);
         $refProps->setAttribute('Type', self::TYPE_SIGNED_PROPS);
-        $refProps->setAttribute('URI', "#$signedPropertiesId");
+        $refProps->setAttribute('URI', "#" . $ids['signedProperties']);
         $signedInfo->appendChild($refProps);
-        $refProps->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', self::ALG_SHA1));
-        $refProps->appendChild($dom->createElement('ds:DigestValue', $this->getDigestWithNamespaces($signedProps, [
-            ['prefix' => 'xades', 'uri' => self::NS_XADES],
-            ['prefix' => 'ds', 'uri' => self::NS_DS]
-        ])));
+        $refProps->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
+        $refProps->appendChild($dom->createElement('ds:DigestValue', $this->getElementDigest($signedProps)));
 
-        // Referencia a KeyInfo
+        // Reference to KeyInfo
         $refKeyInfo = $dom->createElement('ds:Reference');
-        $refKeyInfo->setAttribute('Id', $keyInfoRefId);
-        $refKeyInfo->setAttribute('URI', "#$keyInfoId");
+        $refKeyInfo->setAttribute('Id', $ids['keyInfoRef']);
+        $refKeyInfo->setAttribute('URI', "#" . $ids['keyInfo']);
         $signedInfo->appendChild($refKeyInfo);
-        $refKeyInfo->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', self::ALG_SHA1));
-        $refKeyInfo->appendChild($dom->createElement('ds:DigestValue', $this->getDigestWithNamespaces($keyInfo, [
-            ['prefix' => 'ds', 'uri' => self::NS_DS]
-        ])));
+        $refKeyInfo->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
+        $refKeyInfo->appendChild($dom->createElement('ds:DigestValue', $this->getElementDigest($keyInfo)));
 
-        // 3. SignatureValue
-        openssl_sign($signedInfo->C14N(), $signatureValue, $this->certs['pkey'], OPENSSL_ALGO_SHA1);
+        // 3. SignatureValue - Sign the canonical SignedInfo
+        $signedInfoCanonical = $signedInfo->C14N();
+        if (!openssl_sign($signedInfoCanonical, $signatureValue, $this->certs['pkey'], $opensslAlgorithm)) {
+            $error = openssl_error_string();
+            throw new SignatureException("Error al firmar el documento: " . ($error ?: 'error desconocido'));
+        }
+
         $signatureValueNode = $dom->createElement('ds:SignatureValue', base64_encode($signatureValue));
-        $signatureValueNode->setAttribute('Id', $signatureValueId);
+        $signatureValueNode->setAttribute('Id', $ids['signatureValue']);
         $signature->appendChild($signatureValueNode);
 
         // 4. KeyInfo
         $signature->appendChild($keyInfo);
 
-        // 5. Object con QualifyingProperties
+        // 5. Object with QualifyingProperties
         $object = $dom->createElement('ds:Object');
-        $object->setAttribute('Id', $objectId);
+        $object->setAttribute('Id', $ids['object']);
         $signature->appendChild($object);
 
         $qualifyingProps = $dom->createElementNS(self::NS_XADES, 'xades:QualifyingProperties');
-        $qualifyingProps->setAttribute('Target', "#$signatureId");
+        $qualifyingProps->setAttribute('Target', "#" . $ids['signature']);
         $object->appendChild($qualifyingProps);
         $qualifyingProps->appendChild($signedProps);
 
         return $dom->saveXML();
     }
 
+    /**
+     * Build the KeyInfo element
+     */
     private function buildKeyInfo(DOMDocument $dom, string $keyInfoId, array $certInfo): DOMElement
     {
         $keyInfo = $dom->createElement('ds:KeyInfo');
         $keyInfo->setAttribute('Id', $keyInfoId);
 
-        // X509Data
+        // X509Data with certificate
         $x509Data = $dom->createElement('ds:X509Data');
         $keyInfo->appendChild($x509Data);
+        
+        // 1. Add the signing certificate
         $x509Data->appendChild($dom->createElement('ds:X509Certificate', $certInfo['cleanCert']));
 
-        // KeyValue con RSAKeyValue
+        // 2. Add intermediate certificates if present (Critical for Uanataca/SecurityData)
+        foreach ($this->extraCerts as $extraCert) {
+            $cleanExtra = $this->cleanCertificate($extraCert);
+            // Avoid duplicating the signing certificate if it appears in extracerts
+            if ($cleanExtra !== $certInfo['cleanCert']) {
+                $x509Data->appendChild($dom->createElement('ds:X509Certificate', $cleanExtra));
+            }
+        }
+
+        // KeyValue based on key type
         $keyValue = $dom->createElement('ds:KeyValue');
         $keyInfo->appendChild($keyValue);
 
-        $rsaKeyValue = $dom->createElement('ds:RSAKeyValue');
-        $keyValue->appendChild($rsaKeyValue);
-        $rsaKeyValue->appendChild($dom->createElement('ds:Modulus', $certInfo['modulus']));
-        $rsaKeyValue->appendChild($dom->createElement('ds:Exponent', $certInfo['exponent']));
+        if ($certInfo['keyType'] === self::KEY_TYPE_RSA) {
+            // RSAKeyValue
+            $rsaKeyValue = $dom->createElement('ds:RSAKeyValue');
+            $keyValue->appendChild($rsaKeyValue);
+            $rsaKeyValue->appendChild($dom->createElement('ds:Modulus', $certInfo['modulus']));
+            $rsaKeyValue->appendChild($dom->createElement('ds:Exponent', $certInfo['exponent']));
+        } elseif ($certInfo['keyType'] === self::KEY_TYPE_EC) {
+            // ECKeyValue (for ECDSA certificates)
+            $ecKeyValue = $dom->createElementNS('http://www.w3.org/2009/xmldsig11#', 'dsig11:ECKeyValue');
+            $keyValue->appendChild($ecKeyValue);
+
+            if (!empty($certInfo['curve'])) {
+                $namedCurve = $dom->createElement('dsig11:NamedCurve');
+                $namedCurve->setAttribute('URI', $this->getCurveUri($certInfo['curve']));
+                $ecKeyValue->appendChild($namedCurve);
+            }
+
+            if (!empty($certInfo['publicKey'])) {
+                $ecKeyValue->appendChild($dom->createElement('dsig11:PublicKey', $certInfo['publicKey']));
+            }
+        }
 
         return $keyInfo;
     }
 
+    /**
+     * Build the SignedProperties element
+     */
     private function buildSignedProperties(DOMDocument $dom, string $signedPropsId, string $docRefId, array $certInfo): DOMElement
     {
         $signedProps = $dom->createElement('xades:SignedProperties');
@@ -171,7 +338,7 @@ class XadesSignature
         $signedSigProps = $dom->createElement('xades:SignedSignatureProperties');
         $signedProps->appendChild($signedSigProps);
 
-        // SigningTime
+        // SigningTime in ISO 8601 format
         $signedSigProps->appendChild($dom->createElement('xades:SigningTime', date('Y-m-d\TH:i:sP')));
 
         // SigningCertificate
@@ -184,7 +351,7 @@ class XadesSignature
         // CertDigest
         $certDigestNode = $dom->createElement('xades:CertDigest');
         $cert->appendChild($certDigestNode);
-        $certDigestNode->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', self::ALG_SHA1));
+        $certDigestNode->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $this->getDigestAlgorithmUri()));
         $certDigestNode->appendChild($dom->createElement('ds:DigestValue', $certInfo['certDigest']));
 
         // IssuerSerial
@@ -208,47 +375,278 @@ class XadesSignature
         return $signedProps;
     }
 
+    /**
+     * Extract all certificate information needed for signing
+     */
     private function extractCertificateInfo(): array
     {
         $publicCert = $this->certs['cert'];
-        $cleanCert = str_replace(["-----BEGIN CERTIFICATE-----", "-----END CERTIFICATE-----", "\n", "\r"], '', $publicCert);
-        $certDigest = base64_encode(hash('sha1', base64_decode($cleanCert), true));
+        $cleanCert = $this->cleanCertificate($publicCert);
 
-        // Extraer información del certificado
+        // Calculate certificate digest
+        $certDer = base64_decode($cleanCert);
+        $certDigest = base64_encode(hash($this->digestAlgorithm, $certDer, true));
+
+        // Parse certificate
         $certResource = openssl_x509_read($publicCert);
-        $certData = openssl_x509_parse($certResource);
-
-        // Extraer issuer name en formato RFC 2253
-        $issuerParts = [];
-        foreach (array_reverse($certData['issuer']) as $key => $value) {
-            if (is_array($value)) {
-                foreach ($value as $v) {
-                    $issuerParts[] = "$key=$v";
-                }
-            } else {
-                $issuerParts[] = "$key=$value";
-            }
+        if ($certResource === false) {
+            throw new SignatureException("No se pudo leer el certificado X.509");
         }
-        $issuerName = implode(',', $issuerParts);
 
-        // Extraer serial number
-        $serialNumber = $certData['serialNumber'] ?? $certData['serialNumberHex'] ?? '0';
+        $certData = openssl_x509_parse($certResource);
+        if ($certData === false) {
+            throw new SignatureException("No se pudo parsear el certificado X.509");
+        }
 
-        // Extraer modulus y exponent de la clave pública
-        $pubKeyDetails = openssl_pkey_get_details(openssl_pkey_get_public($publicCert));
-        $modulus = base64_encode($pubKeyDetails['rsa']['n']);
-        $exponent = base64_encode($pubKeyDetails['rsa']['e']);
+        // Build issuer name in RFC 2253 format (reversed order)
+        $issuerName = $this->buildDistinguishedName($certData['issuer']);
 
-        return [
+        // Get serial number (handle both decimal and hex formats)
+        $serialNumber = $this->normalizeSerialNumber($certData);
+
+        // Get public key details
+        $pubKey = openssl_pkey_get_public($publicCert);
+        if ($pubKey === false) {
+            throw new SignatureException("No se pudo extraer la clave pública del certificado");
+        }
+
+        $pubKeyDetails = openssl_pkey_get_details($pubKey);
+        if ($pubKeyDetails === false) {
+            throw new SignatureException("No se pudieron obtener los detalles de la clave pública");
+        }
+
+        $keyType = $pubKeyDetails['type'];
+
+        $result = [
             'cleanCert' => $cleanCert,
             'certDigest' => $certDigest,
             'issuerName' => $issuerName,
             'serialNumber' => $serialNumber,
-            'modulus' => $modulus,
-            'exponent' => $exponent,
+            'keyType' => $keyType,
+            'subject' => $certData['subject'] ?? [],
+            'issuer' => $certData['issuer'] ?? [],
+        ];
+
+        // Add key-type specific information
+        if ($keyType === self::KEY_TYPE_RSA && isset($pubKeyDetails['rsa'])) {
+            $result['modulus'] = base64_encode($pubKeyDetails['rsa']['n']);
+            $result['exponent'] = base64_encode($pubKeyDetails['rsa']['e']);
+        } elseif ($keyType === self::KEY_TYPE_EC && isset($pubKeyDetails['ec'])) {
+            $result['curve'] = $pubKeyDetails['ec']['curve_name'] ?? '';
+            // EC public key as base64
+            if (isset($pubKeyDetails['ec']['x']) && isset($pubKeyDetails['ec']['y'])) {
+                // Uncompressed point format: 04 || X || Y
+                $point = chr(0x04) . $pubKeyDetails['ec']['x'] . $pubKeyDetails['ec']['y'];
+                $result['publicKey'] = base64_encode($point);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get detailed certificate information for diagnostics
+     */
+    public function getCertificateInfo(): array
+    {
+        $publicCert = $this->certs['cert'];
+        $certResource = openssl_x509_read($publicCert);
+        $certData = openssl_x509_parse($certResource);
+        $pubKeyDetails = openssl_pkey_get_details(openssl_pkey_get_public($publicCert));
+
+        // Determine provider
+        $provider = $this->detectProvider($certData);
+
+        // Parse dates
+        $validFrom = new \DateTimeImmutable('@' . $certData['validFrom_time_t']);
+        $validTo = new \DateTimeImmutable('@' . $certData['validTo_time_t']);
+        $now = new \DateTimeImmutable();
+
+        $isExpired = $validTo < $now;
+        $daysUntilExpiry = $isExpired ? null : (int) $now->diff($validTo)->days;
+
+        // Key type
+        $keyTypeName = match ($pubKeyDetails['type']) {
+            self::KEY_TYPE_RSA => 'RSA',
+            self::KEY_TYPE_EC => 'ECDSA',
+            default => 'Unknown'
+        };
+
+        return [
+            'provider' => $provider,
+            'subject' => $certData['subject'] ?? [],
+            'subjectCN' => $certData['subject']['CN'] ?? 'N/A',
+            'issuer' => $certData['issuer'] ?? [],
+            'issuerCN' => $certData['issuer']['CN'] ?? 'N/A',
+            'serialNumber' => $this->normalizeSerialNumber($certData),
+            'validFrom' => $validFrom,
+            'validTo' => $validTo,
+            'isExpired' => $isExpired,
+            'daysUntilExpiry' => $daysUntilExpiry,
+            'keyType' => $keyTypeName,
+            'keyBits' => $pubKeyDetails['bits'] ?? 0,
+            'signatureAlgorithm' => $certData['signatureTypeSN'] ?? 'N/A',
+            'hasExtraCerts' => !empty($this->extraCerts),
+            'extraCertsCount' => count($this->extraCerts),
         ];
     }
 
+    /**
+     * Detect the certificate provider
+     */
+    private function detectProvider(array $certData): string
+    {
+        $issuerString = strtolower(json_encode($certData['issuer']));
+        $subjectString = strtolower(json_encode($certData['subject']));
+
+        foreach (self::KNOWN_PROVIDERS as $providerName => $keywords) {
+            foreach ($keywords as $keyword) {
+                if (str_contains($issuerString, $keyword) || str_contains($subjectString, $keyword)) {
+                    return $providerName;
+                }
+            }
+        }
+
+        return 'Desconocido';
+    }
+
+    /**
+     * Clean certificate PEM format to get only base64 content
+     */
+    private function cleanCertificate(string $cert): string
+    {
+        return str_replace(
+            ["-----BEGIN CERTIFICATE-----", "-----END CERTIFICATE-----", "\n", "\r", " "],
+            '',
+            $cert
+        );
+    }
+
+    /**
+     * Build Distinguished Name string in RFC 2253 format
+     */
+    private function buildDistinguishedName(array $dn): string
+    {
+        $parts = [];
+
+        // Process in reverse order for RFC 2253 compliance
+        foreach (array_reverse($dn) as $key => $value) {
+            // Handle array values (multiple values for same attribute)
+            if (is_array($value)) {
+                foreach ($value as $v) {
+                    $parts[] = $this->escapeDistinguishedNameValue($key, $v);
+                }
+            } else {
+                $parts[] = $this->escapeDistinguishedNameValue($key, $value);
+            }
+        }
+
+        return implode(',', $parts);
+    }
+
+    /**
+     * Escape special characters in DN values
+     */
+    private function escapeDistinguishedNameValue(string $key, string $value): string
+    {
+        // Escape special characters per RFC 2253
+        $escaped = str_replace(
+            ['\\', ',', '+', '"', '<', '>', ';', '='],
+            ['\\\\', '\\,', '\\+', '\\"', '\\<', '\\>', '\\;', '\\='],
+            $value
+        );
+
+        return "$key=$escaped";
+    }
+
+    /**
+     * Normalize serial number to decimal format
+     */
+    private function normalizeSerialNumber(array $certData): string
+    {
+        // 1. Try to use the parsed serialNumber if it's already a clean numeric string
+        if (isset($certData['serialNumber']) && is_numeric($certData['serialNumber']) && !str_contains($certData['serialNumber'], 'E')) {
+            return (string) $certData['serialNumber'];
+        }
+
+        // 2. Use Hexadecimal representation if available (most reliable source)
+        if (isset($certData['serialNumberHex'])) {
+            $hex = $certData['serialNumberHex'];
+            // Remove any colons, spaces, or 0x prefix
+            $hex = str_replace([':', ' ', '0x'], '', $hex);
+            
+            // Convert using BCMath (Arbitrary Precision Mathematics)
+            if (function_exists('bchexdec')) {
+                return bchexdec($hex);
+            }
+            
+            // Fallback: Custom Hex to Dec conversion logic using BCMath
+            if (extension_loaded('bcmath')) {
+                $len = strlen($hex);
+                $dec = '0';
+                for ($i = 0; $i < $len; $i++) {
+                    $dec = bcadd(bcmul($dec, '16'), (string)hexdec($hex[$i]));
+                }
+                return $dec;
+            }
+
+            // Fallback: GMP
+            if (function_exists('gmp_strval')) {
+                return gmp_strval(gmp_init($hex, 16), 10);
+            }
+        }
+
+        // 3. Last resort (may lose precision for massive numbers > PHP_INT_MAX)
+        return isset($certData['serialNumber']) ? (string)$certData['serialNumber'] : '0';
+    }
+
+    /**
+     * Get the appropriate signature algorithm URI based on key type
+     */
+    private function getSignatureAlgorithm(int $keyType): string
+    {
+        if ($keyType === self::KEY_TYPE_EC) {
+            return $this->digestAlgorithm === 'sha256' ? self::ALG_ECDSA_SHA256 : self::ALG_ECDSA_SHA1;
+        }
+
+        // Default to RSA
+        return $this->digestAlgorithm === 'sha256' ? self::ALG_RSA_SHA256 : self::ALG_RSA_SHA1;
+    }
+
+    /**
+     * Get the digest algorithm URI
+     */
+    private function getDigestAlgorithmUri(): string
+    {
+        return $this->digestAlgorithm === 'sha256' ? self::ALG_SHA256 : self::ALG_SHA1;
+    }
+
+    /**
+     * Get the OpenSSL algorithm constant
+     */
+    private function getOpensslAlgorithm(): int
+    {
+        return $this->digestAlgorithm === 'sha256' ? OPENSSL_ALGO_SHA256 : OPENSSL_ALGO_SHA1;
+    }
+
+    /**
+     * Get curve URI for ECDSA
+     */
+    private function getCurveUri(string $curveName): string
+    {
+        $curves = [
+            'prime256v1' => 'urn:oid:1.2.840.10045.3.1.7',
+            'secp256r1' => 'urn:oid:1.2.840.10045.3.1.7',
+            'secp384r1' => 'urn:oid:1.3.132.0.34',
+            'secp521r1' => 'urn:oid:1.3.132.0.35',
+        ];
+
+        return $curves[$curveName] ?? "urn:oid:$curveName";
+    }
+
+    /**
+     * Create an algorithm node with Algorithm attribute
+     */
     private function createAlgorithmNode(DOMDocument $dom, string $name, string $algorithm): DOMElement
     {
         $node = $dom->createElement($name);
@@ -256,19 +654,50 @@ class XadesSignature
         return $node;
     }
 
+    /**
+     * Calculate digest of content
+     */
     private function getDigest(string $content): string
     {
-        return base64_encode(hash('sha1', $content, true));
+        return base64_encode(hash($this->digestAlgorithm, $content, true));
     }
 
-    private function getDigestWithNamespaces(DOMElement $element, array $namespaces): string
+    /**
+     * Calculate digest of a DOM element using C14N
+     */
+    private function getElementDigest(DOMElement $element): string
     {
-        // Para calcular el digest con namespaces heredados, usamos C14N
-        return base64_encode(hash('sha1', $element->C14N(), true));
+        return base64_encode(hash($this->digestAlgorithm, $element->C14N(), true));
     }
 
+    /**
+     * Generate a UUID for signature component IDs
+     */
     private function generateUuid(): string
     {
         return bin2hex(random_bytes(16));
+    }
+
+    /**
+     * Get the list of intermediate certificates (if any)
+     *
+     * @return array<string>
+     */
+    public function getIntermediateCertificates(): array
+    {
+        return $this->extraCerts;
+    }
+
+    /**
+     * Check if the certificate is valid for signing
+     */
+    public function isValid(): bool
+    {
+        try {
+            $info = $this->getCertificateInfo();
+            return !$info['isExpired'];
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }

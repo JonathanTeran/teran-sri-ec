@@ -9,13 +9,28 @@ Librería profesional y de alto rendimiento para **Facturación Electrónica del
 
 ## ✨ Características Principales
 
-- ✅ **Firma XAdES-BES Completa**: Firma digital con IssuerSerial, RSAKeyValue y SignedDataObjectProperties.
+- ✅ **Firma Electrónica Universal**: Compatible con archivos `.p12` o `.pfx` de cualquier entidad certificadora del Ecuador.
+- ✅ **Compatibilidad Avanzada**: Manejo robusto de cadenas de confianza (certificados intermedios) y números de serie de gran longitud.
+- ✅ **Algoritmos Modernos**: Soporte dinámico para llaves RSA y ECDSA.
 - ✅ **Todos los Comprobantes**: Facturas, Notas de Crédito/Débito, Retenciones y Guías de Remisión.
 - ✅ **Validación XSD**: Validación local contra esquemas oficiales del SRI.
 - ✅ **Cliente SOAP**: Comunicación robusta con servicios web del SRI (Recepción y Autorización).
 - ✅ **Clave de Acceso**: Generación automática con algoritmo Módulo 11.
 - ✅ **Validación de RUC**: Online (SRI) con fallback local.
 - ✅ **Soporte de Ambientes**: `pruebas` y `produccion`.
+
+## 🔐 Proveedores de Firma Soportados
+
+Esta librería ha sido probada y ajustada para soportar certificados de:
+
+- **Security Data** (soporte para nuevos números de serie largos)
+- **Uanataca** (manejo correcto de cadena de confianza)
+- **Banco Central del Ecuador (BCE)**
+- **ANF AC Ecuador**
+- **Consejo de la Judicatura**
+- **Datilmedia**
+- **Eclipsoft**
+- Y cualquier otro proveedor que emita certificados estándar X.509 en formato PKCS#12.
 
 ## 📋 Tipos de Comprobantes Soportados
 
