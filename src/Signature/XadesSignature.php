@@ -86,16 +86,94 @@ class XadesSignature
      */
     private function loadCertificate(): void
     {
-        // Try to read the PKCS12 file
-        if (!openssl_pkcs12_read($this->p12Content, $this->certs, $this->password)) {
-            $error = openssl_error_string();
-            throw new SignatureException(
-                "No se pudo leer el certificado .p12. " .
-                "Verifique la contraseña y que el archivo no esté corrupto. " .
-                "Error OpenSSL: " . ($error ?: 'desconocido')
-            );
+        // 1. Try PHP Native (Fastest)
+        if (openssl_pkcs12_read($this->p12Content, $this->certs, $this->password)) {
+            $this->validateLoadedCerts();
+            return;
         }
 
+        // 2. Fallback: Try using CLI OpenSSL if PHP fails
+        // This is necessary for Legacy P12 files on OpenSSL 3.0+ environments (like macOS)
+        $tempFile = stream_get_meta_data(tmpfile())['uri'];
+        file_put_contents($tempFile, $this->p12Content);
+        
+        try {
+            // Determine OpenSSL Binary locations
+            $possibleBins = [
+                '/opt/homebrew/opt/openssl@3/bin/openssl', // MacOS Homebrew v3
+                '/usr/local/opt/openssl@3/bin/openssl',    // MacOS Intel v3
+                '/opt/homebrew/opt/openssl@1.1/bin/openssl', // MacOS Homebrew v1.1
+                '/usr/bin/openssl',                        // Linux Standard
+                'openssl'                                  // PATH Fallback
+            ];
+            
+            $opensslBin = 'openssl';
+            foreach ($possibleBins as $bin) {
+                if (file_exists($bin) && is_executable($bin)) {
+                    $opensslBin = $bin;
+                    break;
+                }
+            }
+            
+            // Convert P12 to readable PEM using CLI
+            // This bypasses PHP's internal checks which might be too strict
+            $tempPem = $tempFile . '.pem';
+            $cmd = sprintf(
+                '%s pkcs12 -in %s -out %s -nodes -passin pass:%s 2>&1',
+                $opensslBin,
+                escapeshellarg($tempFile),
+                escapeshellarg($tempPem),
+                escapeshellarg($this->password)
+            );
+            
+            exec($cmd, $output, $returnVar);
+            
+            if ($returnVar === 0 && file_exists($tempPem)) {
+                $pemContent = file_get_contents($tempPem);
+                
+                // Extract Cert and Key manually from PEM
+                if (openssl_x509_read($pemContent)) {
+                    $this->certs['cert'] = $pemContent; 
+                    
+                    // Regex extraction just in case openssl_x509_read doesn't populate both or for private key
+                    if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pemContent, $matches)) {
+                        $this->certs['cert'] = $matches[0];
+                    }
+                    if (preg_match('/-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----/s', $pemContent, $matches)) {
+                        $this->certs['pkey'] = $matches[0];
+                    }
+                    
+                    // Cleanup and validate
+                    if (file_exists($tempPem)) unlink($tempPem);
+                    if (file_exists($tempFile)) unlink($tempFile);
+                    
+                    $this->validateLoadedCerts();
+                    return;
+                }
+            }
+            
+            if (file_exists($tempPem)) unlink($tempPem);
+            
+        } catch (\Throwable $e) {
+            // Fall through to original exception logic if fallback crashes
+        }
+        
+        if (file_exists($tempFile)) unlink($tempFile);
+
+        // If everything fails, throw the original error or a generic one
+        $error = openssl_error_string();
+        throw new SignatureException(
+            "No se pudo leer el certificado .p12 (Fallo nativo y CLI). " .
+            "Verifique la contraseña y la integridad del archivo. " .
+            "Error OpenSSL: " . ($error ?: 'desconocido')
+        );
+    }
+
+    /**
+     * Validate that the loaded certificates array has the required components
+     */
+    private function validateLoadedCerts(): void
+    {
         // Verify required components exist
         if (empty($this->certs['cert'])) {
             throw new SignatureException("El certificado P12 no contiene un certificado público.");
