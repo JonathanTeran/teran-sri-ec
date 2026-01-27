@@ -66,5 +66,13 @@ abstract class XmlGenerator
         }
     }
 
+    /**
+     * Formatea valores numéricos según requerimiento SRI.
+     */
+    protected function formatValue(string|int|float $value, int $decimals = 2): string
+    {
+        return number_format((float)$value, $decimals, '.', '');
+    }
+
     abstract public function generate(array $data): string;
 }

@@ -84,6 +84,9 @@ class XadesSignature
     /**
      * Load and parse the P12/PFX certificate
      */
+    /**
+     * Load and parse the P12/PFX certificate
+     */
     private function loadCertificate(): void
     {
         // 1. Try PHP Native (Fastest)
@@ -92,31 +95,24 @@ class XadesSignature
             return;
         }
 
-        // 2. Fallback: Try using CLI OpenSSL if PHP fails
-        // This is necessary for Legacy P12 files on OpenSSL 3.0+ environments (like macOS)
+        // 2. Fallback: Try using CLI OpenSSL if PHP fails (Common on MacOS/Homebrew setups)
+        // We need to write the content to a temp file first since CLI needs a file
         $tempFile = stream_get_meta_data(tmpfile())['uri'];
         file_put_contents($tempFile, $this->p12Content);
-        
+
         try {
-            // Determine OpenSSL Binary locations
-            $possibleBins = [
-                '/opt/homebrew/opt/openssl@3/bin/openssl', // MacOS Homebrew v3
-                '/usr/local/opt/openssl@3/bin/openssl',    // MacOS Intel v3
-                '/opt/homebrew/opt/openssl@1.1/bin/openssl', // MacOS Homebrew v1.1
-                '/usr/bin/openssl',                        // Linux Standard
-                'openssl'                                  // PATH Fallback
-            ];
-            
+            // Determine OpenSSL Binary
             $opensslBin = 'openssl';
-            foreach ($possibleBins as $bin) {
-                if (file_exists($bin) && is_executable($bin)) {
-                    $opensslBin = $bin;
-                    break;
-                }
+            if (file_exists('/opt/homebrew/opt/openssl@3/bin/openssl')) {
+                $opensslBin = '/opt/homebrew/opt/openssl@3/bin/openssl';
+            } elseif (file_exists('/usr/local/opt/openssl@3/bin/openssl')) {
+                $opensslBin = '/usr/local/opt/openssl@3/bin/openssl';
+            } elseif (file_exists('/opt/homebrew/opt/openssl@1.1/bin/openssl')) { // Fallback to legacy reader
+                $opensslBin = '/opt/homebrew/opt/openssl@1.1/bin/openssl';
             }
-            
+
             // Convert P12 to readable PEM using CLI
-            // This bypasses PHP's internal checks which might be too strict
+            // This bypasses PHP's internal checks which might be too strict (e.g. legacy algos)
             $tempPem = $tempFile . '.pem';
             $cmd = sprintf(
                 '%s pkcs12 -in %s -out %s -nodes -passin pass:%s 2>&1',
@@ -127,15 +123,15 @@ class XadesSignature
             );
             
             exec($cmd, $output, $returnVar);
-            
+
             if ($returnVar === 0 && file_exists($tempPem)) {
                 $pemContent = file_get_contents($tempPem);
                 
-                // Extract Cert and Key manually from PEM
+                // Extract Cert and Key from PEM manually
                 if (openssl_x509_read($pemContent)) {
-                    $this->certs['cert'] = $pemContent; 
+                    $this->certs['cert'] = $pemContent; // Contains both often, but let's separate if needed
                     
-                    // Regex extraction just in case openssl_x509_read doesn't populate both or for private key
+                    // Basic separation logic
                     if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pemContent, $matches)) {
                         $this->certs['cert'] = $matches[0];
                     }
@@ -143,9 +139,8 @@ class XadesSignature
                         $this->certs['pkey'] = $matches[0];
                     }
                     
-                    // Cleanup and validate
-                    if (file_exists($tempPem)) unlink($tempPem);
-                    if (file_exists($tempFile)) unlink($tempFile);
+                    unlink($tempPem);
+                    unlink($tempFile);
                     
                     $this->validateLoadedCerts();
                     return;
@@ -153,25 +148,20 @@ class XadesSignature
             }
             
             if (file_exists($tempPem)) unlink($tempPem);
-            
         } catch (\Throwable $e) {
-            // Fall through to original exception logic if fallback crashes
+            // Silence, fall through to throw original error
         }
         
         if (file_exists($tempFile)) unlink($tempFile);
 
-        // If everything fails, throw the original error or a generic one
         $error = openssl_error_string();
         throw new SignatureException(
-            "No se pudo leer el certificado .p12 (Fallo nativo y CLI). " .
-            "Verifique la contraseña y la integridad del archivo. " .
+            "No se pudo leer el certificado .p12 (ni con PHP nativo ni CLI). " .
+            "Verifique la contraseña y que el archivo no esté corrupto. " .
             "Error OpenSSL: " . ($error ?: 'desconocido')
         );
     }
 
-    /**
-     * Validate that the loaded certificates array has the required components
-     */
     private function validateLoadedCerts(): void
     {
         // Verify required components exist
@@ -275,13 +265,39 @@ class XadesSignature
         $digestAlgorithmUri = $this->getDigestAlgorithmUri();
         $opensslAlgorithm = $this->getOpensslAlgorithm();
 
-        // 1. Create Signature node
+        // 1. Create Signature node (Detach it from tree initially)
         $signature = $dom->createElementNS(self::NS_DS, 'ds:Signature');
+        // Explicitly set namespaces to avoid repetition and match Reference XML structure
+        $signature->setAttributeNs('http://www.w3.org/2000/xmlns/', 'xmlns:ds', self::NS_DS);
+        $signature->setAttributeNs('http://www.w3.org/2000/xmlns/', 'xmlns:etsi', self::NS_XADES);
         $signature->setAttribute('Id', $ids['signature']);
-        $dom->documentElement->appendChild($signature);
 
-        // 2. Build SignedInfo
-        $signedInfo = $dom->createElement('ds:SignedInfo');
+        // 2. Build Objects and Components (Stand-alone/Internal)
+        
+        // Build KeyInfo
+        $keyInfo = $this->buildKeyInfo($dom, $ids['keyInfo'], $certInfo);
+
+        // Build Object with QualifyingProperties
+        $object = $dom->createElementNS(self::NS_DS, 'ds:Object');
+        $object->setAttribute('Id', $ids['object']);
+        $qualifyingProps = $dom->createElementNS(self::NS_XADES, 'etsi:QualifyingProperties');
+        $qualifyingProps->setAttribute('Target', "#" . $ids['signature']);
+        $object->appendChild($qualifyingProps);
+
+        $signedProps = $this->buildSignedProperties($dom, $ids['signedProperties'], $ids['docRef'], $certInfo);
+        $qualifyingProps->appendChild($signedProps);
+
+        // 3. Create Referenced Components Digests
+        // Inclusive C14N for these elements using temporary doc workaround
+        $signedPropsDigest = $this->getElementDigest($signedProps);
+        $keyInfoDigest = $this->getElementDigest($keyInfo);
+
+        // 4. Calculate Document Digest (the root without the signature)
+        // Since $signature is NOT yet appended to $dom, $dom->C14N() is "clean"
+        $docDigest = $this->getDigest($dom->C14N());
+
+        // 5. Build SignedInfo
+        $signedInfo = $dom->createElementNS(self::NS_DS, 'ds:SignedInfo');
         $signedInfo->setAttribute('Id', $ids['signedInfo']);
         $signature->appendChild($signedInfo);
 
@@ -289,66 +305,70 @@ class XadesSignature
         $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:CanonicalizationMethod', self::ALG_C14N));
         $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:SignatureMethod', $signatureAlgorithm));
 
-        // Reference to document
-        $refDoc = $dom->createElement('ds:Reference');
-        $refDoc->setAttribute('Id', $ids['docRef']);
-        $refDoc->setAttribute('URI', "#$docId");
-        $signedInfo->appendChild($refDoc);
-
-        $transforms = $dom->createElement('ds:Transforms');
-        $transforms->appendChild($this->createAlgorithmNode($dom, 'ds:Transform', self::ALG_ENVELOPED));
-        $refDoc->appendChild($transforms);
-        $refDoc->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
-        $refDoc->appendChild($dom->createElement('ds:DigestValue', $this->getDigest($dom->C14N())));
-
-        // Build KeyInfo first (we need its hash)
-        $keyInfo = $this->buildKeyInfo($dom, $ids['keyInfo'], $certInfo);
-
-        // Build SignedProperties first (we need its hash)
-        $signedProps = $this->buildSignedProperties($dom, $ids['signedProperties'], $ids['docRef'], $certInfo);
-
-        // Reference to SignedProperties
-        $refProps = $dom->createElement('ds:Reference');
+        // 6. Build and Append References in strict order (matching Reference XML)
+        
+        // C. SignedProperties Reference
+        $refProps = $dom->createElementNS(self::NS_DS, 'ds:Reference');
         $refProps->setAttribute('Id', $ids['signedPropsRef']);
         $refProps->setAttribute('Type', self::TYPE_SIGNED_PROPS);
         $refProps->setAttribute('URI', "#" . $ids['signedProperties']);
-        $signedInfo->appendChild($refProps);
         $refProps->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
-        $refProps->appendChild($dom->createElement('ds:DigestValue', $this->getElementDigest($signedProps)));
+        $refProps->appendChild($dom->createElementNS(self::NS_DS, 'ds:DigestValue', $signedPropsDigest));
+        $signedInfo->appendChild($refProps);
 
-        // Reference to KeyInfo
-        $refKeyInfo = $dom->createElement('ds:Reference');
-        $refKeyInfo->setAttribute('Id', $ids['keyInfoRef']);
+        // B. KeyInfo Reference (Certificate)
+        $refKeyInfo = $dom->createElementNS(self::NS_DS, 'ds:Reference');
         $refKeyInfo->setAttribute('URI', "#" . $ids['keyInfo']);
-        $signedInfo->appendChild($refKeyInfo);
         $refKeyInfo->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
-        $refKeyInfo->appendChild($dom->createElement('ds:DigestValue', $this->getElementDigest($keyInfo)));
+        $refKeyInfo->appendChild($dom->createElementNS(self::NS_DS, 'ds:DigestValue', $keyInfoDigest));
+        $signedInfo->appendChild($refKeyInfo);
 
-        // 3. SignatureValue - Sign the canonical SignedInfo
+        // A. Document Reference (comprobante)
+        $refDoc = $dom->createElementNS(self::NS_DS, 'ds:Reference');
+        $refDoc->setAttribute('Id', $ids['docRef']);
+        $refDoc->setAttribute('URI', "#$docId");
+        
+        $transforms = $dom->createElementNS(self::NS_DS, 'ds:Transforms');
+        $transforms->appendChild($this->createAlgorithmNode($dom, 'ds:Transform', self::ALG_ENVELOPED));
+        $refDoc->appendChild($transforms);
+        $refDoc->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
+        $refDoc->appendChild($dom->createElementNS(self::NS_DS, 'ds:DigestValue', $docDigest));
+        $signedInfo->appendChild($refDoc);
+
+        // 7. SignatureValue - Sign the canonical SignedInfo
         $signedInfoCanonical = $signedInfo->C14N();
         if (!openssl_sign($signedInfoCanonical, $signatureValue, $this->certs['pkey'], $opensslAlgorithm)) {
             $error = openssl_error_string();
             throw new SignatureException("Error al firmar el documento: " . ($error ?: 'error desconocido'));
         }
 
-        $signatureValueNode = $dom->createElement('ds:SignatureValue', base64_encode($signatureValue));
+        $signatureValueEncoded = chunk_split(base64_encode($signatureValue), 76, "\n");
+        $signatureValueNode = $dom->createElementNS(self::NS_DS, 'ds:SignatureValue', $signatureValueEncoded);
         $signatureValueNode->setAttribute('Id', $ids['signatureValue']);
         $signature->appendChild($signatureValueNode);
 
-        // 4. KeyInfo
+        // 8. Assemble final Signature tree in order
         $signature->appendChild($keyInfo);
-
-        // 5. Object with QualifyingProperties
-        $object = $dom->createElement('ds:Object');
-        $object->setAttribute('Id', $ids['object']);
         $signature->appendChild($object);
+        
+        // 9. Append Signature to root
+        $dom->documentElement->appendChild($signature);
 
-        $qualifyingProps = $dom->createElementNS(self::NS_XADES, 'xades:QualifyingProperties');
-        $qualifyingProps->setAttribute('Target', "#" . $ids['signature']);
-        $object->appendChild($qualifyingProps);
-        $qualifyingProps->appendChild($signedProps);
+        // CLEANUP: Traverse and remove redundant xmlns attributes
+        $xpath = new \DOMXPath($dom);
+        foreach ($xpath->query('//*[namespace-uri()="' . self::NS_DS . '"]') as $node) {
+            if ($node->hasAttribute('xmlns:ds') && $node !== $signature) {
+                $node->removeAttribute('xmlns:ds');
+            }
+        }
+        foreach ($xpath->query('//*[namespace-uri()="' . self::NS_XADES . '"]') as $node) {
+            if ($node->hasAttribute('xmlns:etsi') && $node !== $signature) {
+                $node->removeAttribute('xmlns:etsi');
+            }
+        }
 
-        return $dom->saveXML();
+        // Return signed XML with strict header formatting (no newlines)
+        return '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . $dom->saveXML($dom->documentElement, LIBXML_NOEMPTYTAG);
     }
 
     /**
@@ -356,48 +376,54 @@ class XadesSignature
      */
     private function buildKeyInfo(DOMDocument $dom, string $keyInfoId, array $certInfo): DOMElement
     {
-        $keyInfo = $dom->createElement('ds:KeyInfo');
+        $keyInfo = $dom->createElementNS(self::NS_DS, 'ds:KeyInfo');
         $keyInfo->setAttribute('Id', $keyInfoId);
 
         // X509Data with certificate
-        $x509Data = $dom->createElement('ds:X509Data');
+        $x509Data = $dom->createElementNS(self::NS_DS, 'ds:X509Data');
         $keyInfo->appendChild($x509Data);
         
-        // 1. Add the signing certificate
-        $x509Data->appendChild($dom->createElement('ds:X509Certificate', $certInfo['cleanCert']));
+        // 1. Add the signing certificate (Chunk split for strict formatting)
+        $certContent = chunk_split($certInfo['cleanCert'], 76, "\n");
+        $x509Data->appendChild($dom->createElementNS(self::NS_DS, 'ds:X509Certificate', $certContent));
 
-        // 2. Add intermediate certificates if present (Critical for Uanataca/SecurityData)
+        // 2. Add intermediate certificates if present
         foreach ($this->extraCerts as $extraCert) {
             $cleanExtra = $this->cleanCertificate($extraCert);
-            // Avoid duplicating the signing certificate if it appears in extracerts
             if ($cleanExtra !== $certInfo['cleanCert']) {
-                $x509Data->appendChild($dom->createElement('ds:X509Certificate', $cleanExtra));
+                $extraContent = chunk_split($cleanExtra, 76, "\n");
+                $x509Data->appendChild($dom->createElementNS(self::NS_DS, 'ds:X509Certificate', $extraContent));
             }
         }
 
         // KeyValue based on key type
-        $keyValue = $dom->createElement('ds:KeyValue');
+        $keyValue = $dom->createElementNS(self::NS_DS, 'ds:KeyValue');
         $keyInfo->appendChild($keyValue);
 
         if ($certInfo['keyType'] === self::KEY_TYPE_RSA) {
             // RSAKeyValue
-            $rsaKeyValue = $dom->createElement('ds:RSAKeyValue');
+            $rsaKeyValue = $dom->createElementNS(self::NS_DS, 'ds:RSAKeyValue');
             $keyValue->appendChild($rsaKeyValue);
-            $rsaKeyValue->appendChild($dom->createElement('ds:Modulus', $certInfo['modulus']));
-            $rsaKeyValue->appendChild($dom->createElement('ds:Exponent', $certInfo['exponent']));
+            
+            // Modulus with chunk split
+            $modulusContent = chunk_split($certInfo['modulus'], 76, "\n");
+            $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Modulus', $modulusContent));
+            $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Exponent', $certInfo['exponent']));
         } elseif ($certInfo['keyType'] === self::KEY_TYPE_EC) {
-            // ECKeyValue (for ECDSA certificates)
-            $ecKeyValue = $dom->createElementNS('http://www.w3.org/2009/xmldsig11#', 'dsig11:ECKeyValue');
+            // ECKeyValue (for ECDSA certificates) - Namespace is specific
+            $nsEc = 'http://www.w3.org/2009/xmldsig11#';
+            $ecKeyValue = $dom->createElementNS($nsEc, 'dsig11:ECKeyValue');
             $keyValue->appendChild($ecKeyValue);
 
             if (!empty($certInfo['curve'])) {
-                $namedCurve = $dom->createElement('dsig11:NamedCurve');
+                $namedCurve = $dom->createElementNS($nsEc, 'dsig11:NamedCurve');
                 $namedCurve->setAttribute('URI', $this->getCurveUri($certInfo['curve']));
                 $ecKeyValue->appendChild($namedCurve);
             }
 
             if (!empty($certInfo['publicKey'])) {
-                $ecKeyValue->appendChild($dom->createElement('dsig11:PublicKey', $certInfo['publicKey']));
+                $publicKeyContent = chunk_split($certInfo['publicKey'], 76, "\n");
+                $ecKeyValue->appendChild($dom->createElementNS($nsEc, 'dsig11:PublicKey', $publicKeyContent));
             }
         }
 
@@ -409,47 +435,56 @@ class XadesSignature
      */
     private function buildSignedProperties(DOMDocument $dom, string $signedPropsId, string $docRefId, array $certInfo): DOMElement
     {
-        $signedProps = $dom->createElement('xades:SignedProperties');
+        $signedProps = $dom->createElementNS(self::NS_XADES, 'etsi:SignedProperties');
         $signedProps->setAttribute('Id', $signedPropsId);
 
         // SignedSignatureProperties
-        $signedSigProps = $dom->createElement('xades:SignedSignatureProperties');
+        $signedSigProps = $dom->createElementNS(self::NS_XADES, 'etsi:SignedSignatureProperties');
         $signedProps->appendChild($signedSigProps);
 
         // SigningTime in ISO 8601 format
-        $signedSigProps->appendChild($dom->createElement('xades:SigningTime', date('Y-m-d\TH:i:sP')));
+        $signedSigProps->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:SigningTime', date('Y-m-d\TH:i:sP')));
 
         // SigningCertificate
-        $signingCert = $dom->createElement('xades:SigningCertificate');
+        $signingCert = $dom->createElementNS(self::NS_XADES, 'etsi:SigningCertificate');
         $signedSigProps->appendChild($signingCert);
 
-        $cert = $dom->createElement('xades:Cert');
+        $cert = $dom->createElementNS(self::NS_XADES, 'etsi:Cert');
         $signingCert->appendChild($cert);
 
         // CertDigest
-        $certDigestNode = $dom->createElement('xades:CertDigest');
+        $certDigestNode = $dom->createElementNS(self::NS_XADES, 'etsi:CertDigest');
         $cert->appendChild($certDigestNode);
-        $certDigestNode->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $this->getDigestAlgorithmUri()));
-        $certDigestNode->appendChild($dom->createElement('ds:DigestValue', $certInfo['certDigest']));
+        
+        $digestMethod = $this->createAlgorithmNode($dom, 'ds:DigestMethod', $this->getDigestAlgorithmUri());
+        $certDigestNode->appendChild($digestMethod);
+        
+        $digestValue = $dom->createElementNS(self::NS_DS, 'ds:DigestValue', $certInfo['certDigest']);
+        $certDigestNode->appendChild($digestValue);
 
         // IssuerSerial
-        $issuerSerial = $dom->createElement('xades:IssuerSerial');
+        $issuerSerial = $dom->createElementNS(self::NS_XADES, 'etsi:IssuerSerial');
         $cert->appendChild($issuerSerial);
-        $issuerSerial->appendChild($dom->createElement('ds:X509IssuerName', $certInfo['issuerName']));
-        $issuerSerial->appendChild($dom->createElement('ds:X509SerialNumber', $certInfo['serialNumber']));
+        
+        $issuerName = $dom->createElementNS(self::NS_DS, 'ds:X509IssuerName', $certInfo['issuerName']);
+        $issuerSerial->appendChild($issuerName);
+        
+        $serialNumber = $dom->createElementNS(self::NS_DS, 'ds:X509SerialNumber', $certInfo['serialNumber']);
+        $issuerSerial->appendChild($serialNumber);
 
         // SignedDataObjectProperties
-        $signedDataObjProps = $dom->createElement('xades:SignedDataObjectProperties');
+        $signedDataObjProps = $dom->createElementNS(self::NS_XADES, 'etsi:SignedDataObjectProperties');
         $signedProps->appendChild($signedDataObjProps);
 
-        $dataObjFormat = $dom->createElement('xades:DataObjectFormat');
+        $dataObjFormat = $dom->createElementNS(self::NS_XADES, 'etsi:DataObjectFormat');
         $dataObjFormat->setAttribute('ObjectReference', "#$docRefId");
         $signedDataObjProps->appendChild($dataObjFormat);
 
-        $dataObjFormat->appendChild($dom->createElement('xades:Description', 'Comprobante electrónico'));
-        $dataObjFormat->appendChild($dom->createElement('xades:MimeType', 'text/xml'));
-        $dataObjFormat->appendChild($dom->createElement('xades:Encoding', 'UTF-8'));
-
+        $dataObjFormat->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:Description', 'DOCUMENTO EMITIDO CON ECUAFACT. LA FACTURACION ELECTRONICA DEL ECUADOR. Visitenos en http://www.ecuanexus.com '));
+        $dataObjFormat->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:MimeType', 'text/xml'));
+        // Removed etsi:Encoding to match reference order and structure exactly
+        // $dataObjFormat->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:Encoding', 'UTF-8'));
+         
         return $signedProps;
     }
 
@@ -627,6 +662,17 @@ class XadesSignature
      */
     private function escapeDistinguishedNameValue(string $key, string $value): string
     {
+        // Translate organizationIdentifier to OID format with hex value if needed (matching ECUAFAC/UANATACA style)
+        if ($key === 'organizationIdentifier') {
+            $hex = bin2hex($value);
+            $len = dechex(strlen($value));
+            if (strlen($len) % 2 !== 0) {
+                $len = '0' . $len;
+            }
+            // 0c is the tag for UTF8String
+            return "2.5.4.97=#0c" . $len . $hex;
+        }
+
         // Escape special characters per RFC 2253
         $escaped = str_replace(
             ['\\', ',', '+', '"', '<', '>', ';', '='],
@@ -727,7 +773,8 @@ class XadesSignature
      */
     private function createAlgorithmNode(DOMDocument $dom, string $name, string $algorithm): DOMElement
     {
-        $node = $dom->createElement($name);
+        // $name comes with prefix 'ds:'
+        $node = $dom->createElementNS(self::NS_DS, $name);
         $node->setAttribute('Algorithm', $algorithm);
         return $node;
     }
@@ -745,7 +792,18 @@ class XadesSignature
      */
     private function getElementDigest(DOMElement $element): string
     {
-        return base64_encode(hash($this->digestAlgorithm, $element->C14N(), true));
+        // Workaround for PHP DOMNode::C14N() returning empty string on some environments/isolated nodes
+        // We create a temporary document, import the node and C14N the root
+        $tempDom = new DOMDocument('1.0', 'UTF-8');
+        $tempDom->preserveWhiteSpace = false;
+        $tempDom->formatOutput = false;
+        
+        $imported = $tempDom->importNode($element, true);
+        $tempDom->appendChild($imported);
+        
+        $canonical = $tempDom->C14N();
+        
+        return base64_encode(hash($this->digestAlgorithm, $canonical, true));
     }
 
     /**

@@ -12,7 +12,7 @@ class FacturaGenerator extends XmlGenerator
     {
         $root = $this->dom->createElement('factura');
         $root->setAttribute('id', 'comprobante');
-        $root->setAttribute('version', '2.1.0');
+        $root->setAttribute('version', '1.1.0');
         $this->dom->appendChild($root);
 
         // 1. Info Tributaria
@@ -37,7 +37,7 @@ class FacturaGenerator extends XmlGenerator
 
         $simpleFields = [
             'fechaEmision', 'dirEstablecimiento', 'contribuyenteEspecial', 
-            'obligadoContabilidad', 'comercioExterior', 'codigoPrincipal',
+            'obligadoContabilidad', 'comercioExterior',
             'tipoIdentificacionComprador', 'guiaRemision', 'razonSocialComprador',
             'identificacionComprador', 'direccionComprador', 'totalSinImpuestos',
             'totalDescuento'
@@ -45,7 +45,12 @@ class FacturaGenerator extends XmlGenerator
 
         foreach ($simpleFields as $field) {
             if (isset($data[$field])) {
-                $node->appendChild($this->dom->createElement($field, (string)$data[$field]));
+                $value = $data[$field];
+                // Apply 2 decimals for monetary fields
+                if (in_array($field, ['totalSinImpuestos', 'totalDescuento'])) {
+                    $value = $this->formatValue($value, 2);
+                }
+                $node->appendChild($this->dom->createElement($field, (string)$value));
             }
         }
 
@@ -56,14 +61,31 @@ class FacturaGenerator extends XmlGenerator
             foreach ($data['totalConImpuestos'] as $imp) {
                 $item = $this->dom->createElement('totalImpuesto');
                 $totalImpNode->appendChild($item);
-                foreach ($imp as $k => $v) {
-                    $item->appendChild($this->dom->createElement($k, (string)$v));
+                // Enforce strict XSD order: codigo, codigoPorcentaje, descuentoAdicional, baseImponible, tarifa, valor, valorDevolucionIva
+                $fieldsOrder = [
+                    'codigo', 'codigoPorcentaje', 'descuentoAdicional', 
+                    'baseImponible', 'tarifa', 'valor', 'valorDevolucionIva'
+                ];
+
+                foreach ($fieldsOrder as $k) {
+                    // Force descuentoAdicional to 0.00 if missing, to match reference XML structure
+                    $v = $imp[$k] ?? null;
+                    if ($k === 'descuentoAdicional' && $v === null) {
+                        $v = '0.00'; // Default
+                    }
+
+                    if ($v !== null) {
+                        if (in_array($k, ['baseImponible', 'valor', 'descuentoAdicional', 'tarifa', 'valorDevolucionIva'])) {
+                            $v = $this->formatValue($v, 2);
+                        }
+                        $item->appendChild($this->dom->createElement($k, (string)$v));
+                    }
                 }
             }
         }
 
-        $node->appendChild($this->dom->createElement('propina', (string)($data['propina'] ?? '0.00')));
-        $node->appendChild($this->dom->createElement('importetotal', (string)$data['importetotal']));
+        $node->appendChild($this->dom->createElement('propina', $this->formatValue($data['propina'] ?? 0, 2)));
+        $node->appendChild($this->dom->createElement('importeTotal', $this->formatValue($data['importetotal'], 2)));
         $node->appendChild($this->dom->createElement('moneda', $data['moneda'] ?? 'DOLAR'));
 
         // Pagos
@@ -73,8 +95,22 @@ class FacturaGenerator extends XmlGenerator
             foreach ($data['pagos'] as $pago) {
                 $item = $this->dom->createElement('pago');
                 $pagosNode->appendChild($item);
-                foreach ($pago as $k => $v) {
-                    $item->appendChild($this->dom->createElement($k, (string)$v));
+                // Enforce strict XSD order: formaPago, total, plazo, unidadTiempo
+                $fieldsOrder = ['formaPago', 'total', 'plazo', 'unidadTiempo'];
+                foreach ($fieldsOrder as $k) {
+                    $val = $pago[$k] ?? null;
+                    
+                    // Match reference: if unit of time is missing but payment is not cash (01)
+                    if ($k === 'unidadTiempo' && $val === null && ($pago['formaPago'] ?? '') !== '01') {
+                        $val = 'dias';
+                    }
+
+                    if ($val !== null) {
+                        if ($k === 'total') {
+                             $val = $this->formatValue($val, 2);
+                        }
+                        $item->appendChild($this->dom->createElement($k, (string)$val));
+                    }
                 }
             }
         }
@@ -96,7 +132,26 @@ class FacturaGenerator extends XmlGenerator
 
             foreach ($simpleFields as $f) {
                 if (isset($det[$f])) {
-                    $item->appendChild($this->dom->createElement($f, (string)$det[$f]));
+                    $val = $det[$f];
+                    // Quantities and Unit Prices use 6 decimals
+                    if (in_array($f, ['cantidad', 'precioUnitario'])) {
+                        $val = $this->formatValue($val, 6);
+                    } elseif (in_array($f, ['descuento', 'precioTotalSinImpuesto'])) {
+                        $val = $this->formatValue($val, 2);
+                    }
+                    $item->appendChild($this->dom->createElement($f, (string)$val));
+                }
+            }
+
+            // Detalles Adicionales
+            if (isset($det['detallesAdicionales'])) {
+                $daNode = $this->dom->createElement('detallesAdicionales');
+                $item->appendChild($daNode);
+                foreach ($det['detallesAdicionales'] as $da) {
+                    $daItem = $this->dom->createElement('detAdicional');
+                    $daItem->setAttribute('nombre', $da['nombre']);
+                    $daItem->setAttribute('valor', $da['valor']);
+                    $daNode->appendChild($daItem);
                 }
             }
 
@@ -107,8 +162,17 @@ class FacturaGenerator extends XmlGenerator
                 foreach ($det['impuestos'] as $imp) {
                     $impItem = $this->dom->createElement('impuesto');
                     $impNode->appendChild($impItem);
-                    foreach ($imp as $k => $v) {
-                        $impItem->appendChild($this->dom->createElement($k, (string)$v));
+                    // Enforce strict XSD order: codigo, codigoPorcentaje, tarifa, baseImponible, valor
+                    $fieldsOrder = ['codigo', 'codigoPorcentaje', 'tarifa', 'baseImponible', 'valor'];
+                    foreach ($fieldsOrder as $k) {
+                        if (isset($imp[$k])) {
+                            $v = $imp[$k];
+                            // Tax numerical values
+                            if (in_array($k, ['tarifa', 'baseImponible', 'valor'])) {
+                                $v = $this->formatValue($v, 2);
+                            }
+                            $impItem->appendChild($this->dom->createElement($k, (string)$v));
+                        }
                     }
                 }
             }
