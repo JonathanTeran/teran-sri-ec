@@ -1,8 +1,8 @@
 # 🇪🇨 teran-sri-ec
 
-[![Última Versión en Packagist](https://img.shields.io/packagist/v/teran/sri-ec.svg?style=flat-square)](https://packagist.org/packages/teran/sri-ec)
+[![Última Versión en Packagist](https://img.shields.io/packagist/v/jonathanteran/sri-ec.svg?style=flat-square)](https://packagist.org/packages/jonathanteran/sri-ec)
 [![Licencia de Software](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-[![Descargas Totales](https://img.shields.io/packagist/dt/teran/sri-ec.svg?style=flat-square)](https://packagist.org/packages/teran/sri-ec)
+[![Descargas Totales](https://img.shields.io/packagist/dt/jonathanteran/sri-ec.svg?style=flat-square)](https://packagist.org/packages/jonathanteran/sri-ec)
 [![Versión PHP](https://img.shields.io/badge/php-%3E%3D%208.1-blue.svg?style=flat-square)](https://www.php.net/)
 
 Librería profesional y de alto rendimiento para **Facturación Electrónica del SRI Ecuador**. Simplifica el proceso de generación, firma y autorización de documentos electrónicos según los últimos requerimientos técnicos del SRI.
@@ -80,7 +80,7 @@ sequenceDiagram
 ## 🚀 Instalación
 
 ```bash
-composer require teran/sri-ec
+composer require jonathanteran/sri-ec
 ```
 
 ## 🛠 Requisitos
