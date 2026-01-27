@@ -1,4 +1,4 @@
-# 🇪🇨 teran-sri-ec
+# 🇪🇨 amephia/sri-ec
 
 [![Última Versión en Packagist](https://img.shields.io/packagist/v/amephia/sri-ec.svg?style=flat-square)](https://packagist.org/packages/amephia/sri-ec)
 [![Licencia de Software](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
@@ -47,7 +47,7 @@ Esta librería ha sido probada y ajustada para soportar certificados de:
 ```mermaid
 sequenceDiagram
     participant App as Tu App (PHP)
-    participant Lib as teran/sri-ec
+    participant Lib as amephia/sri-ec
     participant SRI_REST as SRI Online (REST)
     participant SRI_SOAP as SRI Recepción (SOAP)
 
