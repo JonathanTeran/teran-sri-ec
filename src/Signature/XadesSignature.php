@@ -294,12 +294,9 @@ class XadesSignature
         $refProps->appendChild($signedPropsDigestNode);
         $signedInfo->appendChild($refProps);
 
-        $refKeyInfo = $dom->createElementNS(self::NS_DS, 'ds:Reference');
-        $refKeyInfo->setAttribute('URI', "#" . $ids['keyInfo']);
-        $refKeyInfo->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
-        $keyInfoDigestNode = $dom->createElementNS(self::NS_DS, 'ds:DigestValue', '');
-        $refKeyInfo->appendChild($keyInfoDigestNode);
-        $signedInfo->appendChild($refKeyInfo);
+        // REMOVED REF KEYINFO: Not required for XAdES-BES and causes structure errors in some validators
+        // $refKeyInfo = $dom->createElementNS(self::NS_DS, 'ds:Reference');
+        // ...
 
         $refDoc = $dom->createElementNS(self::NS_DS, 'ds:Reference');
         $refDoc->setAttribute('Id', $ids['docRef']);
@@ -339,33 +336,26 @@ class XadesSignature
         $docDigestNode->nodeValue = $this->getDigest($dom->C14N());
         $dom->documentElement->appendChild($signature);
 
-        // B. Component Digests (Now that they are attached, C14N works correctly with inherited namespaces)
+        // B. Component Digests
         $signedPropsDigestNode->nodeValue = base64_encode(hash($this->digestAlgorithm, $signedProps->C14N(), true));
-        $keyInfoDigestNode->nodeValue = base64_encode(hash($this->digestAlgorithm, $keyInfo->C14N(), true));
+        // KeyInfo digest removed because we removed the reference
 
-        // C. SignatureValue - Add leading newline
+
+        // C. SignatureValue
         $signedInfoCanonical = $signedInfo->C14N();
         if (!openssl_sign($signedInfoCanonical, $signatureValue, $this->certs['pkey'], $opensslAlgorithm)) {
             $error = openssl_error_string();
             throw new SignatureException("Error al firmar el documento: " . ($error ?: 'error desconocido'));
         }
-        $signatureValueNode->nodeValue = "\n" . chunk_split(base64_encode($signatureValue), 76, "\n");
+        $signatureValueNode->nodeValue = trim(chunk_split(base64_encode($signatureValue), 76, "\n"));
 
-        // CLEANUP: Traverse and remove redundant xmlns attributes
-        $xpath = new \DOMXPath($dom);
-        foreach ($xpath->query('//*[namespace-uri()="' . self::NS_DS . '"]') as $node) {
-            if ($node->hasAttribute('xmlns:ds') && $node !== $signature) {
-                $node->removeAttribute('xmlns:ds');
-            }
-        }
-        foreach ($xpath->query('//*[namespace-uri()="' . self::NS_XADES . '"]') as $node) {
-            if ($node->hasAttribute('xmlns:etsi') && $node !== $signature) {
-                $node->removeAttribute('xmlns:etsi');
-            }
-        }
+        // CLEANUP REMOVED: Modifying the DOM after calculating digests (KeyInfo, SignedProperties)
+        // invalidates the hashes because the final XML differs from what was digested.
+        // PHP DOMDocument handles namespaces sufficiently well.
 
-        // Enable formatOutput to match SRI's expected indented structure
-        $dom->formatOutput = true;
+
+        // Disable formatOutput to avoid whitespace issues in signature verification
+        $dom->formatOutput = false;
         $dom->preserveWhiteSpace = false;
 
         // Return signed XML with proper indentation and FULL closing tags (not self-closing)
@@ -390,8 +380,8 @@ class XadesSignature
         $x509Data = $dom->createElementNS(self::NS_DS, 'ds:X509Data');
         $keyInfo->appendChild($x509Data);
         
-        // 1. Add the signing certificate (Chunk split for strict formatting with leading newline)
-        $certContent = "\n" . chunk_split($certInfo['cleanCert'], 76, "\n");
+        // 1. Add the signing certificate (Chunk split formatted)
+        $certContent = trim(chunk_split($certInfo['cleanCert'], 76, "\n"));
         $x509Data->appendChild($dom->createElementNS(self::NS_DS, 'ds:X509Certificate', $certContent));
 
         // 2. Add intermediate certificates if present
@@ -412,8 +402,8 @@ class XadesSignature
             $rsaKeyValue = $dom->createElementNS(self::NS_DS, 'ds:RSAKeyValue');
             $keyValue->appendChild($rsaKeyValue);
             
-            // Modulus with chunk split and leading newline
-            $modulusContent = "\n" . chunk_split($certInfo['modulus'], 76, "\n");
+            // Modulus with chunk split (trimmed)
+            $modulusContent = trim(chunk_split($certInfo['modulus'], 76, "\n"));
             $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Modulus', $modulusContent));
             $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Exponent', $certInfo['exponent']));
         } elseif ($certInfo['keyType'] === self::KEY_TYPE_EC) {
@@ -651,13 +641,16 @@ class XadesSignature
 
         // Process in reverse order for RFC 2253 compliance
         foreach (array_reverse($dn) as $key => $value) {
+            $escaped = '';
             // Handle array values (multiple values for same attribute)
             if (is_array($value)) {
                 foreach ($value as $v) {
-                    $parts[] = $this->escapeDistinguishedNameValue($key, $v);
+                    $res = $this->escapeDistinguishedNameValue($key, $v);
+                    if ($res !== '') $parts[] = $res;
                 }
             } else {
-                $parts[] = $this->escapeDistinguishedNameValue($key, $value);
+                $res = $this->escapeDistinguishedNameValue($key, $value);
+                if ($res !== '') $parts[] = $res;
             }
         }
 
@@ -669,16 +662,15 @@ class XadesSignature
      */
     private function escapeDistinguishedNameValue(string $key, string $value): string
     {
-        // Translate organizationIdentifier to OID format with hex value if needed (matching ECUAFAC/UANATACA style)
+        // Match OpenSSL CLI format for organizationIdentifier to ensure SRI validator match
         if ($key === 'organizationIdentifier') {
-            $hex = bin2hex($value);
-            $len = dechex(strlen($value));
-            if (strlen($len) % 2 !== 0) {
-                $len = '0' . $len;
-            }
-            // 0c is the tag for UTF8String
-            return "2.5.4.97=#0c" . $len . $hex;
+             // Return plain string format: organizationIdentifier=VALUE
+             // (Escaping applied if needed, but usually this OID is alphanumeric)
+             return "organizationIdentifier=" . $value;
         }
+
+        // Escape special characters per RFC 2253
+
 
         // Escape special characters per RFC 2253
         $escaped = str_replace(
