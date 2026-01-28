@@ -203,12 +203,34 @@ class SRI
         $signer = new XadesSignature($this->p12Content, $this->p12Password);
         $xmlFirmado = $signer->sign($xml);
 
+        // 4.1 Validar XML Firmado Localmente (XSD)
+        // Esto asegura que la firma no haya roto la estructura
+        if (file_exists($xsdPath)) {
+            try {
+                XsdValidator::validate($xmlFirmado, $xsdPath);
+            } catch (ValidationException $e) {
+                // Enriquecer el error para saber que fue post-firma
+                throw new ValidationException(
+                    "Error de estructura en el XML Firmado: " . $e->getMessage(),
+                    $e->getErrors()
+                );
+            }
+        }
+
         // 5. Enviar al SRI
-        $xmlBase64 = base64_encode($xmlFirmado);
-        $soapRecepcion = $this->soapClient->enviar($xmlBase64, $this->ambiente);
+        // IMPORTANTE: NO codificar a Base64 aquí porque PHP's SoapClient ya lo hace automáticamente
+        // Hacerlo manualmente causa doble Base64 encoding que el SRI rechaza
+        \Illuminate\Support\Facades\Log::info("Signed XML Debug:", ['xml' => $xmlFirmado]);
+        $soapRecepcion = $this->soapClient->enviar($xmlFirmado, $this->ambiente);
         $respuestaRecepcion = Dto\RecepcionResponse::fromSoap($soapRecepcion);
 
         if ($respuestaRecepcion->estado === 'DEVUELTA') {
+            // Real error - log and throw
+            \Illuminate\Support\Facades\Log::info("SRI DEVUELTA Debug:", [
+                'mensajes_raw' => $respuestaRecepcion->mensajes,
+                'soap_response' => print_r($soapRecepcion, true)
+            ]);
+            
             throw new ValidationException(
                 "El SRI devolvió el comprobante.",
                 array_map(fn($m) => $m->mensaje, $respuestaRecepcion->mensajes)

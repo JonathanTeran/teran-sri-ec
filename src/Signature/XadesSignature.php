@@ -245,16 +245,18 @@ class XadesSignature
 
         // Generate unique IDs for all signature components
         $uuid = $this->generateUuid();
+        // Match reference ID style: SignatureXXXXXX (numeric/hex suffix)
+        $suffix = substr($uuid, 0, 6);
         $ids = [
-            'signature' => "Signature-$uuid",
-            'signatureValue' => "SignatureValue-$uuid",
-            'signedInfo' => "SignedInfo-$uuid",
-            'keyInfo' => "Certificate-$uuid",
-            'signedProperties' => "SignedProperties-$uuid",
-            'object' => "SignatureObject-$uuid",
-            'docRef' => "DocumentRef-$uuid",
-            'signedPropsRef' => "SignedPropertiesRef-$uuid",
-            'keyInfoRef' => "CertificateRef-$uuid",
+            'signature' => 'Signature' . $suffix,
+            'signatureValue' => 'SignatureValue' . $suffix,
+            'signedInfo' => 'Signature-SignedInfo' . $suffix,
+            'keyInfo' => 'Certificate' . $suffix,
+            'signedProperties' => 'Signature' . $suffix . '-SignedProperties' . $suffix,
+            'object' => 'Signature' . $suffix . '-Object' . $suffix,
+            'docRef' => 'Reference-ID-' . $suffix,
+            'signedPropsRef' => 'SignedPropertiesID' . $suffix,
+            'keyInfoRef' => 'CertificateRef-' . $suffix,
         ];
 
         // Extract certificate information
@@ -265,21 +267,64 @@ class XadesSignature
         $digestAlgorithmUri = $this->getDigestAlgorithmUri();
         $opensslAlgorithm = $this->getOpensslAlgorithm();
 
-        // 1. Create Signature node (Detach it from tree initially)
+        // 1. Create Signature node and append to document (to provide correct namespace scope)
         $signature = $dom->createElementNS(self::NS_DS, 'ds:Signature');
-        // Explicitly set namespaces to avoid repetition and match Reference XML structure
         $signature->setAttributeNs('http://www.w3.org/2000/xmlns/', 'xmlns:ds', self::NS_DS);
         $signature->setAttributeNs('http://www.w3.org/2000/xmlns/', 'xmlns:etsi', self::NS_XADES);
         $signature->setAttribute('Id', $ids['signature']);
+        $dom->documentElement->appendChild($signature);
 
-        // 2. Build Objects and Components (Stand-alone/Internal)
+        // 2. Build complete structure with placeholders
         
-        // Build KeyInfo
-        $keyInfo = $this->buildKeyInfo($dom, $ids['keyInfo'], $certInfo);
+        // SignedInfo
+        $signedInfo = $dom->createElementNS(self::NS_DS, 'ds:SignedInfo');
+        $signedInfo->setAttribute('Id', $ids['signedInfo']);
+        $signature->appendChild($signedInfo);
 
-        // Build Object with QualifyingProperties
+        $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:CanonicalizationMethod', self::ALG_C14N));
+        $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:SignatureMethod', $signatureAlgorithm));
+
+        // Placeholder References
+        $refProps = $dom->createElementNS(self::NS_DS, 'ds:Reference');
+        $refProps->setAttribute('Id', $ids['signedPropsRef']);
+        $refProps->setAttribute('Type', self::TYPE_SIGNED_PROPS);
+        $refProps->setAttribute('URI', "#" . $ids['signedProperties']);
+        $refProps->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
+        $signedPropsDigestNode = $dom->createElementNS(self::NS_DS, 'ds:DigestValue', '');
+        $refProps->appendChild($signedPropsDigestNode);
+        $signedInfo->appendChild($refProps);
+
+        $refKeyInfo = $dom->createElementNS(self::NS_DS, 'ds:Reference');
+        $refKeyInfo->setAttribute('URI', "#" . $ids['keyInfo']);
+        $refKeyInfo->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
+        $keyInfoDigestNode = $dom->createElementNS(self::NS_DS, 'ds:DigestValue', '');
+        $refKeyInfo->appendChild($keyInfoDigestNode);
+        $signedInfo->appendChild($refKeyInfo);
+
+        $refDoc = $dom->createElementNS(self::NS_DS, 'ds:Reference');
+        $refDoc->setAttribute('Id', $ids['docRef']);
+        $refDoc->setAttribute('URI', "#$docId");
+        $transforms = $dom->createElementNS(self::NS_DS, 'ds:Transforms');
+        $transforms->appendChild($this->createAlgorithmNode($dom, 'ds:Transform', self::ALG_ENVELOPED));
+        $refDoc->appendChild($transforms);
+        $refDoc->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
+        $docDigestNode = $dom->createElementNS(self::NS_DS, 'ds:DigestValue', '');
+        $refDoc->appendChild($docDigestNode);
+        $signedInfo->appendChild($refDoc);
+
+        // SignatureValue Placeholder
+        $signatureValueNode = $dom->createElementNS(self::NS_DS, 'ds:SignatureValue', '');
+        $signatureValueNode->setAttribute('Id', $ids['signatureValue']);
+        $signature->appendChild($signatureValueNode);
+
+        // KeyInfo and Object
+        $keyInfo = $this->buildKeyInfo($dom, $ids['keyInfo'], $certInfo);
+        $signature->appendChild($keyInfo);
+
         $object = $dom->createElementNS(self::NS_DS, 'ds:Object');
         $object->setAttribute('Id', $ids['object']);
+        $signature->appendChild($object);
+
         $qualifyingProps = $dom->createElementNS(self::NS_XADES, 'etsi:QualifyingProperties');
         $qualifyingProps->setAttribute('Target', "#" . $ids['signature']);
         $object->appendChild($qualifyingProps);
@@ -287,72 +332,24 @@ class XadesSignature
         $signedProps = $this->buildSignedProperties($dom, $ids['signedProperties'], $ids['docRef'], $certInfo);
         $qualifyingProps->appendChild($signedProps);
 
-        // 3. Create Referenced Components Digests
-        // Inclusive C14N for these elements using temporary doc workaround
-        $signedPropsDigest = $this->getElementDigest($signedProps);
-        $keyInfoDigest = $this->getElementDigest($keyInfo);
-
-        // 4. Calculate Document Digest (the root without the signature)
-        // Since $signature is NOT yet appended to $dom, $dom->C14N() is "clean"
-        $docDigest = $this->getDigest($dom->C14N());
-
-        // 5. Build SignedInfo
-        $signedInfo = $dom->createElementNS(self::NS_DS, 'ds:SignedInfo');
-        $signedInfo->setAttribute('Id', $ids['signedInfo']);
-        $signature->appendChild($signedInfo);
-
-        // Canonicalization and Signature methods
-        $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:CanonicalizationMethod', self::ALG_C14N));
-        $signedInfo->appendChild($this->createAlgorithmNode($dom, 'ds:SignatureMethod', $signatureAlgorithm));
-
-        // 6. Build and Append References in strict order (matching Reference XML)
+        // 3. CALCULATION PHASE
         
-        // C. SignedProperties Reference
-        $refProps = $dom->createElementNS(self::NS_DS, 'ds:Reference');
-        $refProps->setAttribute('Id', $ids['signedPropsRef']);
-        $refProps->setAttribute('Type', self::TYPE_SIGNED_PROPS);
-        $refProps->setAttribute('URI', "#" . $ids['signedProperties']);
-        $refProps->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
-        $refProps->appendChild($dom->createElementNS(self::NS_DS, 'ds:DigestValue', $signedPropsDigest));
-        $signedInfo->appendChild($refProps);
+        // A. Document Digest (Detach signature temporarily)
+        $signature->parentNode->removeChild($signature);
+        $docDigestNode->nodeValue = $this->getDigest($dom->C14N());
+        $dom->documentElement->appendChild($signature);
 
-        // B. KeyInfo Reference (Certificate)
-        $refKeyInfo = $dom->createElementNS(self::NS_DS, 'ds:Reference');
-        $refKeyInfo->setAttribute('URI', "#" . $ids['keyInfo']);
-        $refKeyInfo->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
-        $refKeyInfo->appendChild($dom->createElementNS(self::NS_DS, 'ds:DigestValue', $keyInfoDigest));
-        $signedInfo->appendChild($refKeyInfo);
+        // B. Component Digests (Now that they are attached, C14N works correctly with inherited namespaces)
+        $signedPropsDigestNode->nodeValue = base64_encode(hash($this->digestAlgorithm, $signedProps->C14N(), true));
+        $keyInfoDigestNode->nodeValue = base64_encode(hash($this->digestAlgorithm, $keyInfo->C14N(), true));
 
-        // A. Document Reference (comprobante)
-        $refDoc = $dom->createElementNS(self::NS_DS, 'ds:Reference');
-        $refDoc->setAttribute('Id', $ids['docRef']);
-        $refDoc->setAttribute('URI', "#$docId");
-        
-        $transforms = $dom->createElementNS(self::NS_DS, 'ds:Transforms');
-        $transforms->appendChild($this->createAlgorithmNode($dom, 'ds:Transform', self::ALG_ENVELOPED));
-        $refDoc->appendChild($transforms);
-        $refDoc->appendChild($this->createAlgorithmNode($dom, 'ds:DigestMethod', $digestAlgorithmUri));
-        $refDoc->appendChild($dom->createElementNS(self::NS_DS, 'ds:DigestValue', $docDigest));
-        $signedInfo->appendChild($refDoc);
-
-        // 7. SignatureValue - Sign the canonical SignedInfo
+        // C. SignatureValue - Add leading newline
         $signedInfoCanonical = $signedInfo->C14N();
         if (!openssl_sign($signedInfoCanonical, $signatureValue, $this->certs['pkey'], $opensslAlgorithm)) {
             $error = openssl_error_string();
             throw new SignatureException("Error al firmar el documento: " . ($error ?: 'error desconocido'));
         }
-
-        $signatureValueEncoded = chunk_split(base64_encode($signatureValue), 76, "\n");
-        $signatureValueNode = $dom->createElementNS(self::NS_DS, 'ds:SignatureValue', $signatureValueEncoded);
-        $signatureValueNode->setAttribute('Id', $ids['signatureValue']);
-        $signature->appendChild($signatureValueNode);
-
-        // 8. Assemble final Signature tree in order
-        $signature->appendChild($keyInfo);
-        $signature->appendChild($object);
-        
-        // 9. Append Signature to root
-        $dom->documentElement->appendChild($signature);
+        $signatureValueNode->nodeValue = "\n" . chunk_split(base64_encode($signatureValue), 76, "\n");
 
         // CLEANUP: Traverse and remove redundant xmlns attributes
         $xpath = new \DOMXPath($dom);
@@ -367,8 +364,18 @@ class XadesSignature
             }
         }
 
-        // Return signed XML with strict header formatting (no newlines)
-        return '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . $dom->saveXML($dom->documentElement, LIBXML_NOEMPTYTAG);
+        // Enable formatOutput to match SRI's expected indented structure
+        $dom->formatOutput = true;
+        $dom->preserveWhiteSpace = false;
+
+        // Return signed XML with proper indentation and FULL closing tags (not self-closing)
+        // CRITICAL: LIBXML_NOEMPTYTAG ensures <tag></tag> instead of <tag/> which SRI requires
+        $finalXml = $dom->saveXML(null, LIBXML_NOEMPTYTAG);
+        
+        // EMERGENCY DEBUG: Save the exact byte string
+        file_put_contents(base_path('storage/app/final_signed.xml'), $finalXml);
+        
+        return $finalXml;
     }
 
     /**
@@ -383,8 +390,8 @@ class XadesSignature
         $x509Data = $dom->createElementNS(self::NS_DS, 'ds:X509Data');
         $keyInfo->appendChild($x509Data);
         
-        // 1. Add the signing certificate (Chunk split for strict formatting)
-        $certContent = chunk_split($certInfo['cleanCert'], 76, "\n");
+        // 1. Add the signing certificate (Chunk split for strict formatting with leading newline)
+        $certContent = "\n" . chunk_split($certInfo['cleanCert'], 76, "\n");
         $x509Data->appendChild($dom->createElementNS(self::NS_DS, 'ds:X509Certificate', $certContent));
 
         // 2. Add intermediate certificates if present
@@ -405,8 +412,8 @@ class XadesSignature
             $rsaKeyValue = $dom->createElementNS(self::NS_DS, 'ds:RSAKeyValue');
             $keyValue->appendChild($rsaKeyValue);
             
-            // Modulus with chunk split
-            $modulusContent = chunk_split($certInfo['modulus'], 76, "\n");
+            // Modulus with chunk split and leading newline
+            $modulusContent = "\n" . chunk_split($certInfo['modulus'], 76, "\n");
             $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Modulus', $modulusContent));
             $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Exponent', $certInfo['exponent']));
         } elseif ($certInfo['keyType'] === self::KEY_TYPE_EC) {

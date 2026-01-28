@@ -30,10 +30,12 @@ class SriSoapClient
         $this->retries = $retries;
     }
 
-    public function enviar(string $xmlBase64, string $ambiente = 'pruebas'): object
+
+    public function enviar(string $xml, string $ambiente = 'pruebas'): object
     {
         $wsdl = $this->urls['recepcion'][$ambiente];
-        return $this->call('validarComprobante', ['xml' => $xmlBase64], $wsdl);
+        // PHP's SoapClient automatically encodes to Base64
+        return $this->call('validarComprobante', ['xml' => $xml], $wsdl);
     }
 
     public function autorizar(string $claveAcceso, string $ambiente = 'pruebas'): object

@@ -14,20 +14,43 @@ class RecepcionResponse
 
     public static function fromSoap(object $data): self
     {
+        $estado = 'DEVUELTA';
         $mensajes = [];
-        if (isset($data->comprobantes->comprobante->mensajes->mensaje)) {
-            $rawMensajes = is_array($data->comprobantes->comprobante->mensajes->mensaje) 
-                ? $data->comprobantes->comprobante->mensajes->mensaje 
-                : [$data->comprobantes->comprobante->mensajes->mensaje];
-            
-            foreach ($rawMensajes as $m) {
-                $mensajes[] = Mensaje::fromSoap($m);
+        
+        // Handle the wrapper property if it exists (SRI SOAP often wraps it)
+        $root = $data->RespuestaRecepcionComprobante ?? $data;
+
+        if (isset($root->estado)) {
+            $estado = (string)$root->estado;
+        }
+
+        // Traverse: comprobantes -> comprobante -> mensajes -> mensaje
+        if (isset($root->comprobantes->comprobante->mensajes->mensaje)) {
+             $rawMensajes = $root->comprobantes->comprobante->mensajes->mensaje;
+             
+             // Normalize to array
+             if (!is_array($rawMensajes)) {
+                 $rawMensajes = [$rawMensajes];
+             }
+             
+             foreach ($rawMensajes as $m) {
+                 $mensajes[] = Mensaje::fromSoap($m);
+             }
+        }
+        
+        // Check if DEVUELTA is actually "EN PROCESAMIENTO" (not a real error)
+        if ($estado === 'DEVUELTA') {
+            foreach ($mensajes as $mensaje) {
+                // Code 70 = EN PROCESAMIENTO
+                if ($mensaje->identificador == '70' || 
+                    stripos($mensaje->mensaje, 'PROCESAMIENTO') !== false) {
+                    // Treat as RECIBIDA since it's just pending, not rejected
+                    $estado = 'RECIBIDA';
+                    break;
+                }
             }
         }
 
-        return new self(
-            (string)($data->estado ?? 'DEVUELTA'),
-            $mensajes
-        );
+        return new self($estado, $mensajes);
     }
 }
