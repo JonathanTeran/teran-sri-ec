@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Teran\Sri\Signature;
 
-use Teran\Sri\Exceptions\SignatureException;
+use Teran\Sri\Exceptions\SriException;
 use DOMDocument;
 use DOMElement;
 use OpenSSLAsymmetricKey;
@@ -97,53 +97,50 @@ class XadesSignature
 
         // 2. Fallback: Try using CLI OpenSSL if PHP fails (Common on MacOS/Homebrew setups)
         // We need to write the content to a temp file first since CLI needs a file
-        $tempFile = stream_get_meta_data(tmpfile())['uri'];
+        $tempFile = sys_get_temp_dir() . '/p12_' . uniqid() . '.p12';
         file_put_contents($tempFile, $this->p12Content);
 
         try {
-            // Determine OpenSSL Binary
+            // Determine OpenSSL Binary - PRIORITIZE OpenSSL 1.1 for legacy certificate support
+            // Legacy certificates (pre-2024) use RC2/3DES encryption which OpenSSL 3.0+ rejects by default
             $opensslBin = 'openssl';
-            if (file_exists('/opt/homebrew/opt/openssl@3/bin/openssl')) {
+            if (file_exists('/opt/homebrew/opt/openssl@1.1/bin/openssl')) {
+                $opensslBin = '/opt/homebrew/opt/openssl@1.1/bin/openssl';
+            } elseif (file_exists('/usr/local/opt/openssl@1.1/bin/openssl')) {
+                $opensslBin = '/usr/local/opt/openssl@1.1/bin/openssl';
+            } elseif (file_exists('/opt/homebrew/opt/openssl@3/bin/openssl')) {
                 $opensslBin = '/opt/homebrew/opt/openssl@3/bin/openssl';
             } elseif (file_exists('/usr/local/opt/openssl@3/bin/openssl')) {
                 $opensslBin = '/usr/local/opt/openssl@3/bin/openssl';
-            } elseif (file_exists('/opt/homebrew/opt/openssl@1.1/bin/openssl')) { // Fallback to legacy reader
-                $opensslBin = '/opt/homebrew/opt/openssl@1.1/bin/openssl';
             }
 
             // Convert P12 to readable PEM using CLI
-            // This bypasses PHP's internal checks which might be too strict (e.g. legacy algos)
+            // We use -legacy and -provider default if it's OpenSSL 3.0+
             $tempPem = $tempFile . '.pem';
-            $cmd = sprintf(
-                '%s pkcs12 -in %s -out %s -nodes -passin pass:%s 2>&1',
-                $opensslBin,
-                escapeshellarg($tempFile),
-                escapeshellarg($tempPem),
-                escapeshellarg($this->password)
-            );
             
-            exec($cmd, $output, $returnVar);
+            // Try standard command first, then with -legacy if it fails
+            $commands = [
+                sprintf('%s pkcs12 -in %s -out %s -nodes -passin pass:%s 2>&1', $opensslBin, escapeshellarg($tempFile), escapeshellarg($tempPem), escapeshellarg($this->password)),
+                sprintf('%s pkcs12 -in %s -out %s -nodes -passin pass:%s -legacy -provider default 2>&1', $opensslBin, escapeshellarg($tempFile), escapeshellarg($tempPem), escapeshellarg($this->password))
+            ];
 
-            if ($returnVar === 0 && file_exists($tempPem)) {
-                $pemContent = file_get_contents($tempPem);
-                
-                // Extract Cert and Key from PEM manually
-                if (openssl_x509_read($pemContent)) {
-                    $this->certs['cert'] = $pemContent; // Contains both often, but let's separate if needed
-                    
-                    // Basic separation logic
-                    if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pemContent, $matches)) {
-                        $this->certs['cert'] = $matches[0];
+            foreach ($commands as $cmd) {
+                exec($cmd, $output, $returnVar);
+                if ($returnVar === 0 && file_exists($tempPem)) {
+                    $pemContent = file_get_contents($tempPem);
+                    if (openssl_x509_read($pemContent)) {
+                        $this->certs['cert'] = $pemContent;
+                        if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pemContent, $matches)) {
+                            $this->certs['cert'] = $matches[0];
+                        }
+                        if (preg_match('/-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----/s', $pemContent, $matches)) {
+                            $this->certs['pkey'] = $matches[0];
+                        }
+                        unlink($tempPem);
+                        unlink($tempFile);
+                        $this->validateLoadedCerts();
+                        return;
                     }
-                    if (preg_match('/-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----/s', $pemContent, $matches)) {
-                        $this->certs['pkey'] = $matches[0];
-                    }
-                    
-                    unlink($tempPem);
-                    unlink($tempFile);
-                    
-                    $this->validateLoadedCerts();
-                    return;
                 }
             }
             
@@ -155,7 +152,7 @@ class XadesSignature
         if (file_exists($tempFile)) unlink($tempFile);
 
         $error = openssl_error_string();
-        throw new SignatureException(
+        throw new SriException(
             "No se pudo leer el certificado .p12 (ni con PHP nativo ni CLI). " .
             "Verifique la contraseña y que el archivo no esté corrupto. " .
             "Error OpenSSL: " . ($error ?: 'desconocido')
@@ -166,11 +163,11 @@ class XadesSignature
     {
         // Verify required components exist
         if (empty($this->certs['cert'])) {
-            throw new SignatureException("El certificado P12 no contiene un certificado público.");
+            throw new SriException("El certificado P12 no contiene un certificado público.");
         }
 
         if (empty($this->certs['pkey'])) {
-            throw new SignatureException("El certificado P12 no contiene una clave privada.");
+            throw new SriException("El certificado P12 no contiene una clave privada.");
         }
 
         // Store extra certificates (intermediate CAs) if present
@@ -187,7 +184,7 @@ class XadesSignature
     {
         $allowed = ['sha1', 'sha256'];
         if (!in_array(strtolower($algorithm), $allowed, true)) {
-            throw new SignatureException("Algoritmo de digest no soportado: $algorithm. Use: " . implode(', ', $allowed));
+            throw new SriException("Algoritmo de digest no soportado: $algorithm. Use: " . implode(', ', $allowed));
         }
         $this->digestAlgorithm = strtolower($algorithm);
         return $this;
@@ -202,7 +199,7 @@ class XadesSignature
 
         // Check if certificate is expired
         if ($info['isExpired']) {
-            throw new SignatureException(
+            throw new SriException(
                 "El certificado ha expirado. " .
                 "Fecha de expiración: " . $info['validTo']->format('Y-m-d H:i:s')
             );
@@ -210,7 +207,7 @@ class XadesSignature
 
         // Check if certificate is not yet valid
         if ($info['validFrom'] > new \DateTimeImmutable()) {
-            throw new SignatureException(
+            throw new SriException(
                 "El certificado aún no es válido. " .
                 "Válido desde: " . $info['validFrom']->format('Y-m-d H:i:s')
             );
@@ -237,7 +234,7 @@ class XadesSignature
         $dom->formatOutput = false;
 
         if (!$dom->loadXML($xmlContent)) {
-            throw new SignatureException("Error al cargar el XML para la firma. Verifique que sea XML válido.");
+            throw new SriException("Error al cargar el XML para la firma. Verifique que sea XML válido.");
         }
 
         // Get the document ID attribute
@@ -345,7 +342,7 @@ class XadesSignature
         $signedInfoCanonical = $signedInfo->C14N();
         if (!openssl_sign($signedInfoCanonical, $signatureValue, $this->certs['pkey'], $opensslAlgorithm)) {
             $error = openssl_error_string();
-            throw new SignatureException("Error al firmar el documento: " . ($error ?: 'error desconocido'));
+            throw new SriException("Error al firmar el documento: " . ($error ?: 'error desconocido'));
         }
         $signatureValueNode->nodeValue = trim(chunk_split(base64_encode($signatureValue), 76, "\n"));
 
@@ -500,12 +497,12 @@ class XadesSignature
         // Parse certificate
         $certResource = openssl_x509_read($publicCert);
         if ($certResource === false) {
-            throw new SignatureException("No se pudo leer el certificado X.509");
+            throw new SriException("No se pudo leer el certificado X.509");
         }
 
         $certData = openssl_x509_parse($certResource);
         if ($certData === false) {
-            throw new SignatureException("No se pudo parsear el certificado X.509");
+            throw new SriException("No se pudo parsear el certificado X.509");
         }
 
         // Build issuer name in RFC 2253 format (reversed order)
@@ -517,12 +514,12 @@ class XadesSignature
         // Get public key details
         $pubKey = openssl_pkey_get_public($publicCert);
         if ($pubKey === false) {
-            throw new SignatureException("No se pudo extraer la clave pública del certificado");
+            throw new SriException("No se pudo extraer la clave pública del certificado");
         }
 
         $pubKeyDetails = openssl_pkey_get_details($pubKey);
         if ($pubKeyDetails === false) {
-            throw new SignatureException("No se pudieron obtener los detalles de la clave pública");
+            throw new SriException("No se pudieron obtener los detalles de la clave pública");
         }
 
         $keyType = $pubKeyDetails['type'];

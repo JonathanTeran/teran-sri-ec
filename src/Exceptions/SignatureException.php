@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Teran\Sri\Exceptions;
 
-use Exception;
-
-class SriException extends Exception {}
+class SignatureException extends SriException {}

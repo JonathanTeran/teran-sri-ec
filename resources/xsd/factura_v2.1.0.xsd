@@ -11,7 +11,7 @@
                 <xs:element name="reembolsos" type="reembolsos" minOccurs="0"/>
                 <xs:element name="retenciones" type="retenciones" minOccurs="0"/>
                 <xs:element name="infoAdicional" type="infoAdicional" minOccurs="0"/>
-                <xs:any namespace="http://www.w3.org/2000/09/xmldsig#" minOccurs="0"/>
+                <xs:any namespace="http://www.w3.org/2000/09/xmldsig#" processContents="lax" minOccurs="0"/>
             </xs:sequence>
             <xs:attribute name="id" type="xs:string" use="required"/>
             <xs:attribute name="version" type="xs:string" use="required"/>

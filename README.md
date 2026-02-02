@@ -357,6 +357,57 @@ La firma digital cumple con el estándar XAdES-BES requerido por el SRI:
 </ds:Signature>
 ```
 
+## 🔧 Troubleshooting
+
+### Error: "Could not read p12 file" o "error:0308010C:digital envelope routines::unsupported"
+
+**Causa**: Certificados P12 legacy (pre-2024) usan algoritmos de cifrado RC2/3DES que OpenSSL 3.0+ rechaza por defecto.
+
+**Solución**: Esta librería automáticamente usa OpenSSL 1.1 cuando está disponible. En macOS con Homebrew:
+
+```bash
+brew install openssl@1.1
+```
+
+La librería detectará automáticamente la instalación y la usará para certificados legacy.
+
+### Error: "FECHA EMISIÓN EXTEMPORÁNEA"
+
+**Causa**: El SRI rechaza facturas con fechas que no coinciden con la fecha/hora actual del servidor SRI.
+
+**Solución**:
+1. Generar y enviar la factura inmediatamente (no guardar para enviar después)
+2. Usar la zona horaria de Ecuador: `America/Guayaquil`
+3. Formato de fecha correcto: `dd/MM/yyyy` (ej: `01/02/2026`)
+
+```php
+// Correcto
+date_default_timezone_set('America/Guayaquil');
+$fecha = date('d/m/Y'); // Fecha actual en Ecuador
+```
+
+### Error: "Class 'Teran\Sri\Exceptions\SignatureException' not found"
+
+**Causa**: Problema de autoloading (solo en versiones antiguas del paquete).
+
+**Solución**: Actualizar a la última versión:
+```bash
+composer update amephia/sri-ec
+```
+
+### Error: "No matching global element declaration available"
+
+**Causa**: XSD con validación strict para firma digital (solo en versiones antiguas).
+
+**Solución**: Actualizar a la última versión que incluye XSD con `processContents="lax"`.
+
+### Certificados Soportados
+
+✅ **Funcionan correctamente**:
+- Certificados legacy (2020-2024) con OpenSSL 1.1
+- Certificados modernos (2025+) con OpenSSL 3.0+
+- Todos los proveedores ecuatorianos (Uanataca, Security Data, BCE, ANF AC, etc.)
+
 ## 🤝 Contribuir
 
 ¡Las contribuciones son bienvenidas! No dudes en enviar un Pull Request.
