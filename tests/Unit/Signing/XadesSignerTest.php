@@ -14,6 +14,7 @@ use Teran\Sri\Documents\Factura;
 use Teran\Sri\Schema\XsdValidator;
 use Teran\Sri\Tests\Support\TestCertificate;
 use Teran\Sri\Tests\Support\FixedClock;
+use Teran\Sri\Tests\Support\CountingClock;
 
 class XadesSignerTest extends TestCase
 {
@@ -76,6 +77,13 @@ class XadesSignerTest extends TestCase
             $signer->sign($this->unsignedXml, $this->cert),
             $signer->sign($this->unsignedXml, $this->cert)
         );
+    }
+
+    public function test_clock_is_consulted_exactly_once_per_sign(): void
+    {
+        $clock = new CountingClock(new \DateTimeImmutable('2026-01-26T10:00:00-05:00'));
+        (new XadesSigner(new SignatureOptions(), $clock))->sign($this->unsignedXml, $this->cert);
+        $this->assertSame(1, $clock->calls, 'sign() must consult the clock exactly once (single signing time).');
     }
 
     public function test_signature_value_verifies_cryptographically(): void

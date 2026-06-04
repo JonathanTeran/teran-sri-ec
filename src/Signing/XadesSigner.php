@@ -27,8 +27,6 @@ final class XadesSigner
 
     // Canonicalization Algorithms
     private const ALG_C14N = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
-    private const ALG_C14N_EXCLUSIVE = 'http://www.w3.org/2001/10/xml-exc-c14n#';
-
     // Digest Algorithms
     private const ALG_SHA1 = 'http://www.w3.org/2000/09/xmldsig#sha1';
     private const ALG_SHA256 = 'http://www.w3.org/2001/04/xmlenc#sha256';
@@ -74,11 +72,10 @@ final class XadesSigner
         // Get the document ID attribute
         $docId = $dom->documentElement->getAttribute('id') ?: 'comprobante';
 
-        // Generate deterministic IDs derived from signing-time + certificate so that
-        // two calls with the same clock/cert produce identical output (required for
-        // the determinism test and useful for reproducible debugging).
-        $signingTime = $this->clock->now()->format('Y-m-d\TH:i:sP');
-        $suffix = substr(sha1($signingTime . $cert->certPem), 0, 6);
+        // Capture signing time once — used both for ID-suffix derivation and for
+        // the <etsi:SigningTime> element so the two are guaranteed to be identical.
+        $signingTime = $this->clock->now();
+        $suffix = substr(sha1($signingTime->format('Y-m-d\TH:i:sP') . $cert->certPem), 0, 6);
         $ids = [
             'signature' => 'Signature' . $suffix,
             'signatureValue' => 'SignatureValue' . $suffix,
@@ -154,7 +151,7 @@ final class XadesSigner
         $qualifyingProps->setAttribute('Target', "#" . $ids['signature']);
         $object->appendChild($qualifyingProps);
 
-        $signedProps = $this->buildSignedProperties($dom, $ids['signedProperties'], $ids['docRef'], $certInfo);
+        $signedProps = $this->buildSignedProperties($dom, $ids['signedProperties'], $ids['docRef'], $certInfo, $signingTime);
         $qualifyingProps->appendChild($signedProps);
 
         // 3. CALCULATION PHASE
@@ -248,7 +245,7 @@ final class XadesSigner
     /**
      * Build the SignedProperties element
      */
-    private function buildSignedProperties(DOMDocument $dom, string $signedPropsId, string $docRefId, array $certInfo): DOMElement
+    private function buildSignedProperties(DOMDocument $dom, string $signedPropsId, string $docRefId, array $certInfo, \DateTimeImmutable $signingTime): DOMElement
     {
         $signedProps = $dom->createElementNS(self::NS_XADES, 'etsi:SignedProperties');
         $signedProps->setAttribute('Id', $signedPropsId);
@@ -257,8 +254,8 @@ final class XadesSigner
         $signedSigProps = $dom->createElementNS(self::NS_XADES, 'etsi:SignedSignatureProperties');
         $signedProps->appendChild($signedSigProps);
 
-        // SigningTime in ISO 8601 format (from injected clock)
-        $signedSigProps->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:SigningTime', $this->clock->now()->format('Y-m-d\TH:i:sP')));
+        // SigningTime in ISO 8601 format (passed from sign() to guarantee consistency with IDs)
+        $signedSigProps->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:SigningTime', $signingTime->format('Y-m-d\TH:i:sP')));
 
         // SigningCertificate
         $signingCert = $dom->createElementNS(self::NS_XADES, 'etsi:SigningCertificate');
