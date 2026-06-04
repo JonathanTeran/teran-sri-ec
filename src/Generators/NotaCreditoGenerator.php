@@ -44,7 +44,7 @@ class NotaCreditoGenerator extends XmlGenerator
 
         foreach ($simpleFields as $field) {
             if (isset($data[$field])) {
-                $node->appendChild($this->dom->createElement($field, (string)$data[$field]));
+                $node->appendChild($this->createTextElement($field, (string)$data[$field]));
             }
         }
 
@@ -56,13 +56,13 @@ class NotaCreditoGenerator extends XmlGenerator
                 $item = $this->dom->createElement('totalImpuesto');
                 $totalImpNode->appendChild($item);
                 foreach ($imp as $k => $v) {
-                    $item->appendChild($this->dom->createElement($k, (string)$v));
+                    $item->appendChild($this->createTextElement($k, (string)$v));
                 }
             }
         }
 
         if (isset($data['motivo'])) {
-            $node->appendChild($this->dom->createElement('motivo', (string)$data['motivo']));
+            $node->appendChild($this->createTextElement('motivo', (string)$data['motivo']));
         }
     }
 
@@ -82,7 +82,7 @@ class NotaCreditoGenerator extends XmlGenerator
 
             foreach ($simpleFields as $f) {
                 if (isset($det[$f])) {
-                    $item->appendChild($this->dom->createElement($f, (string)$det[$f]));
+                    $item->appendChild($this->createTextElement($f, (string)$det[$f]));
                 }
             }
 
@@ -94,7 +94,7 @@ class NotaCreditoGenerator extends XmlGenerator
                     $impItem = $this->dom->createElement('impuesto');
                     $impNode->appendChild($impItem);
                     foreach ($imp as $k => $v) {
-                        $impItem->appendChild($this->dom->createElement($k, (string)$v));
+                        $impItem->appendChild($this->createTextElement($k, (string)$v));
                     }
                 }
             }

@@ -96,9 +96,16 @@ class XadesSignature
         }
 
         // 2. Fallback: Try using CLI OpenSSL if PHP fails (Common on MacOS/Homebrew setups)
-        // We need to write the content to a temp file first since CLI needs a file
-        $tempFile = sys_get_temp_dir() . '/p12_' . uniqid() . '.p12';
+        // We need to write the content to a temp file first since CLI needs a file.
+        // tempnam() genera un nombre impredecible con permisos 0600, evitando exponer
+        // el .p12 a otros usuarios del sistema en el directorio temporal compartido.
+        $tempFile = tempnam(sys_get_temp_dir(), 'sri_p12_');
+        if ($tempFile === false) {
+            throw new SriException("No se pudo crear el archivo temporal para el certificado.");
+        }
         file_put_contents($tempFile, $this->p12Content);
+        // El PEM con la clave privada descifrada se escribe junto al .p12.
+        $tempPem = $tempFile . '.pem';
 
         try {
             // Determine OpenSSL Binary - PRIORITIZE OpenSSL 1.1 for legacy certificate support
@@ -116,8 +123,7 @@ class XadesSignature
 
             // Convert P12 to readable PEM using CLI
             // We use -legacy and -provider default if it's OpenSSL 3.0+
-            $tempPem = $tempFile . '.pem';
-            
+
             // Try standard command first, then with -legacy if it fails
             $commands = [
                 sprintf('%s pkcs12 -in %s -out %s -nodes -passin pass:%s 2>&1', $opensslBin, escapeshellarg($tempFile), escapeshellarg($tempPem), escapeshellarg($this->password)),
@@ -125,10 +131,13 @@ class XadesSignature
             ];
 
             foreach ($commands as $cmd) {
+                $output = []; // No acumular la salida (posibles datos del cert) entre intentos.
                 exec($cmd, $output, $returnVar);
-                if ($returnVar === 0 && file_exists($tempPem)) {
+                if ($returnVar === 0 && is_file($tempPem)) {
+                    // El PEM contiene la clave privada descifrada (-nodes): restringir permisos.
+                    @chmod($tempPem, 0600);
                     $pemContent = file_get_contents($tempPem);
-                    if (openssl_x509_read($pemContent)) {
+                    if ($pemContent !== false && openssl_x509_read($pemContent)) {
                         $this->certs['cert'] = $pemContent;
                         if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pemContent, $matches)) {
                             $this->certs['cert'] = $matches[0];
@@ -136,20 +145,23 @@ class XadesSignature
                         if (preg_match('/-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----/s', $pemContent, $matches)) {
                             $this->certs['pkey'] = $matches[0];
                         }
-                        unlink($tempPem);
-                        unlink($tempFile);
                         $this->validateLoadedCerts();
                         return;
                     }
                 }
             }
-            
-            if (file_exists($tempPem)) unlink($tempPem);
         } catch (\Throwable $e) {
-            // Silence, fall through to throw original error
+            // Silenciar y caer al error genérico de abajo.
+        } finally {
+            // Garantiza el borrado del .p12 y del PEM (clave privada descifrada)
+            // en CUALQUIER salida: éxito, fallo o excepción.
+            if (is_file($tempPem)) {
+                @unlink($tempPem);
+            }
+            if (is_file($tempFile)) {
+                @unlink($tempFile);
+            }
         }
-        
-        if (file_exists($tempFile)) unlink($tempFile);
 
         $error = openssl_error_string();
         throw new SriException(
@@ -233,7 +245,7 @@ class XadesSignature
         $dom->preserveWhiteSpace = false;
         $dom->formatOutput = false;
 
-        if (!$dom->loadXML($xmlContent)) {
+        if (!$dom->loadXML($xmlContent, LIBXML_NONET)) {
             throw new SriException("Error al cargar el XML para la firma. Verifique que sea XML válido.");
         }
 
@@ -358,10 +370,7 @@ class XadesSignature
         // Return signed XML with proper indentation and FULL closing tags (not self-closing)
         // CRITICAL: LIBXML_NOEMPTYTAG ensures <tag></tag> instead of <tag/> which SRI requires
         $finalXml = $dom->saveXML(null, LIBXML_NOEMPTYTAG);
-        
-        // EMERGENCY DEBUG: Save the exact byte string
-        file_put_contents(base_path('storage/app/final_signed.xml'), $finalXml);
-        
+
         return $finalXml;
     }
 

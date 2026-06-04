@@ -33,7 +33,8 @@ class RucValidator
             curl_setopt($ch, CURLOPT_URL, self::SRI_URL . $ruc);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 3); // Timeout corto para no detener el proceso
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // En producción se debería validar
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
