@@ -53,7 +53,10 @@ final class Psr18SoapTransport implements SriTransportInterface
 
     private function ambienteKey(Ambiente $ambiente): string
     {
-        return $ambiente === Ambiente::Produccion ? 'produccion' : 'pruebas';
+        return match ($ambiente) {
+            Ambiente::Pruebas    => 'pruebas',
+            Ambiente::Produccion => 'produccion',
+        };
     }
 
     private function post(string $url, string $soapBody): string

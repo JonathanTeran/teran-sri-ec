@@ -20,7 +20,8 @@ final class FakePsr18Client implements ClientInterface
     public function sendRequest(RequestInterface $request): ResponseInterface
     {
         $this->lastRequest = $request;
-        return (new Psr17Factory())->createResponse($this->status)
-            ->withBody((new Psr17Factory())->createStream($this->responseBody));
+        $factory = new Psr17Factory();
+        return $factory->createResponse($this->status)
+            ->withBody($factory->createStream($this->responseBody));
     }
 }

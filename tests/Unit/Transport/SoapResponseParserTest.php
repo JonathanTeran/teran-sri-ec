@@ -6,6 +6,7 @@ namespace Teran\Sri\Tests\Unit\Transport;
 
 use PHPUnit\Framework\TestCase;
 use Teran\Sri\Transport\SoapResponseParser;
+use Teran\Sri\Exceptions\CommunicationException;
 
 class SoapResponseParserTest extends TestCase
 {
@@ -61,6 +62,46 @@ class SoapResponseParserTest extends TestCase
         $this->assertCount(1, $o->mensajes);
         $this->assertSame('43', $o->mensajes[0]->identificador);
         $this->assertSame('ERROR', $o->mensajes[0]->tipo);
+    }
+
+    public function test_soap_fault_throws_communication_exception(): void
+    {
+        $xml = <<<XML
+        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <soap:Fault>
+              <faultcode>soap:Server</faultcode>
+              <faultstring>Error de esquema</faultstring>
+            </soap:Fault>
+          </soap:Body>
+        </soap:Envelope>
+        XML;
+
+        $parser = new SoapResponseParser();
+
+        $this->expectException(CommunicationException::class);
+        $this->expectExceptionMessage('SRI SOAP Fault: Error de esquema');
+        $parser->parseReception($xml);
+    }
+
+    public function test_soap_fault_throws_communication_exception_on_authorization(): void
+    {
+        $xml = <<<XML
+        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <soap:Fault>
+              <faultcode>soap:Server</faultcode>
+              <faultstring>Servicio no disponible</faultstring>
+            </soap:Fault>
+          </soap:Body>
+        </soap:Envelope>
+        XML;
+
+        $parser = new SoapResponseParser();
+
+        $this->expectException(CommunicationException::class);
+        $this->expectExceptionMessage('SRI SOAP Fault: Servicio no disponible');
+        $parser->parseAuthorization($xml);
     }
 
     public function test_parses_autorizado(): void

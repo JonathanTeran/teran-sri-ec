@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Teran\Sri\Transport;
 
 use Teran\Sri\Emission\Message;
+use Teran\Sri\Exceptions\CommunicationException;
 use DOMDocument;
 use DOMXPath;
 use DOMNode;
@@ -17,6 +18,7 @@ final class SoapResponseParser
     public function parseReception(string $responseXml): ReceptionOutcome
     {
         $xp = $this->xpath($responseXml);
+        $this->throwOnFault($xp);
         $estado = $this->text($xp, '//*[local-name()="estado"]') ?? 'DEVUELTA';
         $mensajes = $this->messages($xp, '//*[local-name()="mensajes"]/*[local-name()="mensaje"]');
         return new ReceptionOutcome($estado, $mensajes);
@@ -25,6 +27,7 @@ final class SoapResponseParser
     public function parseAuthorization(string $responseXml): AuthorizationOutcome
     {
         $xp = $this->xpath($responseXml);
+        $this->throwOnFault($xp);
         $auth = $xp->query('//*[local-name()="autorizacion"]')->item(0);
         if (!$auth instanceof DOMNode) {
             return new AuthorizationOutcome('NO AUTORIZADO');
@@ -38,12 +41,23 @@ final class SoapResponseParser
         );
     }
 
+    private function throwOnFault(DOMXPath $xp): void
+    {
+        $faultNode = $xp->query('//*[local-name()="Fault"]')->item(0);
+        if ($faultNode === null) {
+            return;
+        }
+        $faultText = $this->text($xp, '//*[local-name()="faultstring"]') ?? 'unknown SOAP fault';
+        throw new CommunicationException('SRI SOAP Fault: ' . $faultText);
+    }
+
     private function xpath(string $xml): DOMXPath
     {
+        $prev = libxml_use_internal_errors(true);
         $dom = new DOMDocument();
-        libxml_use_internal_errors(true);
         $dom->loadXML($xml, LIBXML_NONET);
         libxml_clear_errors();
+        libxml_use_internal_errors($prev);
         return new DOMXPath($dom);
     }
 
