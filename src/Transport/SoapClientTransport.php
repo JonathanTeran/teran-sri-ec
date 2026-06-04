@@ -5,50 +5,73 @@ declare(strict_types=1);
 namespace Teran\Sri\Transport;
 
 use Teran\Sri\Catalogs2\Ambiente;
-use Teran\Sri\Emission\Message;
 use Teran\Sri\Exceptions\CommunicationException;
 use SoapClient;
 use SoapFault;
 
+/**
+ * Transporte basado en ext-soap (SoapClient), portado del 1.x. Funciona out-of-the-box
+ * (ext-soap es requisito del paquete) sin necesidad de un cliente PSR-18 externo.
+ * La llamada SOAP real se aísla en $soapCaller para poder testear sin red.
+ *
+ * Nota: el método realSoapCall() (camino real hacia el SRI) no está cubierto por tests
+ * unitarios porque requiere el servicio en vivo del SRI; valídalo con un smoke test
+ * contra el ambiente de pruebas del SRI antes de pasar a producción.
+ */
 final class SoapClientTransport implements SriTransportInterface
 {
     private const WSDL = [
         'recepcion' => [
-            'pruebas'   => 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
+            'pruebas'    => 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
             'produccion' => 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
         ],
         'autorizacion' => [
-            'pruebas'   => 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
+            'pruebas'    => 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
             'produccion' => 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
         ],
     ];
 
-    /** @var (callable(string,array<string,mixed>,string):object)|null */
+    /** @var callable(string,array<string,mixed>,string):object */
     private $soapCaller;
 
     public function __construct(
         private readonly int $timeout = 30,
         private readonly int $retries = 3,
+        private readonly SoapStdClassParser $parser = new SoapStdClassParser(),
         ?callable $soapCaller = null,
     ) {
-        $this->soapCaller = $soapCaller;
+        $this->soapCaller = $soapCaller ?? fn (string $method, array $params, string $wsdl): object
+            => $this->realSoapCall($method, $params, $wsdl);
     }
 
     public function enviar(string $signedXml, Ambiente $ambiente): ReceptionOutcome
     {
-        $resp = $this->call('validarComprobante', ['xml' => $signedXml], self::WSDL['recepcion'][$this->key($ambiente)]);
-        return $this->parseReception($resp);
+        $wsdl = self::WSDL['recepcion'][$this->key($ambiente)];
+        $resp = $this->call('validarComprobante', ['xml' => $signedXml], $wsdl);
+        $outcome = $this->parser->reception($resp);
+
+        // Código 70 / PROCESAMIENTO se trata como RECIBIDA (no es rechazo), igual que 1.x.
+        if ($outcome->estado === 'DEVUELTA') {
+            foreach ($outcome->mensajes as $m) {
+                if ($m->identificador === '70' || stripos($m->mensaje, 'PROCESAMIENTO') !== false) {
+                    return new ReceptionOutcome('RECIBIDA', $outcome->mensajes);
+                }
+            }
+        }
+
+        return $outcome;
     }
 
     public function autorizar(string $claveAcceso, Ambiente $ambiente): AuthorizationOutcome
     {
-        $resp = $this->call('autorizacionComprobante', ['claveAccesoComprobante' => $claveAcceso], self::WSDL['autorizacion'][$this->key($ambiente)]);
-        return $this->parseAuthorization($resp);
+        $wsdl = self::WSDL['autorizacion'][$this->key($ambiente)];
+        $resp = $this->call('autorizacionComprobante', ['claveAccesoComprobante' => $claveAcceso], $wsdl);
+        return $this->parser->authorization($resp);
     }
 
-    private function key(Ambiente $a): string
+    private function key(Ambiente $ambiente): string
     {
-        return $a === Ambiente::Produccion ? 'produccion' : 'pruebas';
+        return $ambiente === Ambiente::Produccion ? 'produccion' : 'pruebas';
     }
 
     /**
@@ -56,19 +79,10 @@ final class SoapClientTransport implements SriTransportInterface
      */
     private function call(string $method, array $params, string $wsdl): object
     {
-        if ($this->soapCaller !== null) {
-            return ($this->soapCaller)($method, $params, $wsdl);
-        }
-
         $attempt = 0;
-        while ($attempt < $this->retries) {
+        while (true) {
             try {
-                $client = new SoapClient($wsdl, [
-                    'connection_timeout' => $this->timeout,
-                    'trace'              => true,
-                    'exceptions'         => true,
-                ]);
-                return $client->__soapCall($method, [$params]);
+                return ($this->soapCaller)($method, $params, $wsdl);
             } catch (SoapFault $e) {
                 if (++$attempt >= $this->retries) {
                     throw new CommunicationException(
@@ -78,72 +92,17 @@ final class SoapClientTransport implements SriTransportInterface
                 usleep(500000);
             }
         }
-
-        throw new CommunicationException('Falla desconocida en la comunicación con el SRI.');
     }
 
-    private function parseReception(object $data): ReceptionOutcome
+    private function realSoapCall(string $method, array $params, string $wsdl): object
     {
-        $root   = $data->RespuestaRecepcionComprobante ?? $data;
-        $estado = isset($root->estado) ? (string) $root->estado : 'DEVUELTA';
-
-        $mensajes = [];
-        if (isset($root->comprobantes->comprobante->mensajes->mensaje)) {
-            $raw = $root->comprobantes->comprobante->mensajes->mensaje;
-            foreach (is_array($raw) ? $raw : [$raw] as $m) {
-                $mensajes[] = $this->message($m);
-            }
-        }
-
-        // Código 70 / PROCESAMIENTO se trata como RECIBIDA (no es rechazo), igual que 1.x.
-        if ($estado === 'DEVUELTA') {
-            foreach ($mensajes as $m) {
-                if ($m->identificador === '70' || stripos($m->mensaje, 'PROCESAMIENTO') !== false) {
-                    $estado = 'RECIBIDA';
-                    break;
-                }
-            }
-        }
-
-        return new ReceptionOutcome($estado, $mensajes);
-    }
-
-    private function parseAuthorization(object $data): AuthorizationOutcome
-    {
-        $a = null;
-        if (isset($data->autorizaciones->autorizacion)) {
-            $raw = $data->autorizaciones->autorizacion;
-            $a   = is_array($raw) ? $raw[0] : $raw;
-        }
-
-        if ($a === null) {
-            return new AuthorizationOutcome('NO AUTORIZADO');
-        }
-
-        $mensajes = [];
-        if (isset($a->mensajes->mensaje)) {
-            $raw = $a->mensajes->mensaje;
-            foreach (is_array($raw) ? $raw : [$raw] as $m) {
-                $mensajes[] = $this->message($m);
-            }
-        }
-
-        return new AuthorizationOutcome(
-            estado:             (string) ($a->estado ?? 'NO AUTORIZADO'),
-            numeroAutorizacion: isset($a->numeroAutorizacion) ? (string) $a->numeroAutorizacion : null,
-            fechaAutorizacion:  isset($a->fechaAutorizacion)  ? (string) $a->fechaAutorizacion  : null,
-            comprobante:        isset($a->comprobante)        ? (string) $a->comprobante        : null,
-            mensajes:           $mensajes,
-        );
-    }
-
-    private function message(object $m): Message
-    {
-        return new Message(
-            identificador:      isset($m->identificador)      ? (string) $m->identificador      : '',
-            mensaje:            isset($m->mensaje)            ? (string) $m->mensaje            : '',
-            tipo:               isset($m->tipo)               ? (string) $m->tipo               : '',
-            informacionAdicional: isset($m->informacionAdicional) ? (string) $m->informacionAdicional : '',
-        );
+        $client = new SoapClient($wsdl, [
+            'connection_timeout' => $this->timeout,
+            'trace'              => true,
+            'exceptions'         => true,
+        ]);
+        /** @var object $result */
+        $result = $client->__soapCall($method, [$params]);
+        return $result;
     }
 }

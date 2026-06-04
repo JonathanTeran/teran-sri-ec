@@ -112,4 +112,40 @@ class SoapClientTransportTest extends TestCase
 
         $this->assertSame('RECIBIDA', $outcome->estado);
     }
+
+    public function test_enviar_calls_validar_and_parses(): void
+    {
+        $captured = [];
+        $seam = function (string $method, array $params, string $wsdl) use (&$captured) {
+            $captured = ['method' => $method, 'params' => $params, 'wsdl' => $wsdl];
+            return (object) ['RespuestaRecepcionComprobante' => (object) ['estado' => 'RECIBIDA', 'comprobantes' => '']];
+        };
+        $transport = new SoapClientTransport(soapCaller: $seam);
+
+        $o = $transport->enviar('<factura/>', Ambiente::Pruebas);
+
+        $this->assertSame('RECIBIDA', $o->estado);
+        $this->assertSame('validarComprobante', $captured['method']);
+        $this->assertSame('<factura/>', $captured['params']['xml']);
+        $this->assertStringContainsString('celcer.sri.gob.ec', $captured['wsdl']);
+        $this->assertStringContainsString('RecepcionComprobantesOffline', $captured['wsdl']);
+    }
+
+    public function test_autorizar_uses_production_wsdl(): void
+    {
+        $captured = [];
+        $seam = function (string $method, array $params, string $wsdl) use (&$captured) {
+            $captured = ['method' => $method, 'params' => $params, 'wsdl' => $wsdl];
+            return (object) ['autorizaciones' => (object) ['autorizacion' => (object) ['estado' => 'AUTORIZADO', 'numeroAutorizacion' => '9']]];
+        };
+        $transport = new SoapClientTransport(soapCaller: $seam);
+
+        $o = $transport->autorizar('2601...819', Ambiente::Produccion);
+
+        $this->assertSame('AUTORIZADO', $o->estado);
+        $this->assertSame('autorizacionComprobante', $captured['method']);
+        $this->assertSame('2601...819', $captured['params']['claveAccesoComprobante']);
+        $this->assertStringContainsString('cel.sri.gob.ec', $captured['wsdl']);
+        $this->assertStringNotContainsString('celcer', $captured['wsdl']);
+    }
 }
