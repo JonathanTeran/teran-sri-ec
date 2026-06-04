@@ -33,6 +33,9 @@ final class NotaDebito
         if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaEmision)) {
             throw new ValidationException("NotaDebito: fechaEmision inválida '$fechaEmision' (formato dd/MM/yyyy).");
         }
+        if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaEmisionDocSustento)) {
+            throw new ValidationException("NotaDebito: fechaEmisionDocSustento inválida '$fechaEmisionDocSustento' (formato dd/MM/yyyy).");
+        }
         if ($motivos === []) {
             throw new ValidationException('NotaDebito: debe tener al menos un motivo.');
         }

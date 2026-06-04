@@ -51,6 +51,9 @@ class NotaCreditoXmlSerializerTest extends TestCase
             ],
             'detalles' => [
                 [
+                    // Dual-key fixture: supplies BOTH the 1.x key (codigoInterno/codigoAdicional) for the
+                    // legacy NotaCreditoGenerator AND codigoPrincipal/codigoAuxiliar for Detalle::fromArray.
+                    // The Fase 1.8 shim is responsible for translating between these key names at build time.
                     'codigoInterno' => 'PROD001',   // 1.x generator reads this
                     'codigoPrincipal' => 'PROD001',  // new DTO reads this
                     'descripcion' => 'Producto de prueba',

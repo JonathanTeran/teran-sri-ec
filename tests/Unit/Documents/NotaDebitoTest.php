@@ -80,4 +80,13 @@ class NotaDebitoTest extends TestCase
         $this->expectException(ValidationException::class);
         NotaDebito::fromArray($data);
     }
+
+    public function test_rejects_iso_fecha_emision_doc_sustento(): void
+    {
+        $data = $this->validData();
+        $data['infoNotaDebito']['fechaEmisionDocSustento'] = '2026-02-01';
+
+        $this->expectException(ValidationException::class);
+        NotaDebito::fromArray($data);
+    }
 }

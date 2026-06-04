@@ -33,6 +33,12 @@ final class NotaCredito
         if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaEmision)) {
             throw new ValidationException("NotaCredito: fechaEmision inválida '$fechaEmision' (formato dd/MM/yyyy).");
         }
+        if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaEmisionDocSustento)) {
+            throw new ValidationException("NotaCredito: fechaEmisionDocSustento inválida '$fechaEmisionDocSustento' (formato dd/MM/yyyy).");
+        }
+        if ($this->motivo === '') {
+            throw new ValidationException('NotaCredito: "motivo" es obligatorio.');
+        }
         if ($detalles === []) {
             throw new ValidationException('NotaCredito: debe tener al menos un detalle.');
         }

@@ -88,4 +88,31 @@ class NotaCreditoTest extends TestCase
         $this->expectException(ValidationException::class);
         NotaCredito::fromArray($data);
     }
+
+    public function test_rejects_iso_fecha_emision_doc_sustento(): void
+    {
+        $data = $this->validData();
+        $data['infoNotaCredito']['fechaEmisionDocSustento'] = '2026-02-01';
+
+        $this->expectException(ValidationException::class);
+        NotaCredito::fromArray($data);
+    }
+
+    public function test_rejects_empty_motivo(): void
+    {
+        $data = $this->validData();
+        $data['infoNotaCredito']['motivo'] = '';
+
+        $this->expectException(ValidationException::class);
+        NotaCredito::fromArray($data);
+    }
+
+    public function test_rejects_absent_motivo(): void
+    {
+        $data = $this->validData();
+        unset($data['infoNotaCredito']['motivo']);
+
+        $this->expectException(ValidationException::class);
+        NotaCredito::fromArray($data);
+    }
 }
