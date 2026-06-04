@@ -29,10 +29,13 @@ final class Impuesto
         if (!isset($data['codigo'])) {
             throw new ValidationException('Impuesto: falta la llave "codigo".');
         }
+        if (!isset($data['codigoPorcentaje'])) {
+            throw new ValidationException('Impuesto: falta la llave "codigoPorcentaje".');
+        }
 
         return new self(
             codigo: (string) $data['codigo'],
-            codigoPorcentaje: (string) ($data['codigoPorcentaje'] ?? ''),
+            codigoPorcentaje: (string) $data['codigoPorcentaje'],
             baseImponible: Money::of($data['baseImponible'] ?? 0),
             valor: Money::of($data['valor'] ?? 0),
             tarifa: isset($data['tarifa']) ? (string) $data['tarifa'] : null,

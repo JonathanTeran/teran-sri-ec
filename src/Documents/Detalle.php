@@ -20,6 +20,9 @@ final class Detalle
         public readonly array $impuestos,
         public readonly ?string $codigoAuxiliar = null,
     ) {
+        if ($codigoPrincipal === '') {
+            throw new ValidationException('Detalle: "codigoPrincipal" es obligatorio.');
+        }
         if ($descripcion === '') {
             throw new ValidationException('Detalle: "descripcion" es obligatoria.');
         }

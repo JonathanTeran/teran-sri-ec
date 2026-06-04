@@ -76,4 +76,24 @@ class FacturaTest extends TestCase
         $this->expectException(ValidationException::class);
         Factura::fromArray($data);
     }
+
+    // Item 6: empty pagos must throw
+    public function test_rejects_factura_without_pagos(): void
+    {
+        $data = $this->validData();
+        $data['infoFactura']['pagos'] = [];
+
+        $this->expectException(ValidationException::class);
+        Factura::fromArray($data);
+    }
+
+    // Item 7: invalid obligadoContabilidad must throw
+    public function test_rejects_invalid_obligado_contabilidad(): void
+    {
+        $data = $this->validData();
+        $data['infoFactura']['obligadoContabilidad'] = 'MAYBE';
+
+        $this->expectException(ValidationException::class);
+        Factura::fromArray($data);
+    }
 }

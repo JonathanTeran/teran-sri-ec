@@ -27,6 +27,9 @@ final class InfoTributaria
         if ($razonSocial === '') {
             throw new ValidationException('InfoTributaria: "razonSocial" es obligatoria.');
         }
+        if ($dirMatriz === '') {
+            throw new ValidationException('InfoTributaria: "dirMatriz" es obligatoria.');
+        }
         foreach (['estab' => $estab, 'ptoEmi' => $ptoEmi] as $campo => $valor) {
             if (strlen($valor) !== 3 || !ctype_digit($valor)) {
                 throw new ValidationException("InfoTributaria: \"$campo\" debe tener 3 dígitos.");
@@ -45,7 +48,11 @@ final class InfoTributaria
             throw new ValidationException("InfoTributaria: ambiente inválido '$ambienteCodigo' (use '1' o '2').");
         }
 
-        $tipoEmision = TipoEmision::tryFrom((string) ($data['tipoEmision'] ?? '1')) ?? TipoEmision::Normal;
+        $tipoEmisionCodigo = (string) ($data['tipoEmision'] ?? '1');
+        $tipoEmision = TipoEmision::tryFrom($tipoEmisionCodigo);
+        if ($tipoEmision === null) {
+            throw new ValidationException("InfoTributaria: tipoEmision inválido '$tipoEmisionCodigo'.");
+        }
 
         return new self(
             ambiente: $ambiente,

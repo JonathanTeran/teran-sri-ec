@@ -34,4 +34,23 @@ class MoneyTest extends TestCase
         $this->expectException(ValidationException::class);
         Money::of('abc');
     }
+
+    // Item 1: times() accepts float
+    public function test_times_accepts_float(): void
+    {
+        $this->assertSame('15.00', Money::of('100')->times(0.15)->format(2));
+    }
+
+    // Item 2: format() rejects scale larger than INTERNAL_SCALE
+    public function test_format_rejects_over_scale(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Money::of('1')->format(7);
+    }
+
+    // Item 3: negative rounding half-up
+    public function test_negative_rounds_half_up(): void
+    {
+        $this->assertSame('-2.46', Money::of('-2.455')->format(2));
+    }
 }

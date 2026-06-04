@@ -43,4 +43,21 @@ class DetalleTest extends TestCase
             'impuestos' => [],
         ]);
     }
+
+    // Item 8: empty codigoPrincipal must throw
+    public function test_rejects_empty_codigo_principal(): void
+    {
+        $this->expectException(ValidationException::class);
+        Detalle::fromArray([
+            'codigoPrincipal' => '',
+            'descripcion' => 'Producto',
+            'cantidad' => '1',
+            'precioUnitario' => '1',
+            'descuento' => '0',
+            'precioTotalSinImpuesto' => '1',
+            'impuestos' => [
+                ['codigo' => '2', 'codigoPorcentaje' => '4', 'baseImponible' => '1.00', 'valor' => '0.15'],
+            ],
+        ]);
+    }
 }

@@ -31,12 +31,28 @@ final class Factura
         if ($detalles === []) {
             throw new ValidationException('Factura: debe tener al menos un detalle.');
         }
+        if ($pagos === []) {
+            throw new ValidationException('Factura: debe tener al menos un pago.');
+        }
+        if (!in_array($obligadoContabilidad, ['SI', 'NO'], true)) {
+            throw new ValidationException("Factura: obligadoContabilidad debe ser 'SI' o 'NO'.");
+        }
         if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaEmision)) {
             throw new ValidationException("Factura: fechaEmision inválida '$fechaEmision' (formato dd/MM/yyyy).");
         }
         foreach ($detalles as $d) {
             if (!$d instanceof Detalle) {
                 throw new ValidationException('Factura: cada detalle debe ser instancia de Detalle.');
+            }
+        }
+        foreach ($totalConImpuestos as $imp) {
+            if (!$imp instanceof Impuesto) {
+                throw new ValidationException('Factura: cada totalConImpuesto debe ser instancia de Impuesto.');
+            }
+        }
+        foreach ($pagos as $p) {
+            if (!$p instanceof Pago) {
+                throw new ValidationException('Factura: cada pago debe ser instancia de Pago.');
             }
         }
     }
@@ -67,7 +83,7 @@ final class Factura
             identificacionComprador: (string) ($f['identificacionComprador'] ?? ''),
             totalSinImpuestos: Money::of($f['totalSinImpuestos'] ?? 0),
             totalDescuento: Money::of($f['totalDescuento'] ?? 0),
-            importeTotal: Money::of($f['importeTotal'] ?? $f['importetotal'] ?? 0),
+            importeTotal: Money::of($f['importeTotal'] ?? $f['importetotal'] ?? 0), // alias 1.x (clave en minúscula)
             totalConImpuestos: $totalConImpuestos,
             detalles: $detalles,
             pagos: $pagos,

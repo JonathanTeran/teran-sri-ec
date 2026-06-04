@@ -41,4 +41,35 @@ class InfoTributariaTest extends TestCase
             'dirMatriz' => 'Quito',
         ]);
     }
+
+    // Item 4: unknown tipoEmision must throw, not silently default
+    public function test_rejects_unknown_tipo_emision(): void
+    {
+        $this->expectException(ValidationException::class);
+        InfoTributaria::fromArray([
+            'ambiente' => '1',
+            'razonSocial' => 'MI EMPRESA S.A.',
+            'ruc' => '1790011001001',
+            'estab' => '001',
+            'ptoEmi' => '001',
+            'secuencial' => '000000001',
+            'dirMatriz' => 'Quito, Ecuador',
+            'tipoEmision' => '9',
+        ]);
+    }
+
+    // Item 5: empty dirMatriz must throw
+    public function test_rejects_empty_dir_matriz(): void
+    {
+        $this->expectException(ValidationException::class);
+        InfoTributaria::fromArray([
+            'ambiente' => '1',
+            'razonSocial' => 'MI EMPRESA S.A.',
+            'ruc' => '1790011001001',
+            'estab' => '001',
+            'ptoEmi' => '001',
+            'secuencial' => '000000001',
+            'dirMatriz' => '',
+        ]);
+    }
 }

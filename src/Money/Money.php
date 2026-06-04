@@ -38,16 +38,28 @@ final class Money
         return new self(bcadd($this->amount, $other->amount, self::INTERNAL_SCALE));
     }
 
-    public function times(string|int $factor): self
+    public function times(string|int|float $factor): self
     {
-        return new self(bcmul($this->amount, (string) $factor, self::INTERNAL_SCALE));
+        $str = is_float($factor)
+            ? number_format($factor, self::INTERNAL_SCALE, '.', '')
+            : (string) $factor;
+
+        return new self(bcmul($this->amount, $str, self::INTERNAL_SCALE));
     }
 
     /**
      * Devuelve el monto formateado a $decimals con redondeo half-up (como el SRI).
+     *
+     * @throws \InvalidArgumentException si $decimals supera la escala interna.
      */
     public function format(int $decimals): string
     {
+        if ($decimals > self::INTERNAL_SCALE) {
+            throw new \InvalidArgumentException(
+                'Money::format() admite máximo ' . self::INTERNAL_SCALE . ' decimales.'
+            );
+        }
+
         $rounding = '0.' . str_repeat('0', $decimals) . '5';
         $rounded = $this->amount[0] === '-'
             ? bcsub($this->amount, $rounding, $decimals)
@@ -56,6 +68,9 @@ final class Money
         return $rounded;
     }
 
+    /**
+     * Formatea a 2 decimales (half-up). Para otras escalas usar {@see format(int)}.
+     */
     public function __toString(): string
     {
         return $this->format(2);
