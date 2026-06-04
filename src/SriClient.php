@@ -28,6 +28,18 @@ final class SriClient
     ) {
     }
 
+    /**
+     * Emite un comprobante electrónico al SRI (recepción + autorización).
+     *
+     * Actualmente soporta únicamente {@see Factura}. La emisión de
+     * NotaCredito, NotaDebito, Guia de Remisión y Retención se añadirá en
+     * una fase posterior mediante una ruta de serialización agnóstica al tipo
+     * de documento.
+     *
+     * @param Factura     $factura      Documento a emitir.
+     * @param string      $claveAcceso  Clave de acceso de 49 dígitos ya calculada.
+     * @return EmissionResult           Resultado inmutable con estado y mensajes del SRI.
+     */
     public function emit(Factura $factura, string $claveAcceso): EmissionResult
     {
         $xml = $this->facturaSerializer->serialize($factura, $claveAcceso);

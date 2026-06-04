@@ -24,7 +24,17 @@ final class EmissionResult implements \ArrayAccess
     ) {
     }
 
-    /** @return array<string,mixed> mapa de llaves legacy 1.x → valores */
+    /**
+     * Mapa de llaves legacy 1.x → valores actuales.
+     *
+     * @return array<string,mixed>
+     *
+     * @todo Fase 1.7 — el `SRI::procesar()` de 1.x también devolvía las llaves
+     *   `recepcion` (un objeto RecepcionResponse) y `autorizacion` (un objeto
+     *   AutorizacionResponse). Esas llaves se omiten intencionalmente aquí hasta
+     *   que se construya el shim de compatibilidad `SRI` legacy (Fase 1.7). Al
+     *   añadirlas, agregar los tipos correspondientes al mapa de @return.
+     */
     private function legacyMap(): array
     {
         return [

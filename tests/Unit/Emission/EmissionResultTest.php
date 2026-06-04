@@ -31,6 +31,21 @@ class EmissionResultTest extends TestCase
         $this->assertFalse(isset($r['inexistente']));
     }
 
+    public function test_isset_returns_false_for_null_valued_existing_keys(): void
+    {
+        $r = new EmissionResult(EmissionStatus::Rejected, 'clave', '<xml/>');
+        // Quirk de ArrayAccess: PHP delega isset($obj['key']) a offsetExists(),
+        // NO comprueba adicionalmente si el valor es null. Por eso isset() devuelve
+        // true aunque el valor sea null, a diferencia de un array plano donde
+        // isset($arr['key']) sería false cuando $arr['key'] === null.
+        // El valor real es null (la clave existe pero no fue asignada):
+        $this->assertNull($r['fechaAutorizacion']);
+        // offsetExists devuelve true (usa array_key_exists internamente):
+        $this->assertTrue($r->offsetExists('fechaAutorizacion'));
+        // isset() sobre ArrayAccess también devuelve true porque delega a offsetExists():
+        $this->assertTrue(isset($r['fechaAutorizacion']));
+    }
+
     public function test_is_immutable_via_array_access(): void
     {
         $r = new EmissionResult(EmissionStatus::Error, 'x', '<xml/>');
