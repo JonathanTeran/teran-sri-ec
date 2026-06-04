@@ -10,6 +10,7 @@ use Teran\Sri\Signing\XadesSigner;
 use Teran\Sri\Xml\FacturaXmlSerializer;
 use Teran\Sri\Documents\Factura;
 use Teran\Sri\Transport\SriTransportInterface;
+use Teran\Sri\Transport\SoapClientTransport;
 use Teran\Sri\Emission\EmissionResult;
 use Teran\Sri\Emission\EmissionStatus;
 
@@ -26,6 +27,23 @@ final class SriClient
         private readonly XadesSigner $signer = new XadesSigner(),
         private readonly FacturaXmlSerializer $facturaSerializer = new FacturaXmlSerializer(),
     ) {
+    }
+
+    /**
+     * Crea un SriClient listo para usar con transporte zero-config (ext-soap).
+     *
+     * @param SriTransportInterface|null $transport Transporte explícito; por defecto SoapClientTransport.
+     */
+    public static function create(
+        Ambiente $ambiente,
+        Certificate $certificate,
+        ?SriTransportInterface $transport = null,
+    ): self {
+        return new self(
+            ambiente:     $ambiente,
+            certificate:  $certificate,
+            transport:    $transport ?? new SoapClientTransport(),
+        );
     }
 
     /**
