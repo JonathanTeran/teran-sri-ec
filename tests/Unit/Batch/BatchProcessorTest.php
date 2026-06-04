@@ -68,6 +68,18 @@ class BatchProcessorTest extends TestCase
         $this->processor(new ThrowingTransport(), new RetryPolicy(maxAttempts: 1))->process($repo);
 
         $this->assertSame(ComprobanteState::Failed, $repo->find('clave')->state);
+        $this->assertSame(1, $repo->find('clave')->attempts); // un intento de transporte contado
+    }
+
+    public function test_en_proceso_exhausts_retries_to_failed(): void
+    {
+        $t = new FakeTransport(new ReceptionOutcome('RECIBIDA', []), new AuthorizationOutcome('EN PROCESO'));
+        $repo = new InMemoryComprobanteRepository();
+        $repo->save((new BatchItem('clave', '<xml/>'))->markSent()); // arranca en Sent → va directo a autorizar
+        $this->processor($t, new RetryPolicy(maxAttempts: 1))->process($repo);
+        $item = $repo->find('clave');
+        $this->assertSame(ComprobanteState::Failed, $item->state);
+        $this->assertSame(1, $item->attempts); // un intento de autorización contado
     }
 
     public function test_idempotent_terminal_items_are_not_reprocessed(): void
