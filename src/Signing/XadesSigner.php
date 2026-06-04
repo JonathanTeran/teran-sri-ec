@@ -74,10 +74,11 @@ final class XadesSigner
         // Get the document ID attribute
         $docId = $dom->documentElement->getAttribute('id') ?: 'comprobante';
 
-        // Generate unique IDs for all signature components
-        $uuid = $this->generateUuid();
-        // Match reference ID style: SignatureXXXXXX (numeric/hex suffix)
-        $suffix = substr($uuid, 0, 6);
+        // Generate deterministic IDs derived from signing-time + certificate so that
+        // two calls with the same clock/cert produce identical output (required for
+        // the determinism test and useful for reproducible debugging).
+        $signingTime = $this->clock->now()->format('Y-m-d\TH:i:sP');
+        $suffix = substr(sha1($signingTime . $cert->certPem), 0, 6);
         $ids = [
             'signature' => 'Signature' . $suffix,
             'signatureValue' => 'SignatureValue' . $suffix,
@@ -534,11 +535,5 @@ final class XadesSigner
         return base64_encode(hash($this->digestAlgorithm, $content, true));
     }
 
-    /**
-     * Generate a UUID for signature component IDs
-     */
-    private function generateUuid(): string
-    {
-        return bin2hex(random_bytes(16));
-    }
+
 }
