@@ -6,6 +6,7 @@ namespace Teran\Sri\Generators;
 
 use DOMDocument;
 use DOMElement;
+use Teran\Sri\Exceptions\ValidationException;
 use Teran\Sri\Utils\ClaveAcceso;
 
 abstract class XmlGenerator
@@ -84,7 +85,14 @@ abstract class XmlGenerator
      */
     protected function createTextElement(string $name, string $value): DOMElement
     {
-        $node = $this->dom->createElement($name);
+        try {
+            $node = $this->dom->createElement($name);
+        } catch (\DOMException $e) {
+            throw new ValidationException(
+                "Nombre de campo XML inválido: '$name'. Debe ser un nombre XML válido " .
+                "(letras, dígitos, '_', '-', '.', sin espacios ni caracteres especiales)."
+            );
+        }
         if ($value !== '') {
             $node->appendChild($this->dom->createTextNode($value));
         }

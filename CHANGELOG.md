@@ -2,6 +2,18 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [1.1.2] - 2026-06-04
+
+Endurecimiento de seguridad adicional (hardening), 100% retrocompatible. No cambia la salida de los comprobantes.
+
+### Security
+- **Limpieza garantizada del temporal del certificado:** el `.p12` y el PEM con la clave privada descifrada del *fallback* de OpenSSL CLI ahora se borran en un bloque `finally`, en cualquier salida (éxito, error o excepción). Antes, ciertos caminos de error podían dejar la clave en el directorio temporal.
+- **Validación de nombres XML:** un nombre de campo inválido (p. ej. una clave con espacios en `infoAdicional` o en los impuestos) ahora lanza `ValidationException` capturable en vez de un `DOMException` fatal no controlado.
+- **Dist más limpio:** `.gitattributes` (`export-ignore`) excluye del paquete distribuido las utilidades de desarrollo (`verify_p12.php`, `example.php`), los tests, la config de PHPUnit y `vendor/`. Menos superficie y tamaño, sin afectar instalaciones existentes.
+
+### Pendiente para 2.0
+- Pasar la contraseña del `.p12` por `stdin` (no por `argv`) y mantener la clave privada fuera de disco en el *fallback* de OpenSSL CLI (hallazgos M-1/M-2 de la auditoría; solo afectan a hosting compartido con certificados legacy). Requiere un certificado legacy de prueba para validarlo sin riesgo.
+
 ## [1.1.1] - 2026-06-04
 
 Parche de **seguridad**, 100% retrocompatible. No cambia la salida de los comprobantes.

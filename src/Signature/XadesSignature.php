@@ -104,6 +104,8 @@ class XadesSignature
             throw new SriException("No se pudo crear el archivo temporal para el certificado.");
         }
         file_put_contents($tempFile, $this->p12Content);
+        // El PEM con la clave privada descifrada se escribe junto al .p12.
+        $tempPem = $tempFile . '.pem';
 
         try {
             // Determine OpenSSL Binary - PRIORITIZE OpenSSL 1.1 for legacy certificate support
@@ -121,8 +123,7 @@ class XadesSignature
 
             // Convert P12 to readable PEM using CLI
             // We use -legacy and -provider default if it's OpenSSL 3.0+
-            $tempPem = $tempFile . '.pem';
-            
+
             // Try standard command first, then with -legacy if it fails
             $commands = [
                 sprintf('%s pkcs12 -in %s -out %s -nodes -passin pass:%s 2>&1', $opensslBin, escapeshellarg($tempFile), escapeshellarg($tempPem), escapeshellarg($this->password)),
@@ -130,12 +131,13 @@ class XadesSignature
             ];
 
             foreach ($commands as $cmd) {
+                $output = []; // No acumular la salida (posibles datos del cert) entre intentos.
                 exec($cmd, $output, $returnVar);
-                if ($returnVar === 0 && file_exists($tempPem)) {
+                if ($returnVar === 0 && is_file($tempPem)) {
                     // El PEM contiene la clave privada descifrada (-nodes): restringir permisos.
                     @chmod($tempPem, 0600);
                     $pemContent = file_get_contents($tempPem);
-                    if (openssl_x509_read($pemContent)) {
+                    if ($pemContent !== false && openssl_x509_read($pemContent)) {
                         $this->certs['cert'] = $pemContent;
                         if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pemContent, $matches)) {
                             $this->certs['cert'] = $matches[0];
@@ -143,20 +145,23 @@ class XadesSignature
                         if (preg_match('/-----BEGIN PRIVATE KEY-----.*?-----END PRIVATE KEY-----/s', $pemContent, $matches)) {
                             $this->certs['pkey'] = $matches[0];
                         }
-                        unlink($tempPem);
-                        unlink($tempFile);
                         $this->validateLoadedCerts();
                         return;
                     }
                 }
             }
-            
-            if (file_exists($tempPem)) unlink($tempPem);
         } catch (\Throwable $e) {
-            // Silence, fall through to throw original error
+            // Silenciar y caer al error genérico de abajo.
+        } finally {
+            // Garantiza el borrado del .p12 y del PEM (clave privada descifrada)
+            // en CUALQUIER salida: éxito, fallo o excepción.
+            if (is_file($tempPem)) {
+                @unlink($tempPem);
+            }
+            if (is_file($tempFile)) {
+                @unlink($tempFile);
+            }
         }
-        
-        if (file_exists($tempFile)) unlink($tempFile);
 
         $error = openssl_error_string();
         throw new SriException(

@@ -1,0 +1,14 @@
+# Mantener el paquete distribuido (composer dist) liviano y sin utilidades de
+# desarrollo. `export-ignore` excluye estos paths del tarball de `git archive`
+# que Packagist usa para las versiones — no afecta al repositorio ni a las
+# instalaciones existentes.
+/.gitattributes   export-ignore
+/.gitignore       export-ignore
+/.github          export-ignore
+/.phpunit.cache   export-ignore
+/tests            export-ignore
+/docs             export-ignore
+/phpunit.xml      export-ignore
+/verify_p12.php   export-ignore
+/example.php      export-ignore
+/vendor           export-ignore
