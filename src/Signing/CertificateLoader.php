@@ -9,6 +9,13 @@ use Teran\Sri\Exceptions\CertificateException;
 final class CertificateLoader
 {
     /**
+     * Cache del binario openssl resuelto (o false si no existe).
+     * Garantiza que el sondeo de filesystem/shell se ejecute como máximo
+     * una vez por instancia del loader.
+     */
+    private string|false|null $resolvedBinary = null;
+
+    /**
      * Carga un .p12: primero el lector nativo de PHP; si falla (típico en
      * certificados legacy pre-2024), recurre al fallback de OpenSSL CLI seguro.
      */
@@ -51,7 +58,13 @@ final class CertificateLoader
         if ($tempP12 === false) {
             throw new CertificateException('No se pudo crear el archivo temporal para el certificado.');
         }
-        file_put_contents($tempP12, $p12Content);
+
+        // Verificar que la escritura del .p12 cifrado al disco tuvo éxito.
+        $written = file_put_contents($tempP12, $p12Content);
+        if ($written === false) {
+            @unlink($tempP12);
+            throw new CertificateException('No se pudo escribir el archivo temporal del certificado.');
+        }
 
         try {
             // Intento estándar y, si falla, con -legacy para cifrados RC2/3DES.
@@ -90,6 +103,8 @@ final class CertificateLoader
         fclose($pipes[0]);
         $stdout = stream_get_contents($pipes[1]);
         fclose($pipes[1]);
+        // Drenar stderr antes de cerrar para evitar bloqueo por buffer lleno del pipe.
+        $stderr = stream_get_contents($pipes[2]);
         fclose($pipes[2]);
         $code = proc_close($proc);
 
@@ -101,18 +116,22 @@ final class CertificateLoader
 
     private function parsePem(string $pem): Certificate
     {
-        $cert = '';
+        // Capturar TODOS los bloques de certificado: el primero es la hoja (leaf),
+        // el resto son CAs intermedias que forman la cadena de confianza.
+        preg_match_all('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pem, $m);
+        $allCerts = $m[0] ?? [];
+
+        $cert = $allCerts[0] ?? '';
+        $extraCerts = array_slice($allCerts, 1);
+
         $key = '';
-        if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pem, $m)) {
-            $cert = $m[0];
-        }
-        if (preg_match('/-----BEGIN (?:ENCRYPTED )?PRIVATE KEY-----.*?-----END (?:ENCRYPTED )?PRIVATE KEY-----/s', $pem, $m)) {
-            $key = $m[0];
+        if (preg_match('/-----BEGIN (?:ENCRYPTED )?PRIVATE KEY-----.*?-----END (?:ENCRYPTED )?PRIVATE KEY-----/s', $pem, $km)) {
+            $key = $km[0];
         }
         if ($cert === '' || $key === '') {
             throw new CertificateException('El PEM descifrado no contiene certificado y/o clave privada.');
         }
-        return new Certificate($cert, $key, []);
+        return new Certificate($cert, $key, $extraCerts);
     }
 
     public function hasOpensslBinary(): bool
@@ -120,8 +139,18 @@ final class CertificateLoader
         return $this->opensslBinary() !== null;
     }
 
+    /**
+     * Resuelve el binario openssl disponible en el sistema.
+     * El resultado se memoiza en `$resolvedBinary` para que el sondeo
+     * de filesystem y shell se ejecute como máximo una vez por instancia.
+     */
     private function opensslBinary(): ?string
     {
+        // Devolver resultado cacheado si ya se resolvió.
+        if ($this->resolvedBinary !== null) {
+            return $this->resolvedBinary === false ? null : $this->resolvedBinary;
+        }
+
         $candidates = [
             '/opt/homebrew/opt/openssl@1.1/bin/openssl',
             '/usr/local/opt/openssl@1.1/bin/openssl',
@@ -130,14 +159,19 @@ final class CertificateLoader
         ];
         foreach ($candidates as $path) {
             if (is_executable($path)) {
+                $this->resolvedBinary = $path;
                 return $path;
             }
         }
         // Buscar en PATH.
         $which = @shell_exec('command -v openssl 2>/dev/null');
         if (is_string($which) && trim($which) !== '') {
-            return trim($which);
+            $this->resolvedBinary = trim($which);
+            return $this->resolvedBinary;
         }
+
+        // Marcar como no encontrado para no volver a sondar.
+        $this->resolvedBinary = false;
         return null;
     }
 }

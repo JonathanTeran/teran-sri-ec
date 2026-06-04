@@ -31,4 +31,10 @@ class CertificateTest extends TestCase
         $this->expectException(CertificateException::class);
         new Certificate('', 'x', []);
     }
+
+    public function test_rejects_empty_private_key(): void
+    {
+        $this->expectException(CertificateException::class);
+        new Certificate('-----BEGIN CERTIFICATE-----', '', []);
+    }
 }
