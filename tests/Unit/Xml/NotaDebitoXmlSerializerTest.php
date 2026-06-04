@@ -29,10 +29,13 @@ class NotaDebitoXmlSerializerTest extends TestCase
             ],
             'infoNotaDebito' => [
                 'fechaEmision' => '15/03/2026',
+                'dirEstablecimiento' => 'Calle Principal 100 y Secundaria',
                 'tipoIdentificacionComprador' => '04',
                 'razonSocialComprador' => 'EMPRESA ABC S.A.',
                 'identificacionComprador' => '1790011001001',
+                'contribuyenteEspecial' => '9999',
                 'obligadoContabilidad' => 'SI',
+                'rise' => 'Contribuyente Régimen Simplificado RISE',
                 'codDocModificado' => '01',
                 'numDocModificado' => '001-001-000000200',
                 'fechaEmisionDocSustento' => '01/03/2026',

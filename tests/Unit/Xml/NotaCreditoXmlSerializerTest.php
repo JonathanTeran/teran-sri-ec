@@ -29,10 +29,13 @@ class NotaCreditoXmlSerializerTest extends TestCase
             ],
             'infoNotaCredito' => [
                 'fechaEmision' => '10/02/2026',
+                'dirEstablecimiento' => 'Av. Naciones Unidas E3-45',
                 'tipoIdentificacionComprador' => '05',
                 'razonSocialComprador' => 'CLIENTE FINAL',
                 'identificacionComprador' => '9999999999',
+                'contribuyenteEspecial' => '5368',
                 'obligadoContabilidad' => 'NO',
+                'rise' => 'Contribuyente Régimen Simplificado RISE',
                 'codDocModificado' => '01',
                 'numDocModificado' => '001-001-000000100',
                 'fechaEmisionDocSustento' => '01/02/2026',
@@ -51,9 +54,8 @@ class NotaCreditoXmlSerializerTest extends TestCase
             ],
             'detalles' => [
                 [
-                    // Dual-key fixture: supplies BOTH the 1.x key (codigoInterno/codigoAdicional) for the
-                    // legacy NotaCreditoGenerator AND codigoPrincipal/codigoAuxiliar for Detalle::fromArray.
-                    // The Fase 1.8 shim is responsible for translating between these key names at build time.
+                    // Dual-key fixture: supplies BOTH key names so each consumer reads what it expects.
+                    // The 1.x NotaCreditoGenerator reads 'codigoInterno'; Detalle::fromArray reads 'codigoPrincipal'.
                     'codigoInterno' => 'PROD001',   // 1.x generator reads this
                     'codigoPrincipal' => 'PROD001',  // new DTO reads this
                     'descripcion' => 'Producto de prueba',

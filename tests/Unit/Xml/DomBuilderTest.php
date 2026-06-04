@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Teran\Sri\Tests\Unit\Xml;
 
 use PHPUnit\Framework\TestCase;
+use Teran\Sri\Exceptions\ValidationException;
 use Teran\Sri\Xml\DomBuilder;
 use DOMDocument;
 
@@ -48,5 +49,19 @@ class DomBuilderTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $builder->child($root, 'x', '');
+    }
+
+    public function test_child_with_invalid_xml_name_throws_validation_exception(): void
+    {
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $root = $dom->createElement('root');
+        $dom->appendChild($root);
+
+        $builder = new DomBuilder($dom);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessageMatches('/Nombre de elemento XML inválido/');
+        // A name starting with a digit is not a valid XML NCName
+        $builder->child($root, '1invalid', 'value');
     }
 }

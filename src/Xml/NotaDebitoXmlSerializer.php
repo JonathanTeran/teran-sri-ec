@@ -61,10 +61,19 @@ final class NotaDebitoXmlSerializer
 
         // Mirror the 1.x generator's simpleFields list (same order, same optional logic)
         $b->child($node, 'fechaEmision', $doc->fechaEmision);
+        if ($doc->dirEstablecimiento !== null) {
+            $b->child($node, 'dirEstablecimiento', $doc->dirEstablecimiento);
+        }
         $b->child($node, 'tipoIdentificacionComprador', $doc->tipoIdentificacionComprador);
         $b->child($node, 'razonSocialComprador', $doc->razonSocialComprador);
         $b->child($node, 'identificacionComprador', $doc->identificacionComprador);
+        if ($doc->contribuyenteEspecial !== null) {
+            $b->child($node, 'contribuyenteEspecial', $doc->contribuyenteEspecial);
+        }
         $b->child($node, 'obligadoContabilidad', $doc->obligadoContabilidad);
+        if ($doc->rise !== null) {
+            $b->child($node, 'rise', $doc->rise);
+        }
         $b->child($node, 'codDocModificado', $doc->codDocModificado);
         $b->child($node, 'numDocModificado', $doc->numDocModificado);
         $b->child($node, 'fechaEmisionDocSustento', $doc->fechaEmisionDocSustento);

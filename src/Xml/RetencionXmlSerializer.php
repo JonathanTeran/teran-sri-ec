@@ -142,8 +142,9 @@ final class RetencionXmlSerializer
                 foreach ($docS->impuestosDocSustento as $imp) {
                     $impItem = $b->child($impNode, 'impuestoDocSustento');
                     // Pass-through de claves crudas para paridad con el generador 1.x; las claves deben ser nombres XML válidos (NCName).
+                    // Coerce '' to null so DomBuilder produces <el></el> like 1.x, instead of throwing.
                     foreach ($imp as $k => $v) {
-                        $b->child($impItem, (string) $k, (string) $v);
+                        $b->child($impItem, (string) $k, $v !== '' ? (string) $v : null);
                     }
                 }
             }
@@ -154,8 +155,9 @@ final class RetencionXmlSerializer
                 foreach ($docS->retenciones as $ret) {
                     $retItem = $b->child($retNode, 'retencion');
                     // Pass-through de claves crudas para paridad con el generador 1.x; las claves deben ser nombres XML válidos (NCName).
+                    // Coerce '' to null so DomBuilder produces <el></el> like 1.x, instead of throwing.
                     foreach ($ret as $k => $v) {
-                        $b->child($retItem, (string) $k, (string) $v);
+                        $b->child($retItem, (string) $k, $v !== '' ? (string) $v : null);
                     }
                 }
             }
@@ -166,8 +168,9 @@ final class RetencionXmlSerializer
                 foreach ($docS->pagos as $pago) {
                     $pagoItem = $b->child($pagosNode, 'pago');
                     // Pass-through de claves crudas para paridad con el generador 1.x; las claves deben ser nombres XML válidos (NCName).
+                    // Coerce '' to null so DomBuilder produces <el></el> like 1.x, instead of throwing.
                     foreach ($pago as $k => $v) {
-                        $b->child($pagoItem, (string) $k, (string) $v);
+                        $b->child($pagoItem, (string) $k, $v !== '' ? (string) $v : null);
                     }
                 }
             }

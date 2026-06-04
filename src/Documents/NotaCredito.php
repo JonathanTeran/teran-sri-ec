@@ -29,6 +29,9 @@ final class NotaCredito
         public readonly string $motivo,
         public readonly string $obligadoContabilidad = 'NO',
         public readonly string $moneda = 'DOLAR',
+        public readonly ?string $dirEstablecimiento = null,
+        public readonly ?string $contribuyenteEspecial = null,
+        public readonly ?string $rise = null,
     ) {
         if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaEmision)) {
             throw new ValidationException("NotaCredito: fechaEmision inválida '$fechaEmision' (formato dd/MM/yyyy).");
@@ -84,6 +87,9 @@ final class NotaCredito
             motivo: (string) ($f['motivo'] ?? ''),
             obligadoContabilidad: (string) ($f['obligadoContabilidad'] ?? 'NO'),
             moneda: (string) ($f['moneda'] ?? 'DOLAR'),
+            dirEstablecimiento: isset($f['dirEstablecimiento']) ? (string) $f['dirEstablecimiento'] : null,
+            contribuyenteEspecial: isset($f['contribuyenteEspecial']) ? (string) $f['contribuyenteEspecial'] : null,
+            rise: isset($f['rise']) ? (string) $f['rise'] : null,
         );
     }
 }

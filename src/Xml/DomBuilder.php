@@ -6,6 +6,7 @@ namespace Teran\Sri\Xml;
 
 use DOMDocument;
 use DOMElement;
+use Teran\Sri\Exceptions\ValidationException;
 
 /**
  * Crea nodos XML con su valor como nodo de texto (escapando &, <, >, ").
@@ -24,7 +25,11 @@ final class DomBuilder
                 "DomBuilder::child(): cadena vacía para el elemento '$name'. Use null para un elemento vacío intencional, u omita el elemento si es opcional."
             );
         }
-        $el = $this->dom->createElement($name);
+        try {
+            $el = $this->dom->createElement($name);
+        } catch (\DOMException $e) {
+            throw new ValidationException("Nombre de elemento XML inválido: '$name'", [], 0, $e);
+        }
         if ($value !== null) {
             $el->appendChild($this->dom->createTextNode($value));
         }
