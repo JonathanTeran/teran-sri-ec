@@ -7,6 +7,7 @@ namespace Teran\Sri\Tests\Unit\Xml;
 use PHPUnit\Framework\TestCase;
 use Teran\Sri\Xml\FacturaXmlSerializer;
 use Teran\Sri\Documents\Factura;
+use Teran\Sri\Schema\XsdValidator;
 
 class FacturaXmlSerializerTest extends TestCase
 {
@@ -89,5 +90,17 @@ class FacturaXmlSerializerTest extends TestCase
             $s->serialize($f, '0000000000000000000000000000000000000000000000000'),
             $s->serialize($f, '0000000000000000000000000000000000000000000000000')
         );
+    }
+
+    public function test_serialized_xml_is_valid_against_official_xsd(): void
+    {
+        $clave = '2601202601179001100100110010010000000011234567819';
+        $xml = (new FacturaXmlSerializer())->serialize($this->factura(), $clave);
+
+        $xsdPath = __DIR__ . '/../../../resources/xsd/factura_v2.1.0.xsd';
+        $this->assertFileExists($xsdPath, 'Debe existir el XSD oficial de factura.');
+
+        // XsdValidator::validate lanza ValidationException si no cumple; true si cumple.
+        $this->assertTrue(XsdValidator::validate($xml, $xsdPath));
     }
 }
