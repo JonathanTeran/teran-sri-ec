@@ -12,6 +12,11 @@ use Teran\Sri\Strategies\ComprobanteInterface;
 use Teran\Sri\Exceptions\SriException;
 use Teran\Sri\Exceptions\ValidationException;
 
+/**
+ * @deprecated 2.0 Usa Teran\Sri\SriClient (emisión individual) o Teran\Sri\Batch\BatchEmitter
+ *             (envío masivo). Esta clase 1.x se mantiene por compatibilidad y se eliminará en 3.0.
+ *             Migración: $sri->facturaFromArray($a) → $client->emit(Factura::fromArray($a['...']), $clave).
+ */
 class SRI
 {
     use Utils\LoggerTrait;
@@ -34,6 +39,7 @@ class SRI
         $this->soapClient = new SriSoapClient();
     }
 
+    /** @deprecated 2.0 Usa SriClient (configura el certificado en CertificateLoader). */
     public function setFirma(string $p12Content, string $password): self
     {
         $this->p12Content = $p12Content;
@@ -48,6 +54,8 @@ class SRI
 
     /**
      * Procesa una factura desde un array de datos.
+     *
+     * @deprecated 2.0 Usa SriClient::emit(Factura::fromArray($data), $clave).
      */
     public function facturaFromArray(array $data): array
     {
@@ -62,6 +70,8 @@ class SRI
 
     /**
      * Procesa una nota de crédito desde un array de datos.
+     *
+     * @deprecated 2.0 Usa SriClient::emit(NotaCredito::fromArray($data), $clave).
      */
     public function notaCreditoFromArray(array $data): array
     {
@@ -76,6 +86,8 @@ class SRI
 
     /**
      * Procesa una nota de débito desde un array de datos.
+     *
+     * @deprecated 2.0 Usa SriClient::emit(NotaDebito::fromArray($data), $clave).
      */
     public function notaDebitoFromArray(array $data): array
     {
@@ -90,6 +102,8 @@ class SRI
 
     /**
      * Procesa una guía de remisión desde un array de datos.
+     *
+     * @deprecated 2.0 Usa SriClient::emit(GuiaRemision::fromArray($data), $clave).
      */
     public function guiaRemisionFromArray(array $data): array
     {
@@ -104,6 +118,8 @@ class SRI
 
     /**
      * Procesa un comprobante de retención desde un array de datos.
+     *
+     * @deprecated 2.0 Usa SriClient::emit(Retencion::fromArray($data), $clave).
      */
     public function retencionFromArray(array $data): array
     {
@@ -173,6 +189,8 @@ class SRI
 
     /**
      * Proceso completo: Validar -> Firmar -> Enviar -> Autorizar
+     *
+     * @deprecated 2.0 Usa SriClient::emit().
      */
     public function procesar(ComprobanteInterface $comprobante): array
     {
@@ -262,6 +280,8 @@ class SRI
 
     /**
      * Consulta el estado de autorización de un comprobante por su clave de acceso.
+     *
+     * @deprecated 2.0 Usa SriClient::authorize().
      */
     public function consultarAutorizacion(string $claveAcceso): Dto\AutorizacionResponse
     {
@@ -272,6 +292,8 @@ class SRI
     /**
      * Solo firma un XML sin enviarlo al SRI.
      * Útil para generar comprobantes offline.
+     *
+     * @deprecated 2.0 Usa XadesSigner::sign() directamente.
      */
     public function firmarXml(string $xml): string
     {
@@ -285,6 +307,8 @@ class SRI
 
     /**
      * Valida un XML contra su esquema XSD.
+     *
+     * @deprecated 2.0 Usa XsdValidator::validate() directamente.
      */
     public function validarXml(string $xml, string $tipoDoc): bool
     {
