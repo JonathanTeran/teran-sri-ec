@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Teran\Sri\Documents;
 
+use Teran\Sri\Exceptions\ValidationException;
+
 /**
  * Value object representing a docSustento in a Retención (v2.0.0).
  *
@@ -40,6 +42,9 @@ final class DocSustento
         public readonly ?string $totalBaseImponibleReembolso = null,
         public readonly ?string $totalImpuestoReembolso = null,
     ) {
+        if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $this->fechaEmisionDocSustento)) {
+            throw new ValidationException("DocSustento: fechaEmisionDocSustento inválida (formato dd/MM/yyyy).");
+        }
     }
 
     public static function fromArray(array $data): self

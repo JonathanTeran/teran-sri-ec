@@ -107,4 +107,13 @@ class RetencionTest extends TestCase
         $this->expectException(ValidationException::class);
         Retencion::fromArray($data);
     }
+
+    public function test_rejects_iso_fecha_emision_doc_sustento(): void
+    {
+        $data = $this->validData();
+        $data['docsSustento'][0]['fechaEmisionDocSustento'] = '2026-01-25';
+
+        $this->expectException(ValidationException::class);
+        Retencion::fromArray($data);
+    }
 }

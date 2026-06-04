@@ -85,7 +85,6 @@ final class GuiaRemisionXmlSerializer
         $destsNode = $b->child($root, 'destinatarios');
 
         foreach ($doc->destinatarios as $dest) {
-            /** @var Destinatario $dest */
             $destItem = $b->child($destsNode, 'destinatario');
 
             // Mirror the 1.x generator's simpleFields list with isset logic:

@@ -86,7 +86,6 @@ final class RetencionXmlSerializer
         $docsNode = $b->child($root, 'docsSustento');
 
         foreach ($doc->docsSustento as $docS) {
-            /** @var DocSustento $docS */
             $docItem = $b->child($docsNode, 'docSustento');
 
             // Mirror the 1.x generator's simpleFields list with isset logic:
@@ -142,6 +141,7 @@ final class RetencionXmlSerializer
                 $impNode = $b->child($docItem, 'impuestosDocSustento');
                 foreach ($docS->impuestosDocSustento as $imp) {
                     $impItem = $b->child($impNode, 'impuestoDocSustento');
+                    // Pass-through de claves crudas para paridad con el generador 1.x; las claves deben ser nombres XML válidos (NCName).
                     foreach ($imp as $k => $v) {
                         $b->child($impItem, (string) $k, (string) $v);
                     }
@@ -153,6 +153,7 @@ final class RetencionXmlSerializer
                 $retNode = $b->child($docItem, 'retenciones');
                 foreach ($docS->retenciones as $ret) {
                     $retItem = $b->child($retNode, 'retencion');
+                    // Pass-through de claves crudas para paridad con el generador 1.x; las claves deben ser nombres XML válidos (NCName).
                     foreach ($ret as $k => $v) {
                         $b->child($retItem, (string) $k, (string) $v);
                     }
@@ -164,6 +165,7 @@ final class RetencionXmlSerializer
                 $pagosNode = $b->child($docItem, 'pagos');
                 foreach ($docS->pagos as $pago) {
                     $pagoItem = $b->child($pagosNode, 'pago');
+                    // Pass-through de claves crudas para paridad con el generador 1.x; las claves deben ser nombres XML válidos (NCName).
                     foreach ($pago as $k => $v) {
                         $b->child($pagoItem, (string) $k, (string) $v);
                     }
