@@ -44,7 +44,7 @@ class GuiaRemisionGenerator extends XmlGenerator
 
         foreach ($simpleFields as $field) {
             if (isset($data[$field])) {
-                $node->appendChild($this->dom->createElement($field, (string)$data[$field]));
+                $node->appendChild($this->createTextElement($field, (string)$data[$field]));
             }
         }
     }
@@ -67,7 +67,7 @@ class GuiaRemisionGenerator extends XmlGenerator
 
             foreach ($simpleFields as $field) {
                 if (isset($dest[$field])) {
-                    $destItem->appendChild($this->dom->createElement($field, (string)$dest[$field]));
+                    $destItem->appendChild($this->createTextElement($field, (string)$dest[$field]));
                 }
             }
 
@@ -86,7 +86,7 @@ class GuiaRemisionGenerator extends XmlGenerator
 
                     foreach ($detFields as $f) {
                         if (isset($det[$f])) {
-                            $detItem->appendChild($this->dom->createElement($f, (string)$det[$f]));
+                            $detItem->appendChild($this->createTextElement($f, (string)$det[$f]));
                         }
                     }
 

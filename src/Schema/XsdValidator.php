@@ -26,7 +26,7 @@ class XsdValidator
         $dom = new DOMDocument();
         libxml_use_internal_errors(true);
         
-        if (!$dom->loadXML($xmlContent)) {
+        if (!$dom->loadXML($xmlContent, LIBXML_NONET)) {
             $errors = self::getLibXmlErrors();
             libxml_clear_errors();
             throw new ValidationException("Error al cargar el XML para validación.", $errors);

@@ -44,7 +44,7 @@ class NotaDebitoGenerator extends XmlGenerator
 
         foreach ($simpleFields as $field) {
             if (isset($data[$field])) {
-                $node->appendChild($this->dom->createElement($field, (string)$data[$field]));
+                $node->appendChild($this->createTextElement($field, (string)$data[$field]));
             }
         }
 
@@ -56,13 +56,13 @@ class NotaDebitoGenerator extends XmlGenerator
                 $impItem = $this->dom->createElement('impuesto');
                 $impuestosNode->appendChild($impItem);
                 foreach ($imp as $k => $v) {
-                    $impItem->appendChild($this->dom->createElement($k, (string)$v));
+                    $impItem->appendChild($this->createTextElement($k, (string)$v));
                 }
             }
         }
 
         if (isset($data['valorTotal'])) {
-            $node->appendChild($this->dom->createElement('valorTotal', (string)$data['valorTotal']));
+            $node->appendChild($this->createTextElement('valorTotal', (string)$data['valorTotal']));
         }
 
         // Pagos
@@ -73,7 +73,7 @@ class NotaDebitoGenerator extends XmlGenerator
                 $pagoItem = $this->dom->createElement('pago');
                 $pagosNode->appendChild($pagoItem);
                 foreach ($pago as $k => $v) {
-                    $pagoItem->appendChild($this->dom->createElement($k, (string)$v));
+                    $pagoItem->appendChild($this->createTextElement($k, (string)$v));
                 }
             }
         }
@@ -89,10 +89,10 @@ class NotaDebitoGenerator extends XmlGenerator
             $node->appendChild($item);
 
             if (isset($motivo['razon'])) {
-                $item->appendChild($this->dom->createElement('razon', (string)$motivo['razon']));
+                $item->appendChild($this->createTextElement('razon', (string)$motivo['razon']));
             }
             if (isset($motivo['valor'])) {
-                $item->appendChild($this->dom->createElement('valor', (string)$motivo['valor']));
+                $item->appendChild($this->createTextElement('valor', (string)$motivo['valor']));
             }
         }
     }

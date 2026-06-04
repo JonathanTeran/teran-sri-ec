@@ -45,7 +45,7 @@ abstract class XmlGenerator
 
         foreach ($fields as $key => $value) {
             if ($value !== null) {
-                $infoTributaria->appendChild($this->dom->createElement($key, (string)$value));
+                $infoTributaria->appendChild($this->createTextElement($key, (string)$value));
             }
         }
     }
@@ -60,7 +60,7 @@ abstract class XmlGenerator
         $root->appendChild($node);
 
         foreach ($infoAdicional as $nombre => $valor) {
-            $campo = $this->dom->createElement('campoAdicional', (string)$valor);
+            $campo = $this->createTextElement('campoAdicional', (string)$valor);
             $campo->setAttribute('nombre', (string)$nombre);
             $node->appendChild($campo);
         }
@@ -72,6 +72,23 @@ abstract class XmlGenerator
     protected function formatValue(string|int|float $value, int $decimals = 2): string
     {
         return number_format((float)$value, $decimals, '.', '');
+    }
+
+    /**
+     * Crea un elemento con su valor como nodo de texto, escapando correctamente
+     * los caracteres especiales de XML (&, <, >, ").
+     *
+     * NOTA: DOMDocument::createElement($name, $value) NO escapa el segundo
+     * argumento y corrompe los datos que contienen "&" o "<" (p. ej. "J & M").
+     * Por eso todos los valores de datos deben pasar por este método.
+     */
+    protected function createTextElement(string $name, string $value): DOMElement
+    {
+        $node = $this->dom->createElement($name);
+        if ($value !== '') {
+            $node->appendChild($this->dom->createTextNode($value));
+        }
+        return $node;
     }
 
     abstract public function generate(array $data): string;

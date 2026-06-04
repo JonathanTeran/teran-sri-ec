@@ -50,7 +50,7 @@ class FacturaGenerator extends XmlGenerator
                 if (in_array($field, ['totalSinImpuestos', 'totalDescuento'])) {
                     $value = $this->formatValue($value, 2);
                 }
-                $node->appendChild($this->dom->createElement($field, (string)$value));
+                $node->appendChild($this->createTextElement($field, (string)$value));
             }
         }
 
@@ -78,15 +78,15 @@ class FacturaGenerator extends XmlGenerator
                         if (in_array($k, ['baseImponible', 'valor', 'descuentoAdicional', 'tarifa', 'valorDevolucionIva'])) {
                             $v = $this->formatValue($v, 2);
                         }
-                        $item->appendChild($this->dom->createElement($k, (string)$v));
+                        $item->appendChild($this->createTextElement($k, (string)$v));
                     }
                 }
             }
         }
 
-        $node->appendChild($this->dom->createElement('propina', $this->formatValue($data['propina'] ?? 0, 2)));
-        $node->appendChild($this->dom->createElement('importeTotal', $this->formatValue($data['importetotal'], 2)));
-        $node->appendChild($this->dom->createElement('moneda', $data['moneda'] ?? 'DOLAR'));
+        $node->appendChild($this->createTextElement('propina', $this->formatValue($data['propina'] ?? 0, 2)));
+        $node->appendChild($this->createTextElement('importeTotal', $this->formatValue($data['importetotal'], 2)));
+        $node->appendChild($this->createTextElement('moneda', $data['moneda'] ?? 'DOLAR'));
 
         // Pagos
         if (isset($data['pagos'])) {
@@ -109,7 +109,7 @@ class FacturaGenerator extends XmlGenerator
                         if ($k === 'total') {
                              $val = $this->formatValue($val, 2);
                         }
-                        $item->appendChild($this->dom->createElement($k, (string)$val));
+                        $item->appendChild($this->createTextElement($k, (string)$val));
                     }
                 }
             }
@@ -139,7 +139,7 @@ class FacturaGenerator extends XmlGenerator
                     } elseif (in_array($f, ['descuento', 'precioTotalSinImpuesto'])) {
                         $val = $this->formatValue($val, 2);
                     }
-                    $item->appendChild($this->dom->createElement($f, (string)$val));
+                    $item->appendChild($this->createTextElement($f, (string)$val));
                 }
             }
 
@@ -171,7 +171,7 @@ class FacturaGenerator extends XmlGenerator
                             if (in_array($k, ['tarifa', 'baseImponible', 'valor'])) {
                                 $v = $this->formatValue($v, 2);
                             }
-                            $impItem->appendChild($this->dom->createElement($k, (string)$v));
+                            $impItem->appendChild($this->createTextElement($k, (string)$v));
                         }
                     }
                 }

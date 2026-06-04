@@ -49,7 +49,7 @@ class RetencionGenerator extends XmlGenerator
 
         foreach ($simpleFields as $field) {
             if (isset($data[$field])) {
-                $node->appendChild($this->dom->createElement($field, (string)$data[$field]));
+                $node->appendChild($this->createTextElement($field, (string)$data[$field]));
             }
         }
     }
@@ -75,7 +75,7 @@ class RetencionGenerator extends XmlGenerator
 
             foreach ($simpleFields as $field) {
                 if (isset($doc[$field])) {
-                    $docItem->appendChild($this->dom->createElement($field, (string)$doc[$field]));
+                    $docItem->appendChild($this->createTextElement($field, (string)$doc[$field]));
                 }
             }
 
@@ -87,7 +87,7 @@ class RetencionGenerator extends XmlGenerator
                     $impItem = $this->dom->createElement('impuestoDocSustento');
                     $impNode->appendChild($impItem);
                     foreach ($imp as $k => $v) {
-                        $impItem->appendChild($this->dom->createElement($k, (string)$v));
+                        $impItem->appendChild($this->createTextElement($k, (string)$v));
                     }
                 }
             }
@@ -100,7 +100,7 @@ class RetencionGenerator extends XmlGenerator
                     $retItem = $this->dom->createElement('retencion');
                     $retNode->appendChild($retItem);
                     foreach ($ret as $k => $v) {
-                        $retItem->appendChild($this->dom->createElement($k, (string)$v));
+                        $retItem->appendChild($this->createTextElement($k, (string)$v));
                     }
                 }
             }
@@ -113,7 +113,7 @@ class RetencionGenerator extends XmlGenerator
                     $pagoItem = $this->dom->createElement('pago');
                     $pagosNode->appendChild($pagoItem);
                     foreach ($pago as $k => $v) {
-                        $pagoItem->appendChild($this->dom->createElement($k, (string)$v));
+                        $pagoItem->appendChild($this->createTextElement($k, (string)$v));
                     }
                 }
             }
@@ -141,7 +141,7 @@ class RetencionGenerator extends XmlGenerator
 
             foreach ($fields as $f) {
                 if (isset($imp[$f])) {
-                    $item->appendChild($this->dom->createElement($f, (string)$imp[$f]));
+                    $item->appendChild($this->createTextElement($f, (string)$imp[$f]));
                 }
             }
         }
