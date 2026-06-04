@@ -11,8 +11,9 @@ La 2.0 introduce una API tipada y agnóstica de framework. **La clase `Teran\Sri
 | `$sri->facturaFromArray($data)` | `$client->emit(Factura::fromArray($data), $claveAcceso)` |
 | `$result['claveAcceso']` | `$result->claveAcceso` (o `$result['claveAcceso']` por ArrayAccess) |
 | `$result['xmlFirmado']` | `$result->signedXml` (o `$result['xmlFirmado']` por ArrayAccess) |
-| `$result['numeroAutorizacion']` | `$result->numeroAutorizacion` |
-| `$result['estado']` | `$result->status` (`EmissionStatus` enum) |
+| `$result['autorizacion']->numeroAutorizacion` | `$result->numeroAutorizacion` |
+| `$result['autorizacion']->estado` | `$result->status` (`EmissionStatus` enum) |
+| `$result['autorizacion']->mensajes` | `$result->messages` |
 
 ## Antes / Después — Factura
 
@@ -68,9 +69,10 @@ $data = [
 $result = $sri->facturaFromArray($data);
 
 // Acceso por clave array:
-echo $result['claveAcceso'];        // '26012026011790011001001100100100000000112345678...'
-echo $result['xmlFirmado'];         // XML firmado
-echo $result['numeroAutorizacion']; // número de autorización SRI
+echo $result['claveAcceso'];                          // '26012026011790011001001100100100000000112345678...'
+echo $result['xmlFirmado'];                           // XML firmado
+echo $result['autorizacion']->numeroAutorizacion;     // número de autorización SRI
+echo $result['autorizacion']->estado;                 // 'AUTORIZADO' | 'NO AUTORIZADO'
 ```
 
 ### 2.0 (API tipada)
@@ -164,7 +166,7 @@ echo $result['numeroAutorizacion']; // igual que $result->numeroAutorizacion
 
 ## Notas
 
-- **Transporte por defecto:** `SoapClientTransport` (basado en `ext-soap`, ya requerido por el paquete) funciona sin configuración adicional.
+- **Transporte por defecto:** `SoapClientTransport` (basado en `ext-soap`, ya requerido por el paquete) funciona sin configuración adicional. El WSDL del SoapClient se obtiene una vez y queda cacheado en disco (`soap.wsdl_cache`, activo por defecto en PHP), así que no hay una descarga por cada emisión.
 - **Transporte alternativo (testeable / agnóstico de framework):** inyecta `Psr18SoapTransport` con tu cliente PSR-18 (Guzzle, Symfony HttpClient, etc.):
   ```php
   use Teran\Sri\Transport\Psr18SoapTransport;
