@@ -37,4 +37,16 @@ class DomBuilderTest extends TestCase
         $this->assertSame('vacio', $node->nodeName);
         $this->assertSame('', $node->textContent);
     }
+
+    public function test_child_with_empty_string_throws_invalid_argument_exception(): void
+    {
+        $dom = new DOMDocument('1.0', 'UTF-8');
+        $root = $dom->createElement('root');
+        $dom->appendChild($root);
+
+        $builder = new DomBuilder($dom);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $builder->child($root, 'x', '');
+    }
 }

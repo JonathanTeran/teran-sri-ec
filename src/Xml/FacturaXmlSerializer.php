@@ -8,6 +8,7 @@ use Teran\Sri\Documents\Factura;
 use Teran\Sri\Documents\Impuesto;
 use Teran\Sri\Documents\Detalle;
 use Teran\Sri\Documents\Pago;
+use Teran\Sri\Money\Money;
 use DOMDocument;
 use DOMElement;
 
@@ -15,6 +16,8 @@ final class FacturaXmlSerializer
 {
     private const VERSION = '2.1.0';
     private const COD_DOC = '01';
+    private const SCALE_MONEY = 2;
+    private const SCALE_QUANTITY = 6;
 
     public function serialize(Factura $factura, string $claveAcceso): string
     {
@@ -61,8 +64,8 @@ final class FacturaXmlSerializer
         $b->child($node, 'tipoIdentificacionComprador', $f->tipoIdentificacionComprador);
         $b->child($node, 'razonSocialComprador', $f->razonSocialComprador);
         $b->child($node, 'identificacionComprador', $f->identificacionComprador);
-        $b->child($node, 'totalSinImpuestos', $f->totalSinImpuestos->format(2));
-        $b->child($node, 'totalDescuento', $f->totalDescuento->format(2));
+        $b->child($node, 'totalSinImpuestos', $f->totalSinImpuestos->format(self::SCALE_MONEY));
+        $b->child($node, 'totalDescuento', $f->totalDescuento->format(self::SCALE_MONEY));
 
         $tci = $b->child($node, 'totalConImpuestos');
         foreach ($f->totalConImpuestos as $imp) {
@@ -70,12 +73,12 @@ final class FacturaXmlSerializer
             $ti = $b->child($tci, 'totalImpuesto');
             $b->child($ti, 'codigo', $imp->codigo);
             $b->child($ti, 'codigoPorcentaje', $imp->codigoPorcentaje);
-            $b->child($ti, 'baseImponible', $imp->baseImponible->format(2));
-            $b->child($ti, 'valor', $imp->valor->format(2));
+            $b->child($ti, 'baseImponible', $imp->baseImponible->format(self::SCALE_MONEY));
+            $b->child($ti, 'valor', $imp->valor->format(self::SCALE_MONEY));
         }
 
         $b->child($node, 'propina', '0.00');
-        $b->child($node, 'importeTotal', $f->importeTotal->format(2));
+        $b->child($node, 'importeTotal', $f->importeTotal->format(self::SCALE_MONEY));
         $b->child($node, 'moneda', 'DOLAR');
 
         $pagos = $b->child($node, 'pagos');
@@ -83,7 +86,7 @@ final class FacturaXmlSerializer
             /** @var Pago $pago */
             $p = $b->child($pagos, 'pago');
             $b->child($p, 'formaPago', $pago->formaPago->value);
-            $b->child($p, 'total', $pago->total->format(2));
+            $b->child($p, 'total', $pago->total->format(self::SCALE_MONEY));
         }
     }
 
@@ -98,10 +101,10 @@ final class FacturaXmlSerializer
                 $b->child($d, 'codigoAuxiliar', $det->codigoAuxiliar);
             }
             $b->child($d, 'descripcion', $det->descripcion);
-            $b->child($d, 'cantidad', $det->cantidad->format(6));
-            $b->child($d, 'precioUnitario', $det->precioUnitario->format(6));
-            $b->child($d, 'descuento', $det->descuento->format(2));
-            $b->child($d, 'precioTotalSinImpuesto', $det->precioTotalSinImpuesto->format(2));
+            $b->child($d, 'cantidad', $det->cantidad->format(self::SCALE_QUANTITY));
+            $b->child($d, 'precioUnitario', $det->precioUnitario->format(self::SCALE_QUANTITY));
+            $b->child($d, 'descuento', $det->descuento->format(self::SCALE_MONEY));
+            $b->child($d, 'precioTotalSinImpuesto', $det->precioTotalSinImpuesto->format(self::SCALE_MONEY));
 
             $imps = $b->child($d, 'impuestos');
             foreach ($det->impuestos as $imp) {
@@ -109,9 +112,10 @@ final class FacturaXmlSerializer
                 $i = $b->child($imps, 'impuesto');
                 $b->child($i, 'codigo', $imp->codigo);
                 $b->child($i, 'codigoPorcentaje', $imp->codigoPorcentaje);
-                $b->child($i, 'tarifa', $imp->tarifa ?? '0');
-                $b->child($i, 'baseImponible', $imp->baseImponible->format(2));
-                $b->child($i, 'valor', $imp->valor->format(2));
+                $tarifaStr = ($imp->tarifa === null || $imp->tarifa === '') ? '0' : $imp->tarifa;
+                $b->child($i, 'tarifa', Money::of($tarifaStr)->format(self::SCALE_MONEY));
+                $b->child($i, 'baseImponible', $imp->baseImponible->format(self::SCALE_MONEY));
+                $b->child($i, 'valor', $imp->valor->format(self::SCALE_MONEY));
             }
         }
     }

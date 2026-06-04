@@ -19,8 +19,13 @@ final class DomBuilder
 
     public function child(DOMElement $parent, string $name, ?string $value = null): DOMElement
     {
+        if ($value === '') {
+            throw new \InvalidArgumentException(
+                "DomBuilder::child(): cadena vacía para el elemento '$name'. Use null para un elemento vacío intencional, u omita el elemento si es opcional."
+            );
+        }
         $el = $this->dom->createElement($name);
-        if ($value !== null && $value !== '') {
+        if ($value !== null) {
             $el->appendChild($this->dom->createTextNode($value));
         }
         $parent->appendChild($el);
