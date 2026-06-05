@@ -41,4 +41,14 @@ class SoapStdClassParserTest extends TestCase
         $this->assertSame('123', $o->numeroAutorizacion);
         $this->assertSame('<f/>', $o->comprobante);
     }
+
+    public function test_authorization_not_yet_processed_is_en_proceso_not_rejected(): void
+    {
+        // Justo tras RECIBIDA el SRI puede responder sin nodo <autorizacion> (aún procesando).
+        // Eso NO es un rechazo: debe tratarse como EN PROCESO (reintentar), no NO AUTORIZADO.
+        $resp = (object) ['claveAccesoConsultada' => 'x', 'numeroComprobantes' => '0', 'autorizaciones' => ''];
+        $o = (new SoapStdClassParser())->authorization($resp);
+        $this->assertSame('EN PROCESO', $o->estado);
+        $this->assertNull($o->numeroAutorizacion);
+    }
 }

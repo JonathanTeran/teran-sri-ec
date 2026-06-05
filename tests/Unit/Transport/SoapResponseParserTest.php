@@ -131,4 +131,26 @@ class SoapResponseParserTest extends TestCase
         $this->assertSame('2601202601179001100112345678', $o->numeroAutorizacion);
         $this->assertSame('<factura/>', $o->comprobante);
     }
+
+    public function test_authorization_not_yet_processed_is_en_proceso(): void
+    {
+        // El SRI, justo tras RECIBIDA, puede responder sin nodo <autorizacion> (numeroComprobantes=0).
+        // Debe interpretarse como EN PROCESO (reintentar), no NO AUTORIZADO (rechazo terminal).
+        $xml = <<<XML
+        <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <ns2:autorizacionComprobanteResponse xmlns:ns2="http://ec.gob.sri.ws.autorizacion">
+              <RespuestaAutorizacionComprobante>
+                <claveAccesoConsultada>x</claveAccesoConsultada>
+                <numeroComprobantes>0</numeroComprobantes>
+                <autorizaciones/>
+              </RespuestaAutorizacionComprobante>
+            </ns2:autorizacionComprobanteResponse>
+          </soap:Body>
+        </soap:Envelope>
+        XML;
+
+        $o = (new SoapResponseParser())->parseAuthorization($xml);
+        $this->assertSame('EN PROCESO', $o->estado);
+    }
 }

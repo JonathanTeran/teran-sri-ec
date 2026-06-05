@@ -119,8 +119,9 @@ if ($rec->estado !== 'RECIBIDA') {
 }
 
 // 5) AUTORIZACIÓN (con re-consulta si está EN PROCESO)
-echo "\n5) Consultando autorización...\n";
-for ($intento = 1; $intento <= 4; $intento++) {
+echo "\n5) Consultando autorización (el SRI procesa de forma asíncrona)...\n";
+sleep(3); // dar tiempo al SRI a procesar antes de la primera consulta
+for ($intento = 1; $intento <= 5; $intento++) {
     $aut = $transport->autorizar($clave, Ambiente::Pruebas);
     echo "   intento $intento → estado: {$aut->estado}\n";
     foreach ($aut->mensajes as $m) {

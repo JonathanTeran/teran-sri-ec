@@ -44,11 +44,11 @@ final class SoapStdClassParser
                 : $raw;
         }
         if ($autorizacion === null) {
-            return new AuthorizationOutcome('NO AUTORIZADO');
+            return new AuthorizationOutcome('EN PROCESO');
         }
 
         if (!$autorizacion instanceof \stdClass) {
-            return new AuthorizationOutcome('NO AUTORIZADO');
+            return new AuthorizationOutcome('EN PROCESO');
         }
 
         $mensajes = (
@@ -60,7 +60,7 @@ final class SoapStdClassParser
         return new AuthorizationOutcome(
             estado: isset($autorizacion->estado) && (is_string($autorizacion->estado) || is_numeric($autorizacion->estado))
                 ? (string) $autorizacion->estado
-                : 'NO AUTORIZADO',
+                : 'EN PROCESO',
             numeroAutorizacion: isset($autorizacion->numeroAutorizacion) && (is_string($autorizacion->numeroAutorizacion) || is_numeric($autorizacion->numeroAutorizacion))
                 ? (string) $autorizacion->numeroAutorizacion
                 : null,

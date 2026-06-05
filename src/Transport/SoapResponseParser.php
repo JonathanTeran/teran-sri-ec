@@ -31,12 +31,12 @@ final class SoapResponseParser
         $authResult = $xp->query('//*[local-name()="autorizacion"]');
         $auth = ($authResult !== false) ? $authResult->item(0) : null;
         if (!$auth instanceof DOMNode) {
-            return new AuthorizationOutcome('NO AUTORIZADO');
+            return new AuthorizationOutcome('EN PROCESO');
         }
         $ownerDoc = $auth->ownerDocument;
         $ownerXp = ($ownerDoc !== null) ? new DOMXPath($ownerDoc) : $xp;
         return new AuthorizationOutcome(
-            estado: $this->childText($auth, 'estado') ?? 'NO AUTORIZADO',
+            estado: $this->childText($auth, 'estado') ?? 'EN PROCESO',
             numeroAutorizacion: $this->childText($auth, 'numeroAutorizacion'),
             fechaAutorizacion: $this->childText($auth, 'fechaAutorizacion'),
             comprobante: $this->childText($auth, 'comprobante'),
