@@ -1,8 +1,10 @@
 # 🇪🇨 amephia/sri-ec
 
-[![Última Versión en Packagist](https://img.shields.io/packagist/v/amephia/sri-ec.svg?style=flat-square)](https://packagist.org/packages/amephia/sri-ec) [![Licencia de Software](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md) [![Descargas Totales](https://img.shields.io/packagist/dt/amephia/sri-ec.svg?style=flat-square)](https://packagist.org/packages/amephia/sri-ec) [![Versión PHP](https://img.shields.io/badge/php-%3E%3D%208.1-blue.svg?style=flat-square)](https://www.php.net/)
+[![Última Versión en Packagist](https://img.shields.io/packagist/v/amephia/sri-ec.svg?style=flat-square)](https://packagist.org/packages/amephia/sri-ec) [![Licencia de Software](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md) [![Descargas Totales](https://img.shields.io/packagist/dt/amephia/sri-ec.svg?style=flat-square)](https://packagist.org/packages/amephia/sri-ec) [![Versión PHP](https://img.shields.io/badge/php-%3E%3D%208.2-blue.svg?style=flat-square)](https://www.php.net/) [![Invítame un café](https://img.shields.io/badge/PayPal-Inv%C3%ADtame%20un%20caf%C3%A9-00457C?style=flat-square&logo=paypal&logoColor=white)](https://paypal.me/teranjona)
 
 Librería profesional y de alto rendimiento para **Facturación Electrónica del SRI Ecuador**. Simplifica el proceso de generación, firma y autorización de documentos electrónicos según los últimos requerimientos técnicos del SRI.
+
+> ☕ **¿Te ahorró horas de trabajo?** Invítame un café en **[paypal.me/teranjona](https://paypal.me/teranjona)** — ¡gracias por apoyar el proyecto!
 
 ## 🆕 API 2.0 (recomendada)
 

@@ -23,6 +23,12 @@
         "issues": "https://github.com/JonathanTeran/teran-sri-ec/issues",
         "source": "https://github.com/JonathanTeran/teran-sri-ec"
     },
+    "funding": [
+        {
+            "type": "paypal",
+            "url": "https://paypal.me/teranjona"
+        }
+    ],
     "require": {
         "php": ">=8.2",
         "ext-bcmath": "*",
