@@ -3,6 +3,26 @@
     "description": "High-performance Ecuador SRI Electronic Billing Library",
     "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Jonathan Terán",
+            "homepage": "https://github.com/jonathanteran"
+        }
+    ],
+    "homepage": "https://github.com/JonathanTeran/teran-sri-ec",
+    "keywords": [
+        "sri",
+        "ecuador",
+        "facturacion-electronica",
+        "xades",
+        "comprobantes-electronicos",
+        "factura",
+        "e-invoicing"
+    ],
+    "support": {
+        "issues": "https://github.com/JonathanTeran/teran-sri-ec/issues",
+        "source": "https://github.com/JonathanTeran/teran-sri-ec"
+    },
     "require": {
         "php": ">=8.2",
         "ext-bcmath": "*",
