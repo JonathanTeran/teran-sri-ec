@@ -2,6 +2,36 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.0.0] - 2026-06-04
+
+Rediseño mayor: **núcleo agnóstico de framework, tipado, seguro, con envío masivo.** El API 1.x (`SRI`) se mantiene **intacta y funcional** (deprecada) — el código existente sigue corriendo; solo se sube el constraint `^1.0` → `^2.0`.
+
+### Added — API 2.0 (recomendada)
+- **Modelo de documentos tipado:** DTOs inmutables `Factura`, `NotaCredito`, `NotaDebito`, `GuiaRemision`, `Retencion` (+ sub-objetos), con `::fromArray()` (mismas llaves de 1.x) y validación en construcción. Dinero decimal-seguro (`Money`, bcmath). Catálogos como enums (`Ambiente`, `TipoComprobante`, `FormaPago`, …).
+- **Serializadores XML** para los 5 comprobantes, verificados por **paridad** contra los generadores 1.x probados en producción + escape correcto. La factura declara `version="2.1.0"` (corrige el `1.1.0` del path 1.x).
+- **Carga de certificado endurecida** (`CertificateLoader`): contraseña por `stdin` (no por `argv`) y clave privada descifrada **nunca escrita a disco** (capturada por stdout) en el *fallback* de OpenSSL CLI.
+- **Firma XAdES-BES** (`XadesSigner`): port fiel del 1.x, `Clock` inyectable (firma determinista y testeable), descripción configurable (sin branding de terceros), **verificada criptográficamente**.
+- **`SriClient::emit()`** orquesta serializar → firmar → enviar → autorizar, devolviendo un `EmissionResult` inmutable (con `ArrayAccess` para compat 1.x: `$r['claveAcceso']`, `$r['xmlFirmado']`).
+- **Transportes intercambiables** (`SriTransportInterface`): `SoapClientTransport` (ext-soap, funciona out-of-the-box) y `Psr18SoapTransport` (cualquier cliente PSR-18).
+- **Envío masivo** (`BatchEmitter` / `BatchProcessor`): máquina de estados por documento, **idempotente** (clave de acceso), reintentos con backoff, rate-limit (interfaz), repositorio (interfaz + implementación in-memory). Reanudable.
+
+### Changed
+- **PHP mínimo: 8.2** (antes 8.1, ya fuera de soporte de seguridad).
+- Nuevas dependencias: `ext-bcmath`, `psr/http-client`, `psr/http-factory` (solo interfaces; el cliente HTTP concreto lo inyecta el usuario para el transporte PSR-18).
+- El API `SRI` (1.x, basada en arrays) queda **`@deprecated`** en favor de `SriClient` / `BatchEmitter`. Se eliminará en 3.0.
+
+### Security
+- Remediados los hallazgos de auditoría **M-1** (password del `.p12` en línea de comandos) y **M-2** (clave privada a disco) en el nuevo camino de carga. Firma cripto-verificada. **PHPStan nivel máximo sin errores** en el código 2.0 (capturó bugs reales de null-safety).
+
+### Calidad
+- 165 tests · CI con GitHub Actions (PHP 8.2/8.3/8.4) · PHPStan nivel máximo · cada incremento revisado por agentes independientes (spec + calidad + seguridad).
+
+### ⚠️ Antes de usar en producción
+- Hacer un **smoke test** de un transporte contra el ambiente de **pruebas** del SRI (`celcer.sri.gob.ec`) con un comprobante firmado real: el formato SOAP está verificado contra la documentación, no contra el servicio en vivo.
+
+### Migración
+- El código 1.x **sigue funcionando sin cambios**. Para adoptar el API nuevo: `$sri->facturaFromArray($a)` → `$client->emit(Factura::fromArray($a), $clave)`. Ver la sección "API 2.0" del README.
+
 ## [1.1.2] - 2026-06-04
 
 Endurecimiento de seguridad adicional (hardening), 100% retrocompatible. No cambia la salida de los comprobantes.
