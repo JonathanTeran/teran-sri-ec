@@ -69,6 +69,10 @@ final class XadesSigner
             throw new SignatureException("Error al cargar el XML para la firma. Verifique que sea XML válido.");
         }
 
+        if ($dom->documentElement === null) {
+            throw new SignatureException("El XML no tiene elemento raíz.");
+        }
+
         // Get the document ID attribute
         $docId = $dom->documentElement->getAttribute('id') ?: 'comprobante';
 
@@ -157,6 +161,9 @@ final class XadesSigner
         // 3. CALCULATION PHASE
 
         // A. Document Digest (Detach signature temporarily)
+        if ($signature->parentNode === null) {
+            throw new SignatureException("El nodo Signature no tiene padre.");
+        }
         $signature->parentNode->removeChild($signature);
         $docDigestNode->nodeValue = $this->getDigest($dom->C14N());
         $dom->documentElement->appendChild($signature);
@@ -166,11 +173,16 @@ final class XadesSigner
 
         // C. SignatureValue
         $signedInfoCanonical = $signedInfo->C14N();
-        if (!openssl_sign($signedInfoCanonical, $signatureValue, $cert->privateKeyPem, $opensslAlgorithm)) {
+        $signatureValueRaw = '';
+        if (!openssl_sign($signedInfoCanonical, $signatureValueRaw, $cert->privateKeyPem, $opensslAlgorithm)) {
             $error = openssl_error_string();
             throw new SignatureException("Error al firmar el documento: " . ($error ?: 'error desconocido'));
         }
-        $signatureValueNode->nodeValue = trim(chunk_split(base64_encode($signatureValue), 76, "\n"));
+        // $signatureValueRaw is guaranteed to be string after openssl_sign succeeds.
+        if (!is_string($signatureValueRaw)) {
+            throw new SignatureException("openssl_sign no devolvió un string.");
+        }
+        $signatureValueNode->nodeValue = trim(chunk_split(base64_encode($signatureValueRaw), 76, "\n"));
 
         // Disable formatOutput to avoid whitespace issues in signature verification
         $dom->formatOutput = false;
@@ -180,11 +192,17 @@ final class XadesSigner
         // CRITICAL: LIBXML_NOEMPTYTAG ensures <tag></tag> instead of <tag/> which SRI requires
         $finalXml = $dom->saveXML(null, LIBXML_NOEMPTYTAG);
 
+        if ($finalXml === false) {
+            throw new SignatureException("Error al serializar el XML firmado.");
+        }
+
         return $finalXml;
     }
 
     /**
      * Build the KeyInfo element
+     *
+     * @param array{cleanCert: string, certDigest: string, issuerName: string, serialNumber: string, keyType: int, subject: array<string, mixed>, issuer: array<string, mixed>, modulus?: string, exponent?: string, curve?: string, publicKey?: string} $certInfo
      */
     private function buildKeyInfo(DOMDocument $dom, string $keyInfoId, array $certInfo, Certificate $cert): DOMElement
     {
@@ -196,13 +214,14 @@ final class XadesSigner
         $keyInfo->appendChild($x509Data);
 
         // 1. Add the signing certificate (Chunk split formatted)
-        $certContent = trim(chunk_split($certInfo['cleanCert'], 76, "\n"));
+        $cleanCert = $certInfo['cleanCert'];
+        $certContent = trim(chunk_split($cleanCert, 76, "\n"));
         $x509Data->appendChild($dom->createElementNS(self::NS_DS, 'ds:X509Certificate', $certContent));
 
         // 2. Add intermediate certificates if present
         foreach ($cert->extraCerts as $extraCert) {
             $cleanExtra = $this->cleanCertificate($extraCert);
-            if ($cleanExtra !== $certInfo['cleanCert']) {
+            if ($cleanExtra !== $cleanCert) {
                 $extraContent = chunk_split($cleanExtra, 76, "\n");
                 $x509Data->appendChild($dom->createElementNS(self::NS_DS, 'ds:X509Certificate', $extraContent));
             }
@@ -218,23 +237,25 @@ final class XadesSigner
             $keyValue->appendChild($rsaKeyValue);
 
             // Modulus with chunk split (trimmed)
-            $modulusContent = trim(chunk_split($certInfo['modulus'], 76, "\n"));
+            $modulusContent = trim(chunk_split($certInfo['modulus'] ?? '', 76, "\n"));
             $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Modulus', $modulusContent));
-            $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Exponent', $certInfo['exponent']));
+            $rsaKeyValue->appendChild($dom->createElementNS(self::NS_DS, 'ds:Exponent', $certInfo['exponent'] ?? ''));
         } elseif ($certInfo['keyType'] === self::KEY_TYPE_EC) {
             // ECKeyValue (for ECDSA certificates) - Namespace is specific
             $nsEc = 'http://www.w3.org/2009/xmldsig11#';
             $ecKeyValue = $dom->createElementNS($nsEc, 'dsig11:ECKeyValue');
             $keyValue->appendChild($ecKeyValue);
 
-            if (!empty($certInfo['curve'])) {
+            $curveName = $certInfo['curve'] ?? '';
+            if ($curveName !== '') {
                 $namedCurve = $dom->createElementNS($nsEc, 'dsig11:NamedCurve');
-                $namedCurve->setAttribute('URI', $this->getCurveUri($certInfo['curve']));
+                $namedCurve->setAttribute('URI', $this->getCurveUri($curveName));
                 $ecKeyValue->appendChild($namedCurve);
             }
 
-            if (!empty($certInfo['publicKey'])) {
-                $publicKeyContent = chunk_split($certInfo['publicKey'], 76, "\n");
+            $publicKeyStr = $certInfo['publicKey'] ?? '';
+            if ($publicKeyStr !== '') {
+                $publicKeyContent = chunk_split($publicKeyStr, 76, "\n");
                 $ecKeyValue->appendChild($dom->createElementNS($nsEc, 'dsig11:PublicKey', $publicKeyContent));
             }
         }
@@ -244,6 +265,8 @@ final class XadesSigner
 
     /**
      * Build the SignedProperties element
+     *
+     * @param array{cleanCert: string, certDigest: string, issuerName: string, serialNumber: string, keyType: int, subject: array<string, mixed>, issuer: array<string, mixed>, modulus?: string, exponent?: string, curve?: string, publicKey?: string} $certInfo
      */
     private function buildSignedProperties(DOMDocument $dom, string $signedPropsId, string $docRefId, array $certInfo, \DateTimeImmutable $signingTime): DOMElement
     {
@@ -300,7 +323,9 @@ final class XadesSigner
     }
 
     /**
-     * Extract all certificate information needed for signing
+     * Extract all certificate information needed for signing.
+     *
+     * @return array{cleanCert: string, certDigest: string, issuerName: string, serialNumber: string, keyType: int, subject: array<string, mixed>, issuer: array<string, mixed>, modulus?: string, exponent?: string, curve?: string, publicKey?: string}
      */
     private function extractCertificateInfo(Certificate $cert): array
     {
@@ -322,11 +347,16 @@ final class XadesSigner
             throw new SignatureException("No se pudo parsear el certificado X.509");
         }
 
+        /** @var array<string, mixed> $issuerData */
+        $issuerData = is_array($certData['issuer'] ?? null) ? $certData['issuer'] : [];
+
         // Build issuer name in RFC 2253 format (reversed order)
-        $issuerName = $this->buildDistinguishedName($certData['issuer']);
+        $issuerName = $this->buildDistinguishedName($issuerData);
 
         // Get serial number (handle both decimal and hex formats)
-        $serialNumber = $this->normalizeSerialNumber($certData);
+        /** @var array<string, mixed> $certDataForSerial */
+        $certDataForSerial = $certData;
+        $serialNumber = $this->normalizeSerialNumber($certDataForSerial);
 
         // Get public key details
         $pubKey = openssl_pkey_get_public($publicCert);
@@ -339,28 +369,37 @@ final class XadesSigner
             throw new SignatureException("No se pudieron obtener los detalles de la clave pública");
         }
 
-        $keyType = $pubKeyDetails['type'];
+        // PHPStan's openssl_pkey_get_details stub returns array with 'type' as mixed;
+        // it is always an int OPENSSL_KEYTYPE_* constant when the call succeeds.
+        $keyType = is_int($pubKeyDetails['type']) ? $pubKeyDetails['type'] : OPENSSL_KEYTYPE_RSA;
+
+        /** @var array<string, mixed> $subjectData */
+        $subjectData = is_array($certData['subject'] ?? null) ? $certData['subject'] : [];
 
         $result = [
-            'cleanCert' => $cleanCert,
-            'certDigest' => $certDigest,
-            'issuerName' => $issuerName,
+            'cleanCert'    => $cleanCert,
+            'certDigest'   => $certDigest,
+            'issuerName'   => $issuerName,
             'serialNumber' => $serialNumber,
-            'keyType' => $keyType,
-            'subject' => $certData['subject'] ?? [],
-            'issuer' => $certData['issuer'] ?? [],
+            'keyType'      => $keyType,
+            'subject'      => $subjectData,
+            'issuer'       => $issuerData,
         ];
 
         // Add key-type specific information
         if ($keyType === self::KEY_TYPE_RSA && isset($pubKeyDetails['rsa'])) {
-            $result['modulus'] = base64_encode($pubKeyDetails['rsa']['n']);
-            $result['exponent'] = base64_encode($pubKeyDetails['rsa']['e']);
+            /** @var array{n: string, e: string, d?: string, p?: string, q?: string, dmp1?: string, dmq1?: string, iqmp?: string} $rsa */
+            $rsa = $pubKeyDetails['rsa'];
+            $result['modulus']  = base64_encode($rsa['n']);
+            $result['exponent'] = base64_encode($rsa['e']);
         } elseif ($keyType === self::KEY_TYPE_EC && isset($pubKeyDetails['ec'])) {
-            $result['curve'] = $pubKeyDetails['ec']['curve_name'] ?? '';
+            /** @var array{curve_name?: string, x?: string, y?: string, d?: string} $ec */
+            $ec = $pubKeyDetails['ec'];
+            $result['curve'] = $ec['curve_name'] ?? '';
             // EC public key as base64
-            if (isset($pubKeyDetails['ec']['x']) && isset($pubKeyDetails['ec']['y'])) {
+            if (isset($ec['x'], $ec['y'])) {
                 // Uncompressed point format: 04 || X || Y
-                $point = chr(0x04) . $pubKeyDetails['ec']['x'] . $pubKeyDetails['ec']['y'];
+                $point = chr(0x04) . $ec['x'] . $ec['y'];
                 $result['publicKey'] = base64_encode($point);
             }
         }
@@ -382,6 +421,8 @@ final class XadesSigner
 
     /**
      * Build Distinguished Name string in RFC 2253 format
+     *
+     * @param array<string, mixed> $dn
      */
     private function buildDistinguishedName(array $dn): string
     {
@@ -392,13 +433,16 @@ final class XadesSigner
             // Handle array values (multiple values for same attribute)
             if (is_array($value)) {
                 foreach ($value as $v) {
-                    $res = $this->escapeDistinguishedNameValue($key, $v);
+                    if (!is_string($v) && !is_int($v) && !is_float($v)) {
+                        continue;
+                    }
+                    $res = $this->escapeDistinguishedNameValue((string) $key, (string) $v);
                     if ($res !== '') {
                         $parts[] = $res;
                     }
                 }
-            } else {
-                $res = $this->escapeDistinguishedNameValue($key, $value);
+            } elseif (is_string($value) || is_int($value) || is_float($value)) {
+                $res = $this->escapeDistinguishedNameValue((string) $key, (string) $value);
                 if ($res !== '') {
                     $parts[] = $res;
                 }
@@ -431,23 +475,27 @@ final class XadesSigner
 
     /**
      * Normalize serial number to decimal format
+     *
+     * @param array<string, mixed> $certData
      */
     private function normalizeSerialNumber(array $certData): string
     {
         // 1. Try to use the parsed serialNumber if it's already a clean numeric string
-        if (isset($certData['serialNumber']) && is_numeric($certData['serialNumber']) && !str_contains($certData['serialNumber'], 'E')) {
-            return (string) $certData['serialNumber'];
+        $serialRaw = isset($certData['serialNumber']) && (is_string($certData['serialNumber']) || is_numeric($certData['serialNumber'])) ? (string) $certData['serialNumber'] : '';
+        if ($serialRaw !== '' && is_numeric($serialRaw) && !str_contains($serialRaw, 'E')) {
+            return $serialRaw;
         }
 
         // 2. Use Hexadecimal representation if available (most reliable source)
-        if (isset($certData['serialNumberHex'])) {
+        if (isset($certData['serialNumberHex']) && is_string($certData['serialNumberHex'])) {
             $hex = $certData['serialNumberHex'];
             // Remove any colons, spaces, or 0x prefix
             $hex = str_replace([':', ' ', '0x'], '', $hex);
 
             // Convert using BCMath (Arbitrary Precision Mathematics)
             if (function_exists('bchexdec')) {
-                return bchexdec($hex);
+                /** @phpstan-ignore-next-line  bchexdec() is a user-space function (not a PHP built-in); its return type is unknowable to PHPStan */
+                return (string) bchexdec($hex);
             }
 
             // Fallback: Custom Hex to Dec conversion logic using BCMath
@@ -455,7 +503,9 @@ final class XadesSigner
                 $len = strlen($hex);
                 $dec = '0';
                 for ($i = 0; $i < $len; $i++) {
-                    $dec = bcadd(bcmul($dec, '16'), (string) hexdec($hex[$i]));
+                    $digitVal = (int) hexdec($hex[$i]);
+                    // bcmul/bcadd return numeric-string when given numeric-string args.
+                    $dec = bcadd(bcmul($dec, '16', 0), (string) $digitVal, 0);
                 }
                 return $dec;
             }
@@ -467,7 +517,7 @@ final class XadesSigner
         }
 
         // 3. Last resort (may lose precision for massive numbers > PHP_INT_MAX)
-        return isset($certData['serialNumber']) ? (string) $certData['serialNumber'] : '0';
+        return $serialRaw !== '' ? $serialRaw : '0';
     }
 
     /**

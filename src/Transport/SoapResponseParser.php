@@ -28,22 +28,26 @@ final class SoapResponseParser
     {
         $xp = $this->xpath($responseXml);
         $this->throwOnFault($xp);
-        $auth = $xp->query('//*[local-name()="autorizacion"]')->item(0);
+        $authResult = $xp->query('//*[local-name()="autorizacion"]');
+        $auth = ($authResult !== false) ? $authResult->item(0) : null;
         if (!$auth instanceof DOMNode) {
             return new AuthorizationOutcome('NO AUTORIZADO');
         }
+        $ownerDoc = $auth->ownerDocument;
+        $ownerXp = ($ownerDoc !== null) ? new DOMXPath($ownerDoc) : $xp;
         return new AuthorizationOutcome(
             estado: $this->childText($auth, 'estado') ?? 'NO AUTORIZADO',
             numeroAutorizacion: $this->childText($auth, 'numeroAutorizacion'),
             fechaAutorizacion: $this->childText($auth, 'fechaAutorizacion'),
             comprobante: $this->childText($auth, 'comprobante'),
-            mensajes: $this->messages(new DOMXPath($auth->ownerDocument), './/*[local-name()="mensajes"]/*[local-name()="mensaje"]', $auth),
+            mensajes: $this->messages($ownerXp, './/*[local-name()="mensajes"]/*[local-name()="mensaje"]', $auth),
         );
     }
 
     private function throwOnFault(DOMXPath $xp): void
     {
-        $faultNode = $xp->query('//*[local-name()="Fault"]')->item(0);
+        $faultResult = $xp->query('//*[local-name()="Fault"]');
+        $faultNode = ($faultResult !== false) ? $faultResult->item(0) : null;
         if ($faultNode === null) {
             return;
         }
@@ -63,7 +67,8 @@ final class SoapResponseParser
 
     private function text(DOMXPath $xp, string $query): ?string
     {
-        $n = $xp->query($query)->item(0);
+        $result = $xp->query($query);
+        $n = ($result !== false) ? $result->item(0) : null;
         return $n instanceof DOMNode ? trim($n->textContent) : null;
     }
 
@@ -82,8 +87,14 @@ final class SoapResponseParser
     private function messages(DOMXPath $xp, string $query, ?DOMNode $context = null): array
     {
         $nodes = $context ? $xp->query($query, $context) : $xp->query($query);
+        if ($nodes === false) {
+            return [];
+        }
         $out = [];
         foreach ($nodes as $m) {
+            if (!$m instanceof DOMNode) {
+                continue;
+            }
             $out[] = new Message(
                 identificador: $this->childText($m, 'identificador') ?? '',
                 mensaje: $this->childText($m, 'mensaje') ?? '',

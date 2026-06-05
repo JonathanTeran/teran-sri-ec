@@ -23,6 +23,7 @@ final class CertificateLoader
     {
         $certs = [];
         if (openssl_pkcs12_read($p12Content, $certs, $password)) {
+            /** @var array{cert?: string, pkey?: string, extracerts?: string[]} $certs */
             return new Certificate(
                 $certs['cert'] ?? '',
                 $certs['pkey'] ?? '',
@@ -68,7 +69,9 @@ final class CertificateLoader
 
         try {
             // Intento estándar y, si falla, con -legacy para cifrados RC2/3DES.
-            foreach ([[], ['-legacy', '-provider', 'default']] as $extraArgs) {
+            /** @var list<list<string>> $attempts */
+            $attempts = [[], ['-legacy', '-provider', 'default']];
+            foreach ($attempts as $extraArgs) {
                 $pem = $this->runOpenssl($bin, $tempP12, $password, $extraArgs);
                 if ($pem !== null) {
                     return $this->parsePem($pem);
@@ -85,14 +88,20 @@ final class CertificateLoader
         );
     }
 
-    /** Ejecuta openssl pkcs12 con password por stdin; devuelve el PEM por stdout o null si falla. */
+    /**
+     * Ejecuta openssl pkcs12 con password por stdin; devuelve el PEM por stdout o null si falla.
+     *
+     * @param list<string> $extraArgs
+     */
     private function runOpenssl(string $bin, string $tempP12, string $password, array $extraArgs): ?string
     {
+        /** @var list<string> $cmd */
         $cmd = array_merge(
             [$bin, 'pkcs12', '-in', $tempP12, '-nodes', '-passin', 'stdin'],
             $extraArgs
         );
 
+        /** @var array{0: array{string, string}, 1: array{string, string}, 2: array{string, string}} $descriptors */
         $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
         $proc = proc_open($cmd, $descriptors, $pipes);
         if (!is_resource($proc)) {
@@ -119,7 +128,7 @@ final class CertificateLoader
         // Capturar TODOS los bloques de certificado: el primero es la hoja (leaf),
         // el resto son CAs intermedias que forman la cadena de confianza.
         preg_match_all('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pem, $m);
-        $allCerts = $m[0] ?? [];
+        $allCerts = $m[0];
 
         $cert = $allCerts[0] ?? '';
         $extraCerts = array_slice($allCerts, 1);

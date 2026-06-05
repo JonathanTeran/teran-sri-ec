@@ -33,7 +33,8 @@ final class NotaDebitoXmlSerializer
         $this->infoNotaDebito($b, $root, $doc);
         $this->motivos($b, $root, $doc);
 
-        return $dom->saveXML();
+        $xml = $dom->saveXML();
+        return $xml !== false ? $xml : '';
     }
 
     private function infoTributaria(DomBuilder $b, DOMElement $root, NotaDebito $doc, string $claveAcceso): void

@@ -42,30 +42,41 @@ final class GuiaRemision
         }
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
-        $info = InfoTributaria::fromArray($data['infoTributaria'] ?? []);
-        $g = $data['infoGuiaRemision'] ?? [];
+        /** @var array<string, mixed> $infoTributariaRaw */
+        $infoTributariaRaw = is_array($data['infoTributaria'] ?? null) ? $data['infoTributaria'] : [];
+        $info = InfoTributaria::fromArray($infoTributariaRaw);
+        /** @var array<string, mixed> $g */
+        $g = is_array($data['infoGuiaRemision'] ?? null) ? $data['infoGuiaRemision'] : [];
 
+        /** @var array<int, array<string, mixed>> $rawDests */
+        $rawDests = is_array($data['destinatarios'] ?? null) ? $data['destinatarios'] : [];
         $destinatarios = array_map(
             static fn (array $dest): Destinatario => Destinatario::fromArray($dest),
-            $data['destinatarios'] ?? [],
+            $rawDests,
         );
 
         return new self(
             infoTributaria: $info,
-            dirEstablecimiento: (string) ($g['dirEstablecimiento'] ?? ''),
-            dirPartida: (string) ($g['dirPartida'] ?? ''),
-            razonSocialTransportista: (string) ($g['razonSocialTransportista'] ?? ''),
-            tipoIdentificacionTransportista: (string) ($g['tipoIdentificacionTransportista'] ?? ''),
-            rucTransportista: (string) ($g['rucTransportista'] ?? ''),
-            fechaIniTransporte: (string) ($g['fechaIniTransporte'] ?? ''),
-            fechaFinTransporte: (string) ($g['fechaFinTransporte'] ?? ''),
-            placa: (string) ($g['placa'] ?? ''),
+            dirEstablecimiento: self::coerceStr($g['dirEstablecimiento'] ?? null),
+            dirPartida: self::coerceStr($g['dirPartida'] ?? null),
+            razonSocialTransportista: self::coerceStr($g['razonSocialTransportista'] ?? null),
+            tipoIdentificacionTransportista: self::coerceStr($g['tipoIdentificacionTransportista'] ?? null),
+            rucTransportista: self::coerceStr($g['rucTransportista'] ?? null),
+            fechaIniTransporte: self::coerceStr($g['fechaIniTransporte'] ?? null),
+            fechaFinTransporte: self::coerceStr($g['fechaFinTransporte'] ?? null),
+            placa: self::coerceStr($g['placa'] ?? null),
             destinatarios: $destinatarios,
-            rise: isset($g['rise']) ? (string) $g['rise'] : null,
-            obligadoContabilidad: isset($g['obligadoContabilidad']) ? (string) $g['obligadoContabilidad'] : null,
-            contribuyenteEspecial: isset($g['contribuyenteEspecial']) ? (string) $g['contribuyenteEspecial'] : null,
+            rise: isset($g['rise']) ? self::coerceStr($g['rise']) : null,
+            obligadoContabilidad: isset($g['obligadoContabilidad']) ? self::coerceStr($g['obligadoContabilidad']) : null,
+            contribuyenteEspecial: isset($g['contribuyenteEspecial']) ? self::coerceStr($g['contribuyenteEspecial']) : null,
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

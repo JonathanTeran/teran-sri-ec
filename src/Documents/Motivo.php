@@ -18,11 +18,17 @@ final class Motivo
         }
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
         return new self(
-            razon: (string) ($data['razon'] ?? ''),
-            valor: Money::of($data['valor'] ?? 0),
+            razon: self::coerceStr($data['razon'] ?? null),
+            valor: Money::of(self::coerceStr($data['valor'] ?? '0')),
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

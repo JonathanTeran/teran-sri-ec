@@ -57,37 +57,52 @@ final class Factura
         }
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
-        $info = InfoTributaria::fromArray($data['infoTributaria'] ?? []);
-        $f = $data['infoFactura'] ?? [];
+        /** @var array<string, mixed> $infoTributariaRaw */
+        $infoTributariaRaw = is_array($data['infoTributaria'] ?? null) ? $data['infoTributaria'] : [];
+        $info = InfoTributaria::fromArray($infoTributariaRaw);
+        /** @var array<string, mixed> $f */
+        $f = is_array($data['infoFactura'] ?? null) ? $data['infoFactura'] : [];
 
+        /** @var array<int, array<string, mixed>> $rawTci */
+        $rawTci = is_array($f['totalConImpuestos'] ?? null) ? $f['totalConImpuestos'] : [];
         $totalConImpuestos = array_map(
             static fn (array $imp): Impuesto => Impuesto::fromArray($imp),
-            $f['totalConImpuestos'] ?? [],
+            $rawTci,
         );
+        /** @var array<int, array<string, mixed>> $rawDetalles */
+        $rawDetalles = is_array($data['detalles'] ?? null) ? $data['detalles'] : [];
         $detalles = array_map(
             static fn (array $det): Detalle => Detalle::fromArray($det),
-            $data['detalles'] ?? [],
+            $rawDetalles,
         );
+        /** @var array<int, array<string, mixed>> $rawPagos */
+        $rawPagos = is_array($f['pagos'] ?? null) ? $f['pagos'] : [];
         $pagos = array_map(
             static fn (array $pago): Pago => Pago::fromArray($pago),
-            $f['pagos'] ?? [],
+            $rawPagos,
         );
 
         return new self(
             infoTributaria: $info,
-            fechaEmision: (string) ($f['fechaEmision'] ?? ''),
-            tipoIdentificacionComprador: (string) ($f['tipoIdentificacionComprador'] ?? ''),
-            razonSocialComprador: (string) ($f['razonSocialComprador'] ?? ''),
-            identificacionComprador: (string) ($f['identificacionComprador'] ?? ''),
-            totalSinImpuestos: Money::of($f['totalSinImpuestos'] ?? 0),
-            totalDescuento: Money::of($f['totalDescuento'] ?? 0),
-            importeTotal: Money::of($f['importeTotal'] ?? $f['importetotal'] ?? 0), // alias 1.x (clave en minúscula)
+            fechaEmision: self::coerceStr($f['fechaEmision'] ?? null),
+            tipoIdentificacionComprador: self::coerceStr($f['tipoIdentificacionComprador'] ?? null),
+            razonSocialComprador: self::coerceStr($f['razonSocialComprador'] ?? null),
+            identificacionComprador: self::coerceStr($f['identificacionComprador'] ?? null),
+            totalSinImpuestos: Money::of(self::coerceStr($f['totalSinImpuestos'] ?? '0')),
+            totalDescuento: Money::of(self::coerceStr($f['totalDescuento'] ?? '0')),
+            importeTotal: Money::of(self::coerceStr($f['importeTotal'] ?? $f['importetotal'] ?? '0')), // alias 1.x (clave en minúscula)
             totalConImpuestos: $totalConImpuestos,
             detalles: $detalles,
             pagos: $pagos,
-            obligadoContabilidad: (string) ($f['obligadoContabilidad'] ?? 'NO'),
+            obligadoContabilidad: self::coerceStr($f['obligadoContabilidad'] ?? 'NO'),
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

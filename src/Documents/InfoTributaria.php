@@ -40,15 +40,16 @@ final class InfoTributaria
         }
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
-        $ambienteCodigo = (string) ($data['ambiente'] ?? '');
+        $ambienteCodigo = self::coerceStr($data['ambiente'] ?? null);
         $ambiente = Ambiente::tryFrom($ambienteCodigo);
         if ($ambiente === null) {
             throw new ValidationException("InfoTributaria: ambiente inválido '$ambienteCodigo' (use '1' o '2').");
         }
 
-        $tipoEmisionCodigo = (string) ($data['tipoEmision'] ?? '1');
+        $tipoEmisionCodigo = self::coerceStr($data['tipoEmision'] ?? '1');
         $tipoEmision = TipoEmision::tryFrom($tipoEmisionCodigo);
         if ($tipoEmision === null) {
             throw new ValidationException("InfoTributaria: tipoEmision inválido '$tipoEmisionCodigo'.");
@@ -56,14 +57,20 @@ final class InfoTributaria
 
         return new self(
             ambiente: $ambiente,
-            razonSocial: (string) ($data['razonSocial'] ?? ''),
-            ruc: (string) ($data['ruc'] ?? ''),
-            estab: (string) ($data['estab'] ?? ''),
-            ptoEmi: (string) ($data['ptoEmi'] ?? ''),
-            secuencial: (string) ($data['secuencial'] ?? ''),
-            dirMatriz: (string) ($data['dirMatriz'] ?? ''),
+            razonSocial: self::coerceStr($data['razonSocial'] ?? null),
+            ruc: self::coerceStr($data['ruc'] ?? null),
+            estab: self::coerceStr($data['estab'] ?? null),
+            ptoEmi: self::coerceStr($data['ptoEmi'] ?? null),
+            secuencial: self::coerceStr($data['secuencial'] ?? null),
+            dirMatriz: self::coerceStr($data['dirMatriz'] ?? null),
             tipoEmision: $tipoEmision,
-            nombreComercial: isset($data['nombreComercial']) ? (string) $data['nombreComercial'] : null,
+            nombreComercial: isset($data['nombreComercial']) ? self::coerceStr($data['nombreComercial']) : null,
         );
+    }
+
+    /** Safely coerce a mixed value to string. Returns '' for null, array, or non-scalar. */
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

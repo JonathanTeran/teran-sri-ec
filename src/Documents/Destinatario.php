@@ -30,21 +30,29 @@ final class Destinatario
     ) {
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
+        /** @var array<int, array<string, string>> $detalles */
+        $detalles = is_array($data['detalles'] ?? null) ? $data['detalles'] : [];
         return new self(
-            identificacionDestinatario: (string) ($data['identificacionDestinatario'] ?? ''),
-            razonSocialDestinatario: (string) ($data['razonSocialDestinatario'] ?? ''),
-            dirDestinatario: (string) ($data['dirDestinatario'] ?? ''),
-            motivoTraslado: (string) ($data['motivoTraslado'] ?? ''),
-            detalles: $data['detalles'] ?? [],
-            docAduaneroUnico: isset($data['docAduaneroUnico']) ? (string) $data['docAduaneroUnico'] : null,
-            codEstabDestino: isset($data['codEstabDestino']) ? (string) $data['codEstabDestino'] : null,
-            ruta: isset($data['ruta']) ? (string) $data['ruta'] : null,
-            codDocSustento: isset($data['codDocSustento']) ? (string) $data['codDocSustento'] : null,
-            numDocSustento: isset($data['numDocSustento']) ? (string) $data['numDocSustento'] : null,
-            numAutDocSustento: isset($data['numAutDocSustento']) ? (string) $data['numAutDocSustento'] : null,
-            fechaEmisionDocSustento: isset($data['fechaEmisionDocSustento']) ? (string) $data['fechaEmisionDocSustento'] : null,
+            identificacionDestinatario: self::coerceStr($data['identificacionDestinatario'] ?? null),
+            razonSocialDestinatario: self::coerceStr($data['razonSocialDestinatario'] ?? null),
+            dirDestinatario: self::coerceStr($data['dirDestinatario'] ?? null),
+            motivoTraslado: self::coerceStr($data['motivoTraslado'] ?? null),
+            detalles: $detalles,
+            docAduaneroUnico: isset($data['docAduaneroUnico']) ? self::coerceStr($data['docAduaneroUnico']) : null,
+            codEstabDestino: isset($data['codEstabDestino']) ? self::coerceStr($data['codEstabDestino']) : null,
+            ruta: isset($data['ruta']) ? self::coerceStr($data['ruta']) : null,
+            codDocSustento: isset($data['codDocSustento']) ? self::coerceStr($data['codDocSustento']) : null,
+            numDocSustento: isset($data['numDocSustento']) ? self::coerceStr($data['numDocSustento']) : null,
+            numAutDocSustento: isset($data['numAutDocSustento']) ? self::coerceStr($data['numAutDocSustento']) : null,
+            fechaEmisionDocSustento: isset($data['fechaEmisionDocSustento']) ? self::coerceStr($data['fechaEmisionDocSustento']) : null,
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

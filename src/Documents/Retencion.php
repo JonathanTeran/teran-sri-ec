@@ -38,29 +38,40 @@ final class Retencion
         }
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
-        $info = InfoTributaria::fromArray($data['infoTributaria'] ?? []);
-        $c = $data['infoCompRetencion'] ?? [];
+        /** @var array<string, mixed> $infoTributariaRaw */
+        $infoTributariaRaw = is_array($data['infoTributaria'] ?? null) ? $data['infoTributaria'] : [];
+        $info = InfoTributaria::fromArray($infoTributariaRaw);
+        /** @var array<string, mixed> $c */
+        $c = is_array($data['infoCompRetencion'] ?? null) ? $data['infoCompRetencion'] : [];
 
+        /** @var array<int, array<string, mixed>> $rawDocs */
+        $rawDocs = is_array($data['docsSustento'] ?? null) ? $data['docsSustento'] : [];
         $docsSustento = array_map(
             static fn (array $doc): DocSustento => DocSustento::fromArray($doc),
-            $data['docsSustento'] ?? [],
+            $rawDocs,
         );
 
         return new self(
             infoTributaria: $info,
-            fechaEmision: (string) ($c['fechaEmision'] ?? ''),
-            dirEstablecimiento: (string) ($c['dirEstablecimiento'] ?? ''),
-            tipoIdentificacionSujetoRetenido: (string) ($c['tipoIdentificacionSujetoRetenido'] ?? ''),
-            razonSocialSujetoRetenido: (string) ($c['razonSocialSujetoRetenido'] ?? ''),
-            identificacionSujetoRetenido: (string) ($c['identificacionSujetoRetenido'] ?? ''),
-            periodoFiscal: (string) ($c['periodoFiscal'] ?? ''),
+            fechaEmision: self::coerceStr($c['fechaEmision'] ?? null),
+            dirEstablecimiento: self::coerceStr($c['dirEstablecimiento'] ?? null),
+            tipoIdentificacionSujetoRetenido: self::coerceStr($c['tipoIdentificacionSujetoRetenido'] ?? null),
+            razonSocialSujetoRetenido: self::coerceStr($c['razonSocialSujetoRetenido'] ?? null),
+            identificacionSujetoRetenido: self::coerceStr($c['identificacionSujetoRetenido'] ?? null),
+            periodoFiscal: self::coerceStr($c['periodoFiscal'] ?? null),
             docsSustento: $docsSustento,
-            contribuyenteEspecial: isset($c['contribuyenteEspecial']) ? (string) $c['contribuyenteEspecial'] : null,
-            obligadoContabilidad: isset($c['obligadoContabilidad']) ? (string) $c['obligadoContabilidad'] : null,
-            tipoSujetoRetenido: isset($c['tipoSujetoRetenido']) ? (string) $c['tipoSujetoRetenido'] : null,
-            parteRel: isset($c['parteRel']) ? (string) $c['parteRel'] : null,
+            contribuyenteEspecial: isset($c['contribuyenteEspecial']) ? self::coerceStr($c['contribuyenteEspecial']) : null,
+            obligadoContabilidad: isset($c['obligadoContabilidad']) ? self::coerceStr($c['obligadoContabilidad']) : null,
+            tipoSujetoRetenido: isset($c['tipoSujetoRetenido']) ? self::coerceStr($c['tipoSujetoRetenido']) : null,
+            parteRel: isset($c['parteRel']) ? self::coerceStr($c['parteRel']) : null,
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

@@ -36,22 +36,30 @@ final class Detalle
         }
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
+        /** @var array<int, array<string, mixed>> $rawImpuestos */
+        $rawImpuestos = is_array($data['impuestos'] ?? null) ? $data['impuestos'] : [];
         $impuestos = array_map(
             static fn (array $imp): Impuesto => Impuesto::fromArray($imp),
-            $data['impuestos'] ?? [],
+            $rawImpuestos,
         );
 
         return new self(
-            codigoPrincipal: (string) ($data['codigoPrincipal'] ?? ''),
-            descripcion: (string) ($data['descripcion'] ?? ''),
-            cantidad: Money::of($data['cantidad'] ?? 0),
-            precioUnitario: Money::of($data['precioUnitario'] ?? 0),
-            descuento: Money::of($data['descuento'] ?? 0),
-            precioTotalSinImpuesto: Money::of($data['precioTotalSinImpuesto'] ?? 0),
+            codigoPrincipal: self::coerceStr($data['codigoPrincipal'] ?? null),
+            descripcion: self::coerceStr($data['descripcion'] ?? null),
+            cantidad: Money::of(self::coerceStr($data['cantidad'] ?? '0')),
+            precioUnitario: Money::of(self::coerceStr($data['precioUnitario'] ?? '0')),
+            descuento: Money::of(self::coerceStr($data['descuento'] ?? '0')),
+            precioTotalSinImpuesto: Money::of(self::coerceStr($data['precioTotalSinImpuesto'] ?? '0')),
             impuestos: $impuestos,
-            codigoAuxiliar: isset($data['codigoAuxiliar']) ? (string) $data['codigoAuxiliar'] : null,
+            codigoAuxiliar: isset($data['codigoAuxiliar']) ? self::coerceStr($data['codigoAuxiliar']) : null,
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

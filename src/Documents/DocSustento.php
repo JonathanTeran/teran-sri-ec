@@ -20,6 +20,11 @@ use Teran\Sri\Exceptions\ValidationException;
  */
 final class DocSustento
 {
+    /**
+     * @param array<int, array<string, string>> $impuestosDocSustento
+     * @param array<int, array<string, string>> $retenciones
+     * @param array<int, array<string, string>> $pagos
+     */
     public function __construct(
         public readonly string  $codSustento,
         public readonly string  $codDocSustento,
@@ -47,29 +52,47 @@ final class DocSustento
         }
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public static function fromArray(array $data): self
     {
+        /** @var array<int, array<string, string>> $impuestosDocSustento */
+        $impuestosDocSustento = is_array($data['impuestosDocSustento'] ?? null) ? $data['impuestosDocSustento'] : [];
+        /** @var array<int, array<string, string>> $retenciones */
+        $retenciones = is_array($data['retenciones'] ?? null) ? $data['retenciones'] : [];
+        /** @var array<int, array<string, string>> $pagos */
+        $pagos = is_array($data['pagos'] ?? null) ? $data['pagos'] : [];
         return new self(
-            codSustento: (string) ($data['codSustento'] ?? ''),
-            codDocSustento: (string) ($data['codDocSustento'] ?? ''),
-            numDocSustento: (string) ($data['numDocSustento'] ?? ''),
-            fechaEmisionDocSustento: (string) ($data['fechaEmisionDocSustento'] ?? ''),
-            totalSinImpuestos: (string) ($data['totalSinImpuestos'] ?? ''),
-            importeTotal: (string) ($data['importeTotal'] ?? ''),
-            impuestosDocSustento: $data['impuestosDocSustento'] ?? [],
-            retenciones: $data['retenciones'] ?? [],
-            pagos: $data['pagos'] ?? [],
-            fechaRegistroContable: isset($data['fechaRegistroContable']) ? (string) $data['fechaRegistroContable'] : null,
-            numAutDocSustento: isset($data['numAutDocSustento']) ? (string) $data['numAutDocSustento'] : null,
-            pagoLocExt: isset($data['pagoLocExt']) ? (string) $data['pagoLocExt'] : null,
-            tipoRegi: isset($data['tipoRegi']) ? (string) $data['tipoRegi'] : null,
-            paisEfecPago: isset($data['paisEfecPago']) ? (string) $data['paisEfecPago'] : null,
-            aplicConvDobTwordsri: isset($data['aplicConvDobTwordsri']) ? (string) $data['aplicConvDobTwordsri'] : null,
-            pagExtSujRetNorLeg: isset($data['pagExtSujRetNorLeg']) ? (string) $data['pagExtSujRetNorLeg'] : null,
-            pagoRegFis: isset($data['pagoRegFis']) ? (string) $data['pagoRegFis'] : null,
-            totalComprobantesReembolso: isset($data['totalComprobantesReembolso']) ? (string) $data['totalComprobantesReembolso'] : null,
-            totalBaseImponibleReembolso: isset($data['totalBaseImponibleReembolso']) ? (string) $data['totalBaseImponibleReembolso'] : null,
-            totalImpuestoReembolso: isset($data['totalImpuestoReembolso']) ? (string) $data['totalImpuestoReembolso'] : null,
+            codSustento: self::coerceStr($data['codSustento'] ?? null),
+            codDocSustento: self::coerceStr($data['codDocSustento'] ?? null),
+            numDocSustento: self::coerceStr($data['numDocSustento'] ?? null),
+            fechaEmisionDocSustento: self::coerceStr($data['fechaEmisionDocSustento'] ?? null),
+            totalSinImpuestos: self::coerceStr($data['totalSinImpuestos'] ?? null),
+            importeTotal: self::coerceStr($data['importeTotal'] ?? null),
+            impuestosDocSustento: $impuestosDocSustento,
+            retenciones: $retenciones,
+            pagos: $pagos,
+            fechaRegistroContable: isset($data['fechaRegistroContable']) ? self::coerceStr($data['fechaRegistroContable']) : null,
+            numAutDocSustento: isset($data['numAutDocSustento']) ? self::coerceStr($data['numAutDocSustento']) : null,
+            pagoLocExt: isset($data['pagoLocExt']) ? self::coerceStr($data['pagoLocExt']) : null,
+            tipoRegi: isset($data['tipoRegi']) ? self::coerceStr($data['tipoRegi']) : null,
+            paisEfecPago: isset($data['paisEfecPago']) ? self::coerceStr($data['paisEfecPago']) : null,
+            aplicConvDobTwordsri: isset($data['aplicConvDobTwordsri']) ? self::coerceStr($data['aplicConvDobTwordsri']) : null,
+            pagExtSujRetNorLeg: isset($data['pagExtSujRetNorLeg']) ? self::coerceStr($data['pagExtSujRetNorLeg']) : null,
+            pagoRegFis: isset($data['pagoRegFis']) ? self::coerceStr($data['pagoRegFis']) : null,
+            totalComprobantesReembolso: isset($data['totalComprobantesReembolso']) ? self::coerceStr($data['totalComprobantesReembolso']) : null,
+            totalBaseImponibleReembolso: isset($data['totalBaseImponibleReembolso']) ? self::coerceStr($data['totalBaseImponibleReembolso']) : null,
+            totalImpuestoReembolso: isset($data['totalImpuestoReembolso']) ? self::coerceStr($data['totalImpuestoReembolso']) : null,
         );
+    }
+
+    /**
+     * Safely coerce a mixed value to string.
+     * Returns '' for null, array, object, or resource values.
+     */
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

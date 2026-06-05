@@ -30,7 +30,8 @@ final class RetencionXmlSerializer
         $this->infoCompRetencion($b, $root, $doc);
         $this->docsSustento($b, $root, $doc);
 
-        return $dom->saveXML();
+        $xml = $dom->saveXML();
+        return $xml !== false ? $xml : '';
     }
 
     private function infoTributaria(DomBuilder $b, DOMElement $root, Retencion $doc, string $claveAcceso): void

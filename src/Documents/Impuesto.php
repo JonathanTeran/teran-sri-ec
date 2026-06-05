@@ -24,6 +24,7 @@ final class Impuesto
         }
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
         if (!isset($data['codigo'])) {
@@ -34,11 +35,16 @@ final class Impuesto
         }
 
         return new self(
-            codigo: (string) $data['codigo'],
-            codigoPorcentaje: (string) $data['codigoPorcentaje'],
-            baseImponible: Money::of($data['baseImponible'] ?? 0),
-            valor: Money::of($data['valor'] ?? 0),
-            tarifa: isset($data['tarifa']) ? (string) $data['tarifa'] : null,
+            codigo: self::coerceStr($data['codigo']),
+            codigoPorcentaje: self::coerceStr($data['codigoPorcentaje']),
+            baseImponible: Money::of(self::coerceStr($data['baseImponible'] ?? '0')),
+            valor: Money::of(self::coerceStr($data['valor'] ?? '0')),
+            tarifa: isset($data['tarifa']) ? self::coerceStr($data['tarifa']) : null,
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

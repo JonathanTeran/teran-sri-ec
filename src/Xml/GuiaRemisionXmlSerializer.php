@@ -30,7 +30,8 @@ final class GuiaRemisionXmlSerializer
         $this->infoGuiaRemision($b, $root, $doc);
         $this->destinatarios($b, $root, $doc);
 
-        return $dom->saveXML();
+        $xml = $dom->saveXML();
+        return $xml !== false ? $xml : '';
     }
 
     private function infoTributaria(DomBuilder $b, DOMElement $root, GuiaRemision $doc, string $claveAcceso): void
@@ -143,9 +144,14 @@ final class GuiaRemisionXmlSerializer
                     if (isset($det['detallesAdicionales']) && is_array($det['detallesAdicionales'])) {
                         $detAddNode = $b->child($detItem, 'detallesAdicionales');
                         foreach ($det['detallesAdicionales'] as $detAdd) {
+                            if (!is_array($detAdd)) {
+                                continue;
+                            }
                             $detAddEl = $b->child($detAddNode, 'detAdicional');
-                            $detAddEl->setAttribute('nombre', (string) $detAdd['nombre']);
-                            $detAddEl->setAttribute('valor', (string) $detAdd['valor']);
+                            $nombre = $detAdd['nombre'] ?? null;
+                            $valor = $detAdd['valor'] ?? null;
+                            $detAddEl->setAttribute('nombre', is_scalar($nombre) ? (string) $nombre : '');
+                            $detAddEl->setAttribute('valor', is_scalar($valor) ? (string) $valor : '');
                         }
                     }
                 }

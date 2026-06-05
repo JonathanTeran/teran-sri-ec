@@ -29,13 +29,21 @@ final class Money
             throw new ValidationException("Monto no numérico: '$str'.");
         }
 
+        // $str is now guaranteed numeric (is_numeric check above); bcadd requires numeric-string.
+        /** @var numeric-string $numericStr */
+        $numericStr = $str;
+
         // Normalizar a la escala interna con bcmath.
-        return new self(bcadd($str, '0', self::INTERNAL_SCALE));
+        return new self(bcadd($numericStr, '0', self::INTERNAL_SCALE));
     }
 
     public function plus(self $other): self
     {
-        return new self(bcadd($this->amount, $other->amount, self::INTERNAL_SCALE));
+        /** @var numeric-string $a */
+        $a = $this->amount;
+        /** @var numeric-string $b */
+        $b = $other->amount;
+        return new self(bcadd($a, $b, self::INTERNAL_SCALE));
     }
 
     public function times(string|int|float $factor): self
@@ -44,7 +52,16 @@ final class Money
             ? number_format($factor, self::INTERNAL_SCALE, '.', '')
             : (string) $factor;
 
-        return new self(bcmul($this->amount, $str, self::INTERNAL_SCALE));
+        if (!is_numeric($str)) {
+            throw new ValidationException("Factor no numérico: '$str'.");
+        }
+
+        /** @var numeric-string $numericStr */
+        $numericStr = $str;
+        /** @var numeric-string $a */
+        $a = $this->amount;
+
+        return new self(bcmul($a, $numericStr, self::INTERNAL_SCALE));
     }
 
     /**
@@ -60,10 +77,16 @@ final class Money
             );
         }
 
-        $rounding = '0.' . str_repeat('0', $decimals) . '5';
+        // Rounding deltas for half-up per scale: for 2 decimals → '0.005', for 6 → '0.0000005'.
+        // PHPStan stubs require numeric-string for bcadd/bcsub; string literals below are numeric.
+        /** @var array<int, numeric-string> $halves */
+        $halves = ['0.5', '0.05', '0.005', '0.0005', '0.00005', '0.000005', '0.0000005'];
+        $roundingDelta = $halves[$decimals] ?? bcpow('10', (string) -($decimals + 1), $decimals + 1);
+        /** @var numeric-string $a */
+        $a = $this->amount;
         $rounded = $this->amount[0] === '-'
-            ? bcsub($this->amount, $rounding, $decimals)
-            : bcadd($this->amount, $rounding, $decimals);
+            ? bcsub($a, $roundingDelta, $decimals)
+            : bcadd($a, $roundingDelta, $decimals);
 
         return $rounded;
     }

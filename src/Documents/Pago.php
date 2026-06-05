@@ -18,9 +18,10 @@ final class Pago
     ) {
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
-        $codigo = (string) ($data['formaPago'] ?? '');
+        $codigo = self::coerceStr($data['formaPago'] ?? null);
         $formaPago = FormaPago::tryFrom($codigo);
         if ($formaPago === null) {
             throw new ValidationException("Pago: forma de pago desconocida '$codigo'.");
@@ -28,9 +29,14 @@ final class Pago
 
         return new self(
             formaPago: $formaPago,
-            total: Money::of($data['total'] ?? 0),
-            plazo: isset($data['plazo']) ? (int) $data['plazo'] : null,
-            unidadTiempo: isset($data['unidadTiempo']) ? (string) $data['unidadTiempo'] : null,
+            total: Money::of(self::coerceStr($data['total'] ?? '0')),
+            plazo: isset($data['plazo']) && is_int($data['plazo']) ? $data['plazo'] : (isset($data['plazo']) && is_numeric($data['plazo']) ? (int) $data['plazo'] : null),
+            unidadTiempo: isset($data['unidadTiempo']) ? self::coerceStr($data['unidadTiempo']) : null,
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

@@ -59,42 +59,57 @@ final class NotaDebito
         }
     }
 
+    /** @param array<string, mixed> $data */
     public static function fromArray(array $data): self
     {
-        $info = InfoTributaria::fromArray($data['infoTributaria'] ?? []);
-        $f = $data['infoNotaDebito'] ?? [];
+        /** @var array<string, mixed> $infoTributariaRaw */
+        $infoTributariaRaw = is_array($data['infoTributaria'] ?? null) ? $data['infoTributaria'] : [];
+        $info = InfoTributaria::fromArray($infoTributariaRaw);
+        /** @var array<string, mixed> $f */
+        $f = is_array($data['infoNotaDebito'] ?? null) ? $data['infoNotaDebito'] : [];
 
+        /** @var array<int, array<string, mixed>> $rawImpuestos */
+        $rawImpuestos = is_array($f['impuestos'] ?? null) ? $f['impuestos'] : [];
         $impuestos = array_map(
             static fn (array $imp): Impuesto => Impuesto::fromArray($imp),
-            $f['impuestos'] ?? [],
+            $rawImpuestos,
         );
+        /** @var array<int, array<string, mixed>> $rawPagos */
+        $rawPagos = is_array($f['pagos'] ?? null) ? $f['pagos'] : [];
         $pagos = array_map(
             static fn (array $pago): Pago => Pago::fromArray($pago),
-            $f['pagos'] ?? [],
+            $rawPagos,
         );
+        /** @var array<int, array<string, mixed>> $rawMotivos */
+        $rawMotivos = is_array($data['motivos'] ?? null) ? $data['motivos'] : [];
         $motivos = array_map(
             static fn (array $m): Motivo => Motivo::fromArray($m),
-            $data['motivos'] ?? [],
+            $rawMotivos,
         );
 
         return new self(
             infoTributaria: $info,
-            fechaEmision: (string) ($f['fechaEmision'] ?? ''),
-            tipoIdentificacionComprador: (string) ($f['tipoIdentificacionComprador'] ?? ''),
-            razonSocialComprador: (string) ($f['razonSocialComprador'] ?? ''),
-            identificacionComprador: (string) ($f['identificacionComprador'] ?? ''),
-            codDocModificado: (string) ($f['codDocModificado'] ?? ''),
-            numDocModificado: (string) ($f['numDocModificado'] ?? ''),
-            fechaEmisionDocSustento: (string) ($f['fechaEmisionDocSustento'] ?? ''),
-            totalSinImpuestos: Money::of($f['totalSinImpuestos'] ?? 0),
-            valorTotal: Money::of($f['valorTotal'] ?? 0),
+            fechaEmision: self::coerceStr($f['fechaEmision'] ?? null),
+            tipoIdentificacionComprador: self::coerceStr($f['tipoIdentificacionComprador'] ?? null),
+            razonSocialComprador: self::coerceStr($f['razonSocialComprador'] ?? null),
+            identificacionComprador: self::coerceStr($f['identificacionComprador'] ?? null),
+            codDocModificado: self::coerceStr($f['codDocModificado'] ?? null),
+            numDocModificado: self::coerceStr($f['numDocModificado'] ?? null),
+            fechaEmisionDocSustento: self::coerceStr($f['fechaEmisionDocSustento'] ?? null),
+            totalSinImpuestos: Money::of(self::coerceStr($f['totalSinImpuestos'] ?? '0')),
+            valorTotal: Money::of(self::coerceStr($f['valorTotal'] ?? '0')),
             impuestos: $impuestos,
             pagos: $pagos,
             motivos: $motivos,
-            obligadoContabilidad: (string) ($f['obligadoContabilidad'] ?? 'NO'),
-            dirEstablecimiento: isset($f['dirEstablecimiento']) ? (string) $f['dirEstablecimiento'] : null,
-            contribuyenteEspecial: isset($f['contribuyenteEspecial']) ? (string) $f['contribuyenteEspecial'] : null,
-            rise: isset($f['rise']) ? (string) $f['rise'] : null,
+            obligadoContabilidad: self::coerceStr($f['obligadoContabilidad'] ?? 'NO'),
+            dirEstablecimiento: isset($f['dirEstablecimiento']) ? self::coerceStr($f['dirEstablecimiento']) : null,
+            contribuyenteEspecial: isset($f['contribuyenteEspecial']) ? self::coerceStr($f['contribuyenteEspecial']) : null,
+            rise: isset($f['rise']) ? self::coerceStr($f['rise']) : null,
         );
+    }
+
+    private static function coerceStr(mixed $v): string
+    {
+        return is_scalar($v) ? (string) $v : '';
     }
 }

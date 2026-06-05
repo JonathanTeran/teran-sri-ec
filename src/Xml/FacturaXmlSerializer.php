@@ -34,7 +34,8 @@ final class FacturaXmlSerializer
         $this->infoFactura($b, $root, $factura);
         $this->detalles($b, $root, $factura);
 
-        return $dom->saveXML();
+        $xml = $dom->saveXML();
+        return $xml !== false ? $xml : '';
     }
 
     private function infoTributaria(DomBuilder $b, DOMElement $root, Factura $f, string $claveAcceso): void

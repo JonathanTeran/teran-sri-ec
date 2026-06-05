@@ -22,13 +22,20 @@ final class Certificate
         }
     }
 
-    /** @return array<string,mixed> openssl_x509_parse del certificado */
+    /**
+     * Parses the X.509 certificate and returns its fields.
+     * The shape mirrors openssl_x509_parse(): includes 'subject', 'issuer',
+     * 'serialNumber', 'serialNumberHex', etc.
+     *
+     * @return array<string, mixed>
+     */
     public function x509Info(): array
     {
         $info = openssl_x509_parse($this->certPem);
         if ($info === false) {
             throw new CertificateException('Certificate: no se pudo parsear el certificado X.509.');
         }
+        /** @var array<string, mixed> $info */
         return $info;
     }
 }

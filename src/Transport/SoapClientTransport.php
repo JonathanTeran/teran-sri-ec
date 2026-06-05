@@ -31,7 +31,7 @@ final class SoapClientTransport implements SriTransportInterface
         ],
     ];
 
-    /** @var callable(string,array<string,mixed>,string):object */
+    /** @var callable(string,array<string,mixed>,string):\stdClass */
     private $soapCaller;
 
     public function __construct(
@@ -40,8 +40,7 @@ final class SoapClientTransport implements SriTransportInterface
         private readonly SoapStdClassParser $parser = new SoapStdClassParser(),
         ?callable $soapCaller = null,
     ) {
-        $this->soapCaller = $soapCaller ?? fn (string $method, array $params, string $wsdl): object
-            => $this->realSoapCall($method, $params, $wsdl);
+        $this->soapCaller = $soapCaller ?? \Closure::fromCallable([$this, 'realSoapCall']);
     }
 
     public function enviar(string $signedXml, Ambiente $ambiente): ReceptionOutcome
@@ -77,7 +76,7 @@ final class SoapClientTransport implements SriTransportInterface
     /**
      * @param array<string,mixed> $params
      */
-    private function call(string $method, array $params, string $wsdl): object
+    private function call(string $method, array $params, string $wsdl): \stdClass
     {
         $attempt = 0;
         while (true) {
@@ -94,14 +93,17 @@ final class SoapClientTransport implements SriTransportInterface
         }
     }
 
-    private function realSoapCall(string $method, array $params, string $wsdl): object
+    /**
+     * @param array<string, mixed> $params
+     */
+    private function realSoapCall(string $method, array $params, string $wsdl): \stdClass
     {
         $client = new SoapClient($wsdl, [
             'connection_timeout' => $this->timeout,
             'trace'              => true,
             'exceptions'         => true,
         ]);
-        /** @var object $result */
+        /** @var \stdClass $result */
         $result = $client->__soapCall($method, [$params]);
         return $result;
     }
