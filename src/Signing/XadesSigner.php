@@ -327,7 +327,24 @@ final class XadesSigner
      *
      * @return array{cleanCert: string, certDigest: string, issuerName: string, serialNumber: string, keyType: int, subject: array<string, mixed>, issuer: array<string, mixed>, modulus?: string, exponent?: string, curve?: string, publicKey?: string}
      */
+    /** @var array<string, array{cleanCert: string, certDigest: string, issuerName: string, serialNumber: string, keyType: int, subject: array<string, mixed>, issuer: array<string, mixed>, modulus?: string, exponent?: string, curve?: string, publicKey?: string}> Caché del parseo del cert (no cambia entre documentos). */
+    private array $certInfoCache = [];
+
+    /**
+     * @return array{cleanCert: string, certDigest: string, issuerName: string, serialNumber: string, keyType: int, subject: array<string, mixed>, issuer: array<string, mixed>, modulus?: string, exponent?: string, curve?: string, publicKey?: string}
+     */
     private function extractCertificateInfo(Certificate $cert): array
+    {
+        // El certificado y el algoritmo de digest no cambian entre documentos, así que
+        // memoizamos el parseo costoso (openssl_x509_parse, pkey_get_details, DN, serial,
+        // digest). Esto acelera notablemente la firma de muchos comprobantes con el mismo cert.
+        return $this->certInfoCache[md5($cert->certPem)] ??= $this->computeCertificateInfo($cert);
+    }
+
+    /**
+     * @return array{cleanCert: string, certDigest: string, issuerName: string, serialNumber: string, keyType: int, subject: array<string, mixed>, issuer: array<string, mixed>, modulus?: string, exponent?: string, curve?: string, publicKey?: string}
+     */
+    private function computeCertificateInfo(Certificate $cert): array
     {
         $publicCert = $cert->certPem;
         $cleanCert = $this->cleanCertificate($publicCert);
