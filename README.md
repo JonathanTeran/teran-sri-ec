@@ -4,6 +4,71 @@
 
 Librería profesional y de alto rendimiento para **Facturación Electrónica del SRI Ecuador**. Simplifica el proceso de generación, firma y autorización de documentos electrónicos según los últimos requerimientos técnicos del SRI.
 
+## 🆕 API 2.0 (recomendada)
+
+A partir de la versión 2.0 la librería expone una **API tipada** basada en objetos inmutables, enums y una arquitectura de capas clara. La API de arrays (`SRI`) sigue funcionando pero está **marcada como deprecada** en favor de esta versión.
+
+> ⚠️ **Antes de pasar a producción**, haz siempre un smoke-test completo contra el ambiente de *pruebas* del SRI (`Ambiente::Pruebas`) para verificar conectividad, certificado y datos del emisor.
+
+### Emisión individual
+
+```php
+use Teran\Sri\SriClient;
+use Teran\Sri\Catalogs2\Ambiente;
+use Teran\Sri\Signing\CertificateLoader;
+use Teran\Sri\Transport\SoapClientTransport;
+use Teran\Sri\Documents\Factura;
+
+$cert = (new CertificateLoader())->load(file_get_contents('firma.p12'), 'clave');
+$sri  = new SriClient(Ambiente::Pruebas, $cert, new SoapClientTransport());
+
+$resultado = $sri->emit(Factura::fromArray([...]), $claveAcceso);
+
+echo $resultado->status->value; // AUTORIZADO | RECHAZADO | EN_PROCESO
+```
+
+**Firma del método:** `SriClient::emit(Factura $factura, string $claveAcceso): EmissionResult`
+
+`EmissionResult` expone:
+- `->status` — `EmissionStatus` enum (`Authorized`, `Rejected`, `InProcess`, `Error`)
+- `->claveAcceso`, `->signedXml`, `->numeroAutorizacion`, `->fechaAutorizacion`, `->authorizedXml`
+- `->messages` — array de `Message` con los mensajes del SRI
+
+### Envío masivo (BatchEmitter)
+
+```php
+use Teran\Sri\Batch\BatchEmitter;
+use Teran\Sri\Batch\BatchProcessor;
+use Teran\Sri\Transport\SoapClientTransport;
+use Teran\Sri\Catalogs2\Ambiente;
+
+$batch = new BatchEmitter(
+    new BatchProcessor(new SoapClientTransport(), Ambiente::Pruebas)
+);
+
+foreach ($firmados as [$clave, $xmlFirmado]) {
+    $batch->add($clave, $xmlFirmado);
+}
+
+$batch->run();               // síncrono; re-llamable para reanudar
+print_r($batch->status());   // ['AUTHORIZED' => 980, 'REJECTED' => 5, ...]
+```
+
+**Métodos de `BatchEmitter`:**
+- `add(string $claveAcceso, string $signedXml): void` — idempotente por clave de acceso
+- `run(int $maxPasses = 20): void` — procesa todos los pendientes; reanuda donde quedó
+- `status(): array<string,int>` — conteo por estado (`ComprobanteState`)
+- `result(string $claveAcceso): ?BatchItem` — estado de un comprobante individual
+
+### Transportes disponibles
+
+| Clase | Descripción |
+|-------|-------------|
+| `SoapClientTransport` | Usa `ext-soap` (sin dependencias extra). Recomendado para la mayoría de proyectos. |
+| `Psr18SoapTransport` | Acepta cualquier cliente PSR-18 (`psr/http-client`). Ideal si ya tienes un cliente HTTP configurado (Guzzle, Symfony HttpClient, etc.). |
+
+---
+
 ## ✨ Características Principales
 
 - ✅ **Firma Electrónica Universal**: Compatible con archivos `.p12` o `.pfx` de cualquier entidad certificadora del Ecuador.
@@ -85,7 +150,9 @@ composer require amephia/sri-ec
 - **PHP**: `^8.1`
 - **Extensiones**: `ext-curl`, `ext-dom`, `ext-libxml`, `ext-openssl`, `ext-soap`
 
-## 📖 Uso
+## 📖 Uso (API 1.x — deprecada)
+
+> **Nota:** La API de arrays descrita en esta sección (`new SRI(...)`, `facturaFromArray()`, etc.) sigue funcionando pero está **deprecada**. Se eliminará en la versión 3.0. Usa la [API 2.0](#-api-20-recomendada) para proyectos nuevos.
 
 ### Configuración Básica
 
