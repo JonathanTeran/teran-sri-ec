@@ -2,6 +2,12 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.0.2] - 2026-06-04
+
+### Docs
+- Botón **"Invítame un café"** (PayPal) en el README, en `composer.json` (`funding`) y en `.github/FUNDING.yml` (botón *Sponsor* de GitHub).
+- Corregido el badge de versión de PHP en el README (8.1 → 8.2, acorde al mínimo real del 2.0).
+
 ## [2.0.1] - 2026-06-04
 
 Patch de **rendimiento**, retrocompatible. Misma salida (firma idéntica y verificada).
