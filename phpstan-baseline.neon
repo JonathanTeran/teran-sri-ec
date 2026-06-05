@@ -1,0 +1,1975 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\PaymentMethods\:\:getAll\(\) should return array\<string, string\> but returns array\<int\|string, string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/PaymentMethods.php
+
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\PaymentMethods\:\:getCodes\(\) should return array\<string\> but returns array\<int, int\|string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/PaymentMethods.php
+
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\Provinces\:\:getAll\(\) should return array\<string, array\{name\: string, capital\: string, region\: string\}\> but returns array\{''01''\: array\{name\: ''Azuay'', capital\: ''Cuenca'', region\: ''sierra''\}, ''02''\: array\{name\: ''Bolívar'', capital\: ''Guaranda'', region\: ''sierra''\}, ''03''\: array\{name\: ''Cañar'', capital\: ''Azogues'', region\: ''sierra''\}, ''04''\: array\{name\: ''Carchi'', capital\: ''Tulcán'', region\: ''sierra''\}, ''05''\: array\{name\: ''Cotopaxi'', capital\: ''Latacunga'', region\: ''sierra''\}, ''06''\: array\{name\: ''Chimborazo'', capital\: ''Riobamba'', region\: ''sierra''\}, ''07''\: array\{name\: ''El Oro'', capital\: ''Machala'', region\: ''costa''\}, ''08''\: array\{name\: ''Esmeraldas'', capital\: ''Esmeraldas'', region\: ''costa''\}, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/Provinces.php
+
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\Provinces\:\:getByRegion\(\) should return array\<string, array\{name\: string, capital\: string, region\: string\}\> but returns array\{''01''\?\: array\{name\: ''Azuay'', capital\: ''Cuenca'', region\: ''sierra''\}, ''02''\?\: array\{name\: ''Bolívar'', capital\: ''Guaranda'', region\: ''sierra''\}, ''03''\?\: array\{name\: ''Cañar'', capital\: ''Azogues'', region\: ''sierra''\}, ''04''\?\: array\{name\: ''Carchi'', capital\: ''Tulcán'', region\: ''sierra''\}, ''05''\?\: array\{name\: ''Cotopaxi'', capital\: ''Latacunga'', region\: ''sierra''\}, ''06''\?\: array\{name\: ''Chimborazo'', capital\: ''Riobamba'', region\: ''sierra''\}, ''07''\?\: array\{name\: ''El Oro'', capital\: ''Machala'', region\: ''costa''\}, ''08''\?\: array\{name\: ''Esmeraldas'', capital\: ''Esmeraldas'', region\: ''costa''\}, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/Provinces.php
+
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\Provinces\:\:getCodes\(\) should return array\<string\> but returns array\<int, int\|string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/Provinces.php
+
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\RetentionCodes\:\:getAllIva\(\) should return array\<string, array\{name\: string, percentage\: float, description\: string\}\> but returns array\{1\: array\{name\: ''Retención IVA 30%% …'', percentage\: 30\.0, description\: ''Retención del 30%%…''\}, 2\: array\{name\: ''Retención IVA 70%% …'', percentage\: 70\.0, description\: ''Retención del 70%%…''\}, 3\: array\{name\: ''Retención IVA 100%%'', percentage\: 100\.0, description\: ''Retención del 100%%…''\}, 9\: array\{name\: ''No Procede…'', percentage\: 0\.0, description\: ''No procede…''\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/RetentionCodes.php
+
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\RetentionCodes\:\:getAllRenta\(\) should return array\<string, array\{name\: string, percentage\: float, description\: string\}\> but returns array\{''332B''\: array\{name\: ''RIMPE Negocio…'', percentage\: 0\.0, description\: ''Retención a…''\}, ''343A''\: array\{name\: ''RIMPE Emprendedor'', percentage\: 1\.0, description\: ''Retención a…''\}, 312\: array\{name\: ''Transferencia…'', percentage\: 1\.75, description\: ''Compra de bienes…''\}, 3440\: array\{name\: ''Otras Retenciones'', percentage\: 2\.75, description\: ''Otras retenciones…''\}, 303\: array\{name\: ''Honorarios…'', percentage\: 10\.0, description\: ''Honorarios,…''\}, 304\: array\{name\: ''Servicios Predomina…'', percentage\: 8\.0, description\: ''Servicios donde…''\}, 307\: array\{name\: ''Servicios Predomina…'', percentage\: 2\.0, description\: ''Servicios donde…''\}, 308\: array\{name\: ''Servicios Entre…'', percentage\: 2\.0, description\: ''Servicios prestados…''\}, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/RetentionCodes.php
+
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\TaxSupport\:\:getAll\(\) should return array\<string, array\{name\: string, credito_iva\: bool, costo_gasto_ir\: bool\}\> but returns array\{''01''\: array\{name\: ''Crédito Tributario…'', credito_iva\: true, costo_gasto_ir\: false\}, ''02''\: array\{name\: ''Costo o Gasto para…'', credito_iva\: false, costo_gasto_ir\: true\}, ''03''\: array\{name\: ''Activo Fijo \-…'', credito_iva\: true, costo_gasto_ir\: false\}, ''04''\: array\{name\: ''Activo Fijo \- Costo…'', credito_iva\: false, costo_gasto_ir\: true\}, ''05''\: array\{name\: ''Liquidación Gastos…'', credito_iva\: true, costo_gasto_ir\: true\}, ''06''\: array\{name\: ''Inventario \-…'', credito_iva\: true, costo_gasto_ir\: false\}, ''07''\: array\{name\: ''Inventario \- Costo…'', credito_iva\: false, costo_gasto_ir\: true\}, ''08''\: array\{name\: ''Valor pagado para…'', credito_iva\: false, costo_gasto_ir\: false\}, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/TaxSupport.php
+
+		-
+			message: '#^Method Teran\\Sri\\Catalogs\\TaxSupport\:\:getCodes\(\) should return array\<string\> but returns array\<int, int\|string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Catalogs/TaxSupport.php
+
+		-
+			message: '#^Cannot access property \$autorizacion on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Cannot access property \$comprobante on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Cannot access property \$estado on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Cannot access property \$fechaAutorizacion on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Cannot access property \$mensaje on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Cannot access property \$mensajes on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Cannot access property \$numeroAutorizacion on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 4
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Dto\\Mensaje\:\:fromSoap\(\) expects object, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Dto/AutorizacionResponse.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 4
+			path: src/Dto/Mensaje.php
+
+		-
+			message: '#^Cannot access property \$comprobante on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/RecepcionResponse.php
+
+		-
+			message: '#^Cannot access property \$comprobantes on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/RecepcionResponse.php
+
+		-
+			message: '#^Cannot access property \$estado on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/RecepcionResponse.php
+
+		-
+			message: '#^Cannot access property \$mensaje on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/RecepcionResponse.php
+
+		-
+			message: '#^Cannot access property \$mensajes on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Dto/RecepcionResponse.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Dto/RecepcionResponse.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Dto\\Mensaje\:\:fromSoap\(\) expects object, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Dto/RecepcionResponse.php
+
+		-
+			message: '#^Method Teran\\Sri\\Exceptions\\ValidationException\:\:__construct\(\) has parameter \$errors with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exceptions/ValidationException.php
+
+		-
+			message: '#^Method Teran\\Sri\\Exceptions\\ValidationException\:\:getErrors\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exceptions/ValidationException.php
+
+		-
+			message: '#^Property Teran\\Sri\\Exceptions\\ValidationException\:\:\$errors type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Exceptions/ValidationException.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 4
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''baseImponible''\|''codigo''\|''codigoPorcentaje''\|''descuentoAdicional''\|''tarifa''\|''valor''\|''valorDevolucionIva'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''baseImponible''\|''codigo''\|''codigoPorcentaje''\|''tarifa''\|''valor'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''cantidad''\|''codigoAuxiliar''\|''codigoPrincipal''\|''descripcion''\|''descuento''\|''precioTotalSinImpuesto''\|''precioUnitario''\|''unidadMedida'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''detallesAdicionales'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''formaPago'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''formaPago''\|''plazo''\|''total''\|''unidadTiempo'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''impuestos'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''nombre'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot access offset ''valor'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 5
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\FacturaGenerator\:\:createDetalles\(\) has parameter \$detalles with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\FacturaGenerator\:\:createInfoFactura\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\FacturaGenerator\:\:generate\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\FacturaGenerator\:\:generate\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Parameter \#1 \$value of method Teran\\Sri\\Generators\\XmlGenerator\:\:formatValue\(\) expects float\|int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 8
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\FacturaGenerator\:\:createInfoFactura\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\XmlGenerator\:\:createInfoTributaria\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$detalles of method Teran\\Sri\\Generators\\FacturaGenerator\:\:createDetalles\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$value of method DOMElement\:\:setAttribute\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$value of method Teran\\Sri\\Generators\\XmlGenerator\:\:createTextElement\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/FacturaGenerator.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''cantidad''\|''codigoAdicional''\|''codigoInterno''\|''descripcion'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''codDocSustento''\|''codEstabDestino''\|''dirDestinatario''\|''docAduaneroUnico''\|''fechaEmisionDocSustento''\|''identificacionDestinatario''\|''motivoTraslado''\|''numAutDocSustento''\|''numDocSustento''\|''razonSocialDestinatario''\|''ruta'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''detalles'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''detallesAdicionales'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''nombre'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''valor'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 3
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\GuiaRemisionGenerator\:\:createDestinatarios\(\) has parameter \$destinatarios with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\GuiaRemisionGenerator\:\:createInfoGuiaRemision\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\GuiaRemisionGenerator\:\:generate\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\GuiaRemisionGenerator\:\:generate\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\GuiaRemisionGenerator\:\:createInfoGuiaRemision\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\XmlGenerator\:\:createInfoTributaria\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$destinatarios of method Teran\\Sri\\Generators\\GuiaRemisionGenerator\:\:createDestinatarios\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$value of method DOMElement\:\:setAttribute\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Generators/GuiaRemisionGenerator.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 4
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Cannot access offset ''cantidad''\|''codigoAdicional''\|''codigoInterno''\|''descripcion''\|''descuento''\|''precioTotalSinImpuesto''\|''precioUnitario'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Cannot access offset ''impuestos'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 5
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\NotaCreditoGenerator\:\:createDetalles\(\) has parameter \$detalles with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\NotaCreditoGenerator\:\:createInfoNotaCredito\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\NotaCreditoGenerator\:\:generate\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\NotaCreditoGenerator\:\:generate\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Parameter \#1 \$name of method Teran\\Sri\\Generators\\XmlGenerator\:\:createTextElement\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\NotaCreditoGenerator\:\:createInfoNotaCredito\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\XmlGenerator\:\:createInfoTributaria\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$detalles of method Teran\\Sri\\Generators\\NotaCreditoGenerator\:\:createDetalles\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/NotaCreditoGenerator.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 4
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Cannot access offset ''razon'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Cannot access offset ''valor'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 6
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\NotaDebitoGenerator\:\:createInfoNotaDebito\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\NotaDebitoGenerator\:\:createMotivos\(\) has parameter \$motivos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\NotaDebitoGenerator\:\:generate\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\NotaDebitoGenerator\:\:generate\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Parameter \#1 \$name of method Teran\\Sri\\Generators\\XmlGenerator\:\:createTextElement\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\NotaDebitoGenerator\:\:createInfoNotaDebito\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\XmlGenerator\:\:createInfoTributaria\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$motivos of method Teran\\Sri\\Generators\\NotaDebitoGenerator\:\:createMotivos\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/NotaDebitoGenerator.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 6
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''aplicConvDobTwordsri''\|''codDocSustento''\|''codSustento''\|''fechaEmisionDocSustento''\|''fechaRegistroContable''\|''importeTotal''\|''numAutDocSustento''\|''numDocSustento''\|''pagExtSujRetNorLeg''\|''pagoLocExt''\|''pagoRegFis''\|''paisEfecPago''\|''tipoRegi''\|''totalBaseImponibleReembolso''\|''totalComprobantesReembolso''\|''totalImpuestoReembolso''\|''totalSinImpuestos'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''baseImponible''\|''codDocSustento''\|''codigo''\|''codigoRetencion''\|''fechaEmisionDocSustento''\|''numDocSustento''\|''porcentajeRetener''\|''valorRetenido'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''impuestosDocSustento'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''pagos'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Cannot access offset ''retenciones'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 6
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\RetencionGenerator\:\:createDocsSustento\(\) has parameter \$docsSustento with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\RetencionGenerator\:\:createImpuestos\(\) has parameter \$impuestos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\RetencionGenerator\:\:createInfoCompRetencion\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\RetencionGenerator\:\:generate\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\RetencionGenerator\:\:generate\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Parameter \#1 \$name of method Teran\\Sri\\Generators\\XmlGenerator\:\:createTextElement\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\RetencionGenerator\:\:createInfoCompRetencion\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\XmlGenerator\:\:createInfoTributaria\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$docsSustento of method Teran\\Sri\\Generators\\RetencionGenerator\:\:createDocsSustento\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$impuestos of method Teran\\Sri\\Generators\\RetencionGenerator\:\:createImpuestos\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Generators/RetencionGenerator.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: src/Generators/XmlGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) has parameter \$infoAdicional with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/XmlGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\XmlGenerator\:\:createInfoTributaria\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/XmlGenerator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\XmlGenerator\:\:generate\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Generators/XmlGenerator.php
+
+		-
+			message: '#^Binary operation "\." between mixed and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/SRI.php
+
+		-
+			message: '#^Call to an undefined method object\:\:generate\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''ambiente'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''claveAcceso'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''codDoc'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''codigoNumerico'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''estab'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''fechaEmision'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''ptoEmi'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''ruc'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''secuencial'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot access offset ''tipoEmision'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:facturaFromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:facturaFromArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:guiaRemisionFromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:guiaRemisionFromArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:notaCreditoFromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:notaCreditoFromArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:notaDebitoFromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:notaDebitoFromArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:procesar\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:procesarComprobante\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:procesarComprobante\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:retencionFromArray\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Method Teran\\Sri\\SRI\:\:retencionFromArray\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#1 \$fecha of static method Teran\\Sri\\Utils\\ClaveAcceso\:\:generar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#1 \$ruc of method Teran\\Sri\\Utils\\RucValidator\:\:validate\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#2 \$xml of class Teran\\Sri\\Strategies\\GeneratedComprobante constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#3 \$ruc of static method Teran\\Sri\\Utils\\ClaveAcceso\:\:generar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#4 \$ambiente of static method Teran\\Sri\\Utils\\ClaveAcceso\:\:generar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#5 \$serie of static method Teran\\Sri\\Utils\\ClaveAcceso\:\:generar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#6 \$numero of static method Teran\\Sri\\Utils\\ClaveAcceso\:\:generar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#7 \$codigoNum of static method Teran\\Sri\\Utils\\ClaveAcceso\:\:generar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/SRI.php
+
+		-
+			message: '#^Parameter \#8 \$tipoEmision of static method Teran\\Sri\\Utils\\ClaveAcceso\:\:generar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Part \$datosClave\[''ruc''\] \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/SRI.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Schema/BusinessValidator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Schema\\BusinessValidator\:\:validarCampos\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Schema/BusinessValidator.php
+
+		-
+			message: '#^Method Teran\\Sri\\Schema\\XsdValidator\:\:getLibXmlErrors\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Schema/XsdValidator.php
+
+		-
+			message: '#^Binary operation "\." between ''@'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Binary operation "\." between ''El certificado aún…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Binary operation "\." between ''El certificado ha…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Binary operation "\." between non\-empty\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''CN'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''curve_name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''e'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''n'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''type'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''validFrom_time_t'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''validTo_time_t'' on array\|false\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''x'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset ''y'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot call method appendChild\(\) on DOMElement\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot call method format\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot call method getAttribute\(\) on DOMElement\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot call method removeChild\(\) on DOMNode\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Constant Teran\\Sri\\Signature\\XadesSignature\:\:ALG_C14N_EXCLUSIVE is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:buildDistinguishedName\(\) has parameter \$dn with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:buildKeyInfo\(\) has parameter \$certInfo with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:buildSignedProperties\(\) has parameter \$certInfo with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:detectProvider\(\) has parameter \$certData with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:extractCertificateInfo\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:getCertificateInfo\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:getElementDigest\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:getIntermediateCertificates\(\) should return array\<string\> but returns array\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:normalizeSerialNumber\(\) has parameter \$certData with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:normalizeSerialNumber\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Method Teran\\Sri\\Signature\\XadesSignature\:\:sign\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$cert of method Teran\\Sri\\Signature\\XadesSignature\:\:cleanCertificate\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$certData of method Teran\\Sri\\Signature\\XadesSignature\:\:detectProvider\(\) expects array, array\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$certData of method Teran\\Sri\\Signature\\XadesSignature\:\:normalizeSerialNumber\(\) expects array, array\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$certificate of function openssl_x509_parse expects OpenSSLCertificate\|string, OpenSSLCertificate\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$certificate of function openssl_x509_read expects OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$curveName of method Teran\\Sri\\Signature\\XadesSignature\:\:getCurveUri\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$dn of method Teran\\Sri\\Signature\\XadesSignature\:\:buildDistinguishedName\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$haystack of function str_contains expects string, float\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$key of function openssl_pkey_get_details expects OpenSSLAsymmetricKey, OpenSSLAsymmetricKey\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$keyType of method Teran\\Sri\\Signature\\XadesSignature\:\:getSignatureAlgorithm\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$public_key of function openssl_pkey_get_public expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_encode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$string of function chunk_split expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strtolower expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#2 \$value of method Teran\\Sri\\Signature\\XadesSignature\:\:escapeDistinguishedNameValue\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#3 \$private_key of function openssl_sign expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Parameter \#3 \$value of method DOMDocument\:\:createElementNS\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Part \$daysUntilExpiry \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Property Teran\\Sri\\Signature\\XadesSignature\:\:\$certs \(array\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Property Teran\\Sri\\Signature\\XadesSignature\:\:\$certs type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Property Teran\\Sri\\Signature\\XadesSignature\:\:\$extraCerts \(array\) does not accept mixed\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Property Teran\\Sri\\Signature\\XadesSignature\:\:\$extraCerts type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Property Teran\\Sri\\Signature\\XadesSignature\:\:\$validated is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: src/Signature/XadesSignature.php
+
+		-
+			message: '#^Cannot access offset string on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Soap/SriSoapClient.php
+
+		-
+			message: '#^Method Teran\\Sri\\Soap\\SriSoapClient\:\:call\(\) has parameter \$params with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Soap/SriSoapClient.php
+
+		-
+			message: '#^Method Teran\\Sri\\Soap\\SriSoapClient\:\:call\(\) should return object but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Soap/SriSoapClient.php
+
+		-
+			message: '#^Parameter \#3 \$wsdl of method Teran\\Sri\\Soap\\SriSoapClient\:\:call\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Soap/SriSoapClient.php
+
+		-
+			message: '#^Property Teran\\Sri\\Soap\\SriSoapClient\:\:\$urls type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Soap/SriSoapClient.php
+
+		-
+			message: '#^Method Teran\\Sri\\Strategies\\ComprobanteInterface\:\:getDatosClave\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Strategies/ComprobanteInterface.php
+
+		-
+			message: '#^Method Teran\\Sri\\Strategies\\GeneratedComprobante\:\:__construct\(\) has parameter \$datosClave with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Strategies/GeneratedComprobante.php
+
+		-
+			message: '#^Method Teran\\Sri\\Strategies\\GeneratedComprobante\:\:getDatosClave\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Strategies/GeneratedComprobante.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Support\\TestCertificate\:\:modernP12\(\) should return array\{p12\: string, password\: string, subjectCN\: string\} but returns array\{p12\: mixed, password\: string, subjectCN\: string\}\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/Support/TestCertificate.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Support\\TestCertificate\:\:modernP12WithChain\(\) should return array\{p12\: string, password\: string, leafCN\: string, caCN\: string\} but returns array\{p12\: mixed, password\: string, leafCN\: string, caCN\: string\}\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/Support/TestCertificate.php
+
+		-
+			message: '#^Parameter \#1 \$certificate of function openssl_pkcs12_export expects OpenSSLCertificate\|string, OpenSSLCertificate\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Support/TestCertificate.php
+
+		-
+			message: '#^Parameter \#1 \$csr of function openssl_csr_sign expects OpenSSLCertificateSigningRequest\|string, bool\|OpenSSLCertificateSigningRequest given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Support/TestCertificate.php
+
+		-
+			message: '#^Parameter \#2 \$ca_certificate of function openssl_csr_sign expects OpenSSLCertificate\|string\|null, OpenSSLCertificate\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Support/TestCertificate.php
+
+		-
+			message: '#^Parameter \#3 \$private_key of function openssl_csr_sign expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Support/TestCertificate.php
+
+		-
+			message: '#^Parameter \#3 \$private_key of function openssl_pkcs12_export expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Support/TestCertificate.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Support\\XmlParity\:\:normalize\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/Support/XmlParity.php
+
+		-
+			message: '#^Cannot access property \$numeroAutorizacion on Teran\\Sri\\Batch\\BatchItem\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Batch/BatchEmitterTest.php
+
+		-
+			message: '#^Cannot access property \$state on Teran\\Sri\\Batch\\BatchItem\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Batch/BatchEmitterTest.php
+
+		-
+			message: '#^Cannot access property \$attempts on Teran\\Sri\\Batch\\BatchItem\|null\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/Unit/Batch/BatchProcessorTest.php
+
+		-
+			message: '#^Cannot access property \$numeroAutorizacion on Teran\\Sri\\Batch\\BatchItem\|null\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: tests/Unit/Batch/BatchProcessorTest.php
+
+		-
+			message: '#^Cannot access property \$state on Teran\\Sri\\Batch\\BatchItem\|null\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: tests/Unit/Batch/BatchProcessorTest.php
+
+		-
+			message: '#^Cannot access property \$state on Teran\\Sri\\Batch\\BatchItem\|null\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/Unit/Batch/InMemoryComprobanteRepositoryTest.php
+
+		-
+			message: '#^Cannot access offset ''obligadoContabilidad'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/FacturaTest.php
+
+		-
+			message: '#^Cannot access offset ''pagos'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/FacturaTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Documents\\FacturaTest\:\:validData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Documents/FacturaTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\Factura\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/Unit/Documents/FacturaTest.php
+
+		-
+			message: '#^Cannot access offset ''fechaIniTransporte'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/GuiaRemisionTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Documents\\GuiaRemisionTest\:\:validData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Documents/GuiaRemisionTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\GuiaRemision\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Documents/GuiaRemisionTest.php
+
+		-
+			message: '#^Cannot access offset ''fechaEmision'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/NotaCreditoTest.php
+
+		-
+			message: '#^Cannot access offset ''fechaEmisionDocSustento'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/NotaCreditoTest.php
+
+		-
+			message: '#^Cannot access offset ''motivo'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Unit/Documents/NotaCreditoTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Documents\\NotaCreditoTest\:\:validData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Documents/NotaCreditoTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\NotaCredito\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 6
+			path: tests/Unit/Documents/NotaCreditoTest.php
+
+		-
+			message: '#^Cannot access offset ''fechaEmision'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/NotaDebitoTest.php
+
+		-
+			message: '#^Cannot access offset ''fechaEmisionDocSustento'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/NotaDebitoTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Documents\\NotaDebitoTest\:\:validData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Documents/NotaDebitoTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\NotaDebito\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/Unit/Documents/NotaDebitoTest.php
+
+		-
+			message: '#^Cannot access offset ''fechaEmision'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/RetencionTest.php
+
+		-
+			message: '#^Cannot access offset ''fechaEmisionDocSustento'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/RetencionTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Documents/RetencionTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Documents\\RetencionTest\:\:validData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Documents/RetencionTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\Retencion\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 4
+			path: tests/Unit/Documents/RetencionTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with Teran\\Sri\\Emission\\EmissionStatus\:\:Authorized will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Emission/MessageTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with Teran\\Sri\\Emission\\EmissionStatus\:\:InProcess will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Emission/MessageTest.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with Teran\\Sri\\Emission\\EmissionStatus\:\:Rejected will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Emission/MessageTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMNameSpaceNode\|DOMNode\|null\.$#'
+			identifier: property.nonObject
+			count: 4
+			path: tests/Unit/Generators/FacturaGeneratorTest.php
+
+		-
+			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/Unit/Generators/FacturaGeneratorTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Generators\\FacturaGeneratorTest\:\:test_generate_basic_factura_xml\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/Unit/Generators/FacturaGeneratorTest.php
+
+		-
+			message: '#^Call to an undefined method Teran\\Sri\\Generators\\XmlGenerator\:\:makeElement\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: tests/Unit/Generators/XmlGeneratorTest.php
+
+		-
+			message: '#^Cannot access property \$nodeName on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Generators/XmlGeneratorTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Generators/XmlGeneratorTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\XmlGenerator@anonymous/tests/Unit/Generators/XmlGeneratorTest\.php\:15\:\:generate\(\) has parameter \$data with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Generators/XmlGeneratorTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Generators\\XmlGenerator@anonymous/tests/Unit/Generators/XmlGeneratorTest\.php\:15\:\:generate\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/Unit/Generators/XmlGeneratorTest.php
+
+		-
+			message: '#^Cannot call method getExtension\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Unit/SecurityGuardsTest.php
+
+		-
+			message: '#^Cannot call method getPathname\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Unit/SecurityGuardsTest.php
+
+		-
+			message: '#^Cannot call method isFile\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Unit/SecurityGuardsTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\SecurityGuardsTest\:\:sourceFiles\(\) should return array\<string\> but returns list\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/Unit/SecurityGuardsTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertStringNotContainsString\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/SecurityGuardsTest.php
+
+		-
+			message: '#^Parameter \#2 \$string of method PHPUnit\\Framework\\Assert\:\:assertDoesNotMatchRegularExpression\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Unit/SecurityGuardsTest.php
+
+		-
+			message: '#^Cannot access offset ''CN'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Signing/CertificateLoaderTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertStringContainsString\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Signing/CertificateLoaderTest.php
+
+		-
+			message: '#^Cannot access offset ''CN'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Signing/CertificateTest.php
+
+		-
+			message: '#^Parameter \#1 \$certPem of class Teran\\Sri\\Signing\\Certificate constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Signing/CertificateTest.php
+
+		-
+			message: '#^Parameter \#1 \$certificate of function openssl_x509_export expects OpenSSLCertificate\|string, OpenSSLCertificate\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Signing/CertificateTest.php
+
+		-
+			message: '#^Parameter \#1 \$csr of function openssl_csr_sign expects OpenSSLCertificateSigningRequest\|string, bool\|OpenSSLCertificateSigningRequest given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Signing/CertificateTest.php
+
+		-
+			message: '#^Parameter \#1 \$key of function openssl_pkey_export expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Signing/CertificateTest.php
+
+		-
+			message: '#^Parameter \#2 \$privateKeyPem of class Teran\\Sri\\Signing\\Certificate constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Signing/CertificateTest.php
+
+		-
+			message: '#^Parameter \#3 \$private_key of function openssl_csr_sign expects array\|OpenSSLAsymmetricKey\|OpenSSLCertificate\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Signing/CertificateTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMNameSpaceNode\|DOMNode\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Signing/XadesSignerTest.php
+
+		-
+			message: '#^Cannot call method C14N\(\) on DOMNameSpaceNode\|DOMNode\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Unit/Signing/XadesSignerTest.php
+
+		-
+			message: '#^Cannot call method item\(\) on DOMNodeList\<DOMNameSpaceNode\|DOMNode\>\|false\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/Unit/Signing/XadesSignerTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertStringContainsString\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/SriClientTest.php
+
+		-
+			message: '#^Cannot call method getMethod\(\) on Psr\\Http\\Message\\RequestInterface\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Unit/Transport/Psr18SoapTransportTest.php
+
+		-
+			message: '#^Cannot call method getUri\(\) on Psr\\Http\\Message\\RequestInterface\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/Unit/Transport/Psr18SoapTransportTest.php
+
+		-
+			message: '#^Offset ''claveAccesoComprobante'' might not exist on array\|string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/Unit/Transport/SoapClientTransportTest.php
+
+		-
+			message: '#^Offset ''xml'' might not exist on array\|string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: tests/Unit/Transport/SoapClientTransportTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertStringContainsString\(\) expects string, array\|string given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Transport/SoapClientTransportTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertStringNotContainsString\(\) expects string, array\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Transport/SoapClientTransportTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Utils\\ClaveAccesoTest\:\:test_generar_clave_valida\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/Unit/Utils/ClaveAccesoTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Utils\\ClaveAccesoTest\:\:test_modulo11_calculator\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/Unit/Utils/ClaveAccesoTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Utils\\ClaveAccesoTest\:\:test_throws_exception_on_invalid_length\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/Unit/Utils/ClaveAccesoTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Utils\\RucValidatorTest\:\:test_validate_returns_false_for_invalid_ruc_structure\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/Unit/Utils/RucValidatorTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Utils\\RucValidatorTest\:\:test_validate_returns_true_for_valid_local_ruc\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: tests/Unit/Utils/RucValidatorTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: tests/Unit/Xml/DomBuilderTest.php
+
+		-
+			message: '#^Parameter \#1 \$source of method DOMDocument\:\:loadXML\(\) expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Xml/DomBuilderTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/Unit/Xml/FacturaXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''claveAcceso'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''codDoc'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''motivoTraslado'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razonSocial'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razonSocialTransportista'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Xml\\GuiaRemisionXmlSerializerTest\:\:parityData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\GuiaRemision\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Xml/GuiaRemisionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''claveAcceso'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaCreditoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''codDoc'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaCreditoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''motivo'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaCreditoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razonSocial'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaCreditoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razonSocialComprador'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaCreditoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/Unit/Xml/NotaCreditoXmlSerializerTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Xml\\NotaCreditoXmlSerializerTest\:\:parityData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Xml/NotaCreditoXmlSerializerTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\NotaCredito\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Xml/NotaCreditoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''claveAcceso'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''codDoc'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razon'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razonSocial'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razonSocialComprador'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Xml\\NotaDebitoXmlSerializerTest\:\:parityData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\NotaDebito\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Xml/NotaDebitoXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''claveAcceso'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/RetencionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''codDoc'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/RetencionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razonSocial'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/RetencionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access offset ''razonSocialSujetoRetenido'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Unit/Xml/RetencionXmlSerializerTest.php
+
+		-
+			message: '#^Cannot access property \$textContent on DOMElement\|null\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: tests/Unit/Xml/RetencionXmlSerializerTest.php
+
+		-
+			message: '#^Method Teran\\Sri\\Tests\\Unit\\Xml\\RetencionXmlSerializerTest\:\:parityData\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Xml/RetencionXmlSerializerTest.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Teran\\Sri\\Documents\\Retencion\:\:fromArray\(\) expects array\<string, mixed\>, array given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Xml/RetencionXmlSerializerTest.php

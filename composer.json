@@ -17,6 +17,7 @@
     },
     "require-dev": {
         "nyholm/psr7": "^1.8",
+        "phpstan/phpstan": "^2.2",
         "phpunit/phpunit": "^10.0"
     },
     "autoload": {
