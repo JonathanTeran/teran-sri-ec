@@ -387,8 +387,11 @@ final class XadesSigner
         /** @var array<string, mixed> $issuerData */
         $issuerData = is_array($certData['issuer'] ?? null) ? $certData['issuer'] : [];
 
-        // Build issuer name in RFC 2253 format (reversed order)
-        $issuerName = $this->buildDistinguishedName($issuerData);
+        // Construye el IssuerName decodificando el DER del certificado, exactamente como
+        // Java X500Principal.getName("RFC2253") — que es lo que el validador XAdES del SRI
+        // espera. OpenSSL emite `organizationIdentifier=...` para el OID 2.5.4.97, formato
+        // que el SRI rechaza ([39] FIRMA INVALIDA). Ver Teran\Sri\Signing\IssuerName.
+        $issuerName = IssuerName::fromCertificate($certDer);
 
         // Get serial number (handle both decimal and hex formats)
         /** @var array<string, mixed> $certDataForSerial */
@@ -454,60 +457,6 @@ final class XadesSigner
             '',
             $cert
         );
-    }
-
-    /**
-     * Build Distinguished Name string in RFC 2253 format
-     *
-     * @param array<string, mixed> $dn
-     */
-    private function buildDistinguishedName(array $dn): string
-    {
-        $parts = [];
-
-        // Process in reverse order for RFC 2253 compliance
-        foreach (array_reverse($dn) as $key => $value) {
-            // Handle array values (multiple values for same attribute)
-            if (is_array($value)) {
-                foreach ($value as $v) {
-                    if (!is_string($v) && !is_int($v) && !is_float($v)) {
-                        continue;
-                    }
-                    $res = $this->escapeDistinguishedNameValue((string) $key, (string) $v);
-                    if ($res !== '') {
-                        $parts[] = $res;
-                    }
-                }
-            } elseif (is_string($value) || is_int($value) || is_float($value)) {
-                $res = $this->escapeDistinguishedNameValue((string) $key, (string) $value);
-                if ($res !== '') {
-                    $parts[] = $res;
-                }
-            }
-        }
-
-        return implode(',', $parts);
-    }
-
-    /**
-     * Escape special characters in DN values
-     */
-    private function escapeDistinguishedNameValue(string $key, string $value): string
-    {
-        // Match OpenSSL CLI format for organizationIdentifier to ensure SRI validator match
-        if ($key === 'organizationIdentifier') {
-            // Return plain string format: organizationIdentifier=VALUE
-            return "organizationIdentifier=" . $value;
-        }
-
-        // Escape special characters per RFC 2253
-        $escaped = str_replace(
-            ['\\', ',', '+', '"', '<', '>', ';', '='],
-            ['\\\\', '\\,', '\\+', '\\"', '\\<', '\\>', '\\;', '\\='],
-            $value
-        );
-
-        return "$key=$escaped";
     }
 
     /**

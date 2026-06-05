@@ -89,14 +89,15 @@ $data = [
         'fechaEmision' => $fecha, 'obligadoContabilidad' => 'NO',
         'tipoIdentificacionComprador' => '07', 'razonSocialComprador' => 'CONSUMIDOR FINAL',
         'identificacionComprador' => '9999999999999',
-        'totalSinImpuestos' => '100.00', 'totalDescuento' => '0.00', 'importeTotal' => '115.00',
-        'totalConImpuestos' => [['codigo' => '2', 'codigoPorcentaje' => '4', 'baseImponible' => '100.00', 'valor' => '15.00']],
-        'pagos' => [['formaPago' => '01', 'total' => '115.00']],
+        // Monto < 50 USD para poder facturar a CONSUMIDOR FINAL (regla SRI: >50 USD exige identificar al comprador).
+        'totalSinImpuestos' => '10.00', 'totalDescuento' => '0.00', 'importeTotal' => '11.50',
+        'totalConImpuestos' => [['codigo' => '2', 'codigoPorcentaje' => '4', 'baseImponible' => '10.00', 'valor' => '1.50']],
+        'pagos' => [['formaPago' => '01', 'total' => '11.50']],
     ],
     'detalles' => [[
         'codigoPrincipal' => 'PROD-001', 'descripcion' => 'Producto de prueba',
-        'cantidad' => '1.00', 'precioUnitario' => '100.00', 'descuento' => '0.00', 'precioTotalSinImpuesto' => '100.00',
-        'impuestos' => [['codigo' => '2', 'codigoPorcentaje' => '4', 'tarifa' => '15.00', 'baseImponible' => '100.00', 'valor' => '15.00']],
+        'cantidad' => '1.00', 'precioUnitario' => '10.00', 'descuento' => '0.00', 'precioTotalSinImpuesto' => '10.00',
+        'impuestos' => [['codigo' => '2', 'codigoPorcentaje' => '4', 'tarifa' => '15.00', 'baseImponible' => '10.00', 'valor' => '1.50']],
     ]],
 ];
 $signed = (new XadesSigner())->sign((new FacturaXmlSerializer())->serialize(Factura::fromArray($data), $clave), $cert);
@@ -120,25 +121,33 @@ if ($rec->estado !== 'RECIBIDA') {
 
 // 5) AUTORIZACIÓN (con re-consulta si está EN PROCESO)
 echo "\n5) Consultando autorización (el SRI procesa de forma asíncrona)...\n";
-sleep(3); // dar tiempo al SRI a procesar antes de la primera consulta
-for ($intento = 1; $intento <= 5; $intento++) {
+sleep(4); // dar tiempo al SRI a procesar antes de la primera consulta
+$estadoFinal = 'EN PROCESO';
+for ($intento = 1; $intento <= 12; $intento++) {
     $aut = $transport->autorizar($clave, Ambiente::Pruebas);
     echo "   intento $intento → estado: {$aut->estado}\n";
     foreach ($aut->mensajes as $m) {
         echo "     • [{$m->identificador}] {$m->tipo}: {$m->mensaje}" . ($m->informacionAdicional !== '' ? " ({$m->informacionAdicional})" : '') . "\n";
     }
-    if (in_array(strtoupper($aut->estado), ['EN PROCESO', 'EN PROCESAMIENTO'], true)) {
-        echo "     (en proceso, reintentando en 3s...)\n";
-        sleep(3);
+    $estadoFinal = strtoupper($aut->estado);
+    if (in_array($estadoFinal, ['EN PROCESO', 'EN PROCESAMIENTO'], true)) {
+        echo "     (en proceso, reintentando en 5s...)\n";
+        sleep(5);
         continue;
     }
-    if (strtoupper($aut->estado) === 'AUTORIZADO') {
+    if ($estadoFinal === 'AUTORIZADO') {
         echo "\n🎉 ¡AUTORIZADO! Nº {$aut->numeroAutorizacion} — {$aut->fechaAutorizacion}\n";
         echo "   El flujo 2.0 completo funciona contra el SRI con tu certificado. ✅\n";
     } else {
-        echo "\nEstado final: {$aut->estado}. Revisa los mensajes (datos de negocio del emisor).\n";
+        echo "\nEstado final: {$aut->estado}. Revisa los mensajes (regla de negocio de la factura).\n";
     }
     break;
+}
+
+if (in_array($estadoFinal, ['EN PROCESO', 'EN PROCESAMIENTO'], true)) {
+    echo "\n⏳ El SRI de pruebas sigue procesando (es asíncrono y a veces se congestiona).\n";
+    echo "   La firma y el envío fueron correctos. Consulta el estado final luego con la clave:\n";
+    echo "   $clave\n";
 }
 
 echo "\n== Fin ==\n";

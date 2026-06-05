@@ -2,6 +2,26 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.0.3] - 2026-06-05
+
+Patch **crítico de correctitud de la firma** (+ autorización, rendimiento y ejemplos). Retrocompatible.
+
+### Fixed — Firma XAdES (crítico para certificados Uanataca / eIDAS)
+- **El `<ds:X509IssuerName>` ahora coincide exactamente con `javax.security.auth.x500.X500Principal.getName("RFC2253")`**, que es lo que valida el stack Java del SRI. Antes, los atributos del emisor sin palabra clave estándar — en particular `organizationIdentifier` (OID **2.5.4.97**), presente en certificados **Uanataca** y eIDAS — se emitían en formato OpenSSL (`organizationIdentifier=VATES-…`), lo que provocaba el rechazo **`[39] FIRMA INVALIDA – La información sobre el certificado de firma no se ajusta a XAdES`** al autorizar. Ahora se emiten como `2.5.4.97=#0c0f…` (OID numérico + valor en DER hexadecimal), idéntico a Java. Verificado **byte-a-byte contra OpenJDK 17** con certificados reales y de prueba, incluido el escaping completo (`, + " \ < > ; = #`). Nueva clase `Teran\Sri\Signing\IssuerName` (parser DER dedicado, con tests y revisión adversarial). **Aplica al API 2.0 (`XadesSigner`) y al API 1.x (`XadesSignature`).**
+- **Sin regresión:** para certificados de CAs con solo atributos estándar (CN/O/OU/C/L/ST — el caso de las CAs ecuatorianas comunes), la salida del IssuerName es **idéntica** a la anterior. Los usuarios actuales no notan ningún cambio.
+
+### Fixed — Autorización
+- La consulta de autorización inmediatamente posterior a `RECIBIDA` (cuando el SRI todavía no ha generado el nodo `<autorizacion>`) ahora se interpreta como **`EN PROCESO`** (reintentable), no como `NO AUTORIZADO` (rechazo terminal). Afecta a `SoapResponseParser` y `SoapStdClassParser`.
+
+### Performance
+- **Firma ~22% más rápida**: `XadesSigner` ahora también memoiza la **clave privada parseada** (`openssl_pkey_get_private`), además del parseo del certificado introducido en 2.0.1. Reutiliza la misma instancia de `XadesSigner` para aprovechar la caché.
+
+### Docs / Ejemplos
+- Nuevo `examples/smoke-prueba-sri.php`: prueba el flujo completo (firmar → enviar → autorizar) contra el ambiente de **pruebas** del SRI con tu propio certificado. La clave del `.p12` se pide por consola (nunca por `argv`); el certificado nunca sale de tu máquina.
+
+### Calidad
+- 171 tests · PHPStan nivel máximo limpio · la nueva clase `IssuerName` pasó revisión adversarial de seguridad (parser DER robusto ante certificados malformados: sin lecturas fuera de límites ni bucles).
+
 ## [2.0.2] - 2026-06-04
 
 ### Docs

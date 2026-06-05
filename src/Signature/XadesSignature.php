@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Teran\Sri\Signature;
 
 use Teran\Sri\Exceptions\SriException;
+use Teran\Sri\Signing\IssuerName;
 use DOMDocument;
 use DOMElement;
 use OpenSSLAsymmetricKey;
@@ -514,8 +515,10 @@ class XadesSignature
             throw new SriException("No se pudo parsear el certificado X.509");
         }
 
-        // Build issuer name in RFC 2253 format (reversed order)
-        $issuerName = $this->buildDistinguishedName($certData['issuer']);
+        // IssuerName decodificado del DER, exactamente como Java X500Principal.getName("RFC2253"),
+        // que es lo que valida el SRI. OpenSSL emite `organizationIdentifier=...` para el OID
+        // 2.5.4.97, formato que el SRI rechaza ([39] FIRMA INVALIDA). Ver Teran\Sri\Signing\IssuerName.
+        $issuerName = IssuerName::fromCertificate($certDer);
 
         // Get serial number (handle both decimal and hex formats)
         $serialNumber = $this->normalizeSerialNumber($certData);
@@ -636,56 +639,6 @@ class XadesSignature
             '',
             $cert
         );
-    }
-
-    /**
-     * Build Distinguished Name string in RFC 2253 format
-     */
-    private function buildDistinguishedName(array $dn): string
-    {
-        $parts = [];
-
-        // Process in reverse order for RFC 2253 compliance
-        foreach (array_reverse($dn) as $key => $value) {
-            $escaped = '';
-            // Handle array values (multiple values for same attribute)
-            if (is_array($value)) {
-                foreach ($value as $v) {
-                    $res = $this->escapeDistinguishedNameValue($key, $v);
-                    if ($res !== '') $parts[] = $res;
-                }
-            } else {
-                $res = $this->escapeDistinguishedNameValue($key, $value);
-                if ($res !== '') $parts[] = $res;
-            }
-        }
-
-        return implode(',', $parts);
-    }
-
-    /**
-     * Escape special characters in DN values
-     */
-    private function escapeDistinguishedNameValue(string $key, string $value): string
-    {
-        // Match OpenSSL CLI format for organizationIdentifier to ensure SRI validator match
-        if ($key === 'organizationIdentifier') {
-             // Return plain string format: organizationIdentifier=VALUE
-             // (Escaping applied if needed, but usually this OID is alphanumeric)
-             return "organizationIdentifier=" . $value;
-        }
-
-        // Escape special characters per RFC 2253
-
-
-        // Escape special characters per RFC 2253
-        $escaped = str_replace(
-            ['\\', ',', '+', '"', '<', '>', ';', '='],
-            ['\\\\', '\\,', '\\+', '\\"', '\\<', '\\>', '\\;', '\\='],
-            $value
-        );
-
-        return "$key=$escaped";
     }
 
     /**
