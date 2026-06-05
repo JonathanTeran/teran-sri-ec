@@ -2,6 +2,13 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.0.1] - 2026-06-04
+
+Patch de **rendimiento**, retrocompatible. Misma salida (firma idéntica y verificada).
+
+### Performance
+- **Firma ~12% más rápida** (de ~520 a ~580 comprobantes/seg en el pipeline completo): `XadesSigner` ahora **memoiza el parseo del certificado** (`openssl_x509_parse`, detalles de la clave, DN, serial, digest), que no cambia entre documentos. Comportamiento idéntico — los tests de verificación criptográfica, golden y determinismo siguen verdes. **Sugerencia para lotes:** reutiliza la misma instancia de `XadesSigner` (y del serializador) en vez de crear una nueva por documento, para aprovechar la caché. Para mayor throughput, la firma es *stateless* y escala con workers en paralelo.
+
 ## [2.0.0] - 2026-06-04
 
 Rediseño mayor: **núcleo agnóstico de framework, tipado, seguro, con envío masivo.** El API 1.x (`SRI`) se mantiene **intacta y funcional** (deprecada) — el código existente sigue corriendo; solo se sube el constraint `^1.0` → `^2.0`.
