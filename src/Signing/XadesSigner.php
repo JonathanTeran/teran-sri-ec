@@ -174,7 +174,7 @@ final class XadesSigner
         // C. SignatureValue
         $signedInfoCanonical = $signedInfo->C14N();
         $signatureValueRaw = '';
-        if (!openssl_sign($signedInfoCanonical, $signatureValueRaw, $cert->privateKeyPem, $opensslAlgorithm)) {
+        if (!openssl_sign($signedInfoCanonical, $signatureValueRaw, $this->privateKey($cert), $opensslAlgorithm)) {
             $error = openssl_error_string();
             throw new SignatureException("Error al firmar el documento: " . ($error ?: 'error desconocido'));
         }
@@ -339,6 +339,26 @@ final class XadesSigner
         // memoizamos el parseo costoso (openssl_x509_parse, pkey_get_details, DN, serial,
         // digest). Esto acelera notablemente la firma de muchos comprobantes con el mismo cert.
         return $this->certInfoCache[md5($cert->certPem)] ??= $this->computeCertificateInfo($cert);
+    }
+
+    /** @var array<string, \OpenSSLAsymmetricKey> Clave privada ya parseada, reutilizable entre firmas. */
+    private array $privateKeyCache = [];
+
+    /**
+     * Devuelve la clave privada parseada (memoizada). openssl_sign() re-parsea el PEM
+     * en cada llamada si se le pasa el string; reusar el objeto evita ese costo por firma.
+     */
+    private function privateKey(Certificate $cert): \OpenSSLAsymmetricKey
+    {
+        $cacheKey = md5($cert->privateKeyPem);
+        if (!isset($this->privateKeyCache[$cacheKey])) {
+            $key = openssl_pkey_get_private($cert->privateKeyPem);
+            if ($key === false) {
+                throw new SignatureException("No se pudo cargar la clave privada para firmar.");
+            }
+            $this->privateKeyCache[$cacheKey] = $key;
+        }
+        return $this->privateKeyCache[$cacheKey];
     }
 
     /**
