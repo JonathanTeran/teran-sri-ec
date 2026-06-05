@@ -3,7 +3,7 @@
         'name' => 'amephia/sri-ec',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '34e3580364c7f48f69e5038caa645d5ca81dd4da',
+        'reference' => 'de4cb1a6a3403e2feecaafcb39079d902307393c',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'amephia/sri-ec' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '34e3580364c7f48f69e5038caa645d5ca81dd4da',
+            'reference' => 'de4cb1a6a3403e2feecaafcb39079d902307393c',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -69,6 +69,15 @@
             'provided' => array(
                 0 => '1.0',
             ),
+        ),
+        'phpstan/phpstan' => array(
+            'pretty_version' => '2.2.1',
+            'version' => '2.2.1.0',
+            'reference' => 'dea9c8f2d25cc849391042b71e429c1a4bf82660',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../phpstan/phpstan',
+            'aliases' => array(),
+            'dev_requirement' => true,
         ),
         'phpunit/php-code-coverage' => array(
             'pretty_version' => '10.1.16',
