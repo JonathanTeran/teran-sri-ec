@@ -21,6 +21,8 @@ final class EmissionResult implements \ArrayAccess
         public readonly ?string $fechaAutorizacion = null,
         public readonly ?string $authorizedXml = null,
         public readonly array $messages = [],
+        /** Etapa del rechazo cuando status = Rejected (v2.1); null si no hubo. */
+        public readonly ?RejectionStage $rejectedStage = null,
     ) {
     }
 

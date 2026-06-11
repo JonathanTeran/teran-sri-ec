@@ -13,6 +13,7 @@ use Teran\Sri\Documents\Factura;
 use Teran\Sri\Transport\ReceptionOutcome;
 use Teran\Sri\Transport\AuthorizationOutcome;
 use Teran\Sri\Emission\Message;
+use Teran\Sri\Emission\RejectionStage;
 use Teran\Sri\Tests\Support\TestCertificate;
 use Teran\Sri\Tests\Support\FakeTransport;
 
@@ -76,6 +77,36 @@ class SriClientTest extends TestCase
         $this->assertSame(EmissionStatus::Rejected, $result->status);
         $this->assertNull($transport->lastAuthorizedClave); // no se consultó autorización
         $this->assertNotEmpty($result->messages);
+        // v2.1: el rechazo distingue la etapa — DEVUELTA = recepción.
+        $this->assertSame(RejectionStage::Recepcion, $result->rejectedStage);
+    }
+
+    public function test_emit_rejected_at_authorization_exposes_stage(): void
+    {
+        $transport = new FakeTransport(
+            new ReceptionOutcome('RECIBIDA', []),
+            new AuthorizationOutcome('NO AUTORIZADO', null, null, null, [new Message('60', 'clave registrada', 'ERROR')]),
+        );
+        $result = $this->client($transport)->emit($this->factura(), '2601202601179001100100110010010000000011234567819');
+
+        $this->assertSame(EmissionStatus::Rejected, $result->status);
+        // v2.1: rechazo en autorización (la recepción SÍ pasó).
+        $this->assertSame(RejectionStage::Autorizacion, $result->rejectedStage);
+    }
+
+    public function test_emit_authorized_and_in_process_have_null_rejected_stage(): void
+    {
+        $ok = new FakeTransport(
+            new ReceptionOutcome('RECIBIDA', []),
+            new AuthorizationOutcome('AUTORIZADO', '123', '2026-01-26T10:00:00-05:00', '<auth/>', []),
+        );
+        $this->assertNull($this->client($ok)->emit($this->factura(), '2601202601179001100100110010010000000011234567819')->rejectedStage);
+
+        $pending = new FakeTransport(
+            new ReceptionOutcome('RECIBIDA', []),
+            new AuthorizationOutcome('EN PROCESO'),
+        );
+        $this->assertNull($this->client($pending)->emit($this->factura(), '2601202601179001100100110010010000000011234567819')->rejectedStage);
     }
 
     public function test_emit_in_process_maps_to_in_process(): void

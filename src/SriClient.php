@@ -13,6 +13,7 @@ use Teran\Sri\Transport\SriTransportInterface;
 use Teran\Sri\Transport\SoapClientTransport;
 use Teran\Sri\Emission\EmissionResult;
 use Teran\Sri\Emission\EmissionStatus;
+use Teran\Sri\Emission\RejectionStage;
 
 /**
  * Entrada del 2.0 para emisión individual. Orquesta:
@@ -70,6 +71,7 @@ final class SriClient
                 claveAcceso: $claveAcceso,
                 signedXml: $signed,
                 messages: $reception->mensajes,
+                rejectedStage: RejectionStage::Recepcion,
             );
         }
 
@@ -88,6 +90,7 @@ final class SriClient
             fechaAutorizacion: $auth->fechaAutorizacion,
             authorizedXml: $auth->comprobante,
             messages: $auth->mensajes,
+            rejectedStage: $status === EmissionStatus::Rejected ? RejectionStage::Autorizacion : null,
         );
     }
 }

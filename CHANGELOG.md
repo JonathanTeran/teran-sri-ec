@@ -2,6 +2,26 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.1.0] - 2026-06-11
+
+Minor retrocompatible: el rechazo de emisión ahora distingue la **etapa**.
+
+### Added
+- **`EmissionResult::$rejectedStage`** (`?RejectionStage`, default `null`): cuando
+  `status === EmissionStatus::Rejected`, expone si el rechazo fue en **recepción**
+  (`RejectionStage::Recepcion` — comprobante DEVUELTO, nunca entró al SRI; se puede
+  corregir y re-emitir con la misma clave) o en **autorización**
+  (`RejectionStage::Autorizacion` — NO AUTORIZADO, quedó registrado). v2.0 colapsaba
+  ambos en `Rejected` y los consumidores que necesitan el routing legal
+  DEVUELTO/NO_AUTORIZADO (p. ej. facturación con reintentos) perdían la distinción.
+- Nueva enum `Teran\Sri\Emission\RejectionStage` (`Recepcion` | `Autorizacion`).
+
+### Notas de compatibilidad
+- 100% retrocompatible: parámetro nuevo opcional al final del constructor de
+  `EmissionResult`; `EmissionStatus` no cambia (sin casos nuevos — los `match`
+  exhaustivos existentes siguen compilando). Consumidores que no lean
+  `rejectedStage` no notan ningún cambio.
+
 ## [2.0.3] - 2026-06-05
 
 Patch **crítico de correctitud de la firma** (+ autorización, rendimiento y ejemplos). Retrocompatible.
