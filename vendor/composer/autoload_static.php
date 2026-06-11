@@ -13,59 +13,59 @@ class ComposerStaticInitc7e7ed7af6a286521e0ec75b37520526
     );
 
     public static $prefixLengthsPsr4 = array (
-        'T' => 
+        'T' =>
         array (
             'Teran\\Sri\\Tests\\' => 16,
             'Teran\\Sri\\' => 10,
         ),
-        'P' => 
+        'P' =>
         array (
             'Psr\\Log\\' => 8,
             'Psr\\Http\\Message\\' => 17,
             'Psr\\Http\\Client\\' => 16,
             'PhpParser\\' => 10,
         ),
-        'N' => 
+        'N' =>
         array (
             'Nyholm\\Psr7\\' => 12,
         ),
-        'D' => 
+        'D' =>
         array (
             'DeepCopy\\' => 9,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Teran\\Sri\\Tests\\' => 
+        'Teran\\Sri\\Tests\\' =>
         array (
             0 => __DIR__ . '/../..' . '/tests',
         ),
-        'Teran\\Sri\\' => 
+        'Teran\\Sri\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
-        'Psr\\Log\\' => 
+        'Psr\\Log\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
         ),
-        'Psr\\Http\\Message\\' => 
+        'Psr\\Http\\Message\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/http-factory/src',
             1 => __DIR__ . '/..' . '/psr/http-message/src',
         ),
-        'Psr\\Http\\Client\\' => 
+        'Psr\\Http\\Client\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/http-client/src',
         ),
-        'PhpParser\\' => 
+        'PhpParser\\' =>
         array (
             0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
         ),
-        'Nyholm\\Psr7\\' => 
+        'Nyholm\\Psr7\\' =>
         array (
             0 => __DIR__ . '/..' . '/nyholm/psr7/src',
         ),
-        'DeepCopy\\' => 
+        'DeepCopy\\' =>
         array (
             0 => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy',
         ),
@@ -1627,6 +1627,7 @@ class ComposerStaticInitc7e7ed7af6a286521e0ec75b37520526
         'Teran\\Sri\\Signing\\Certificate' => __DIR__ . '/../..' . '/src/Signing/Certificate.php',
         'Teran\\Sri\\Signing\\CertificateLoader' => __DIR__ . '/../..' . '/src/Signing/CertificateLoader.php',
         'Teran\\Sri\\Signing\\ClockInterface' => __DIR__ . '/../..' . '/src/Signing/ClockInterface.php',
+        'Teran\\Sri\\Signing\\IssuerName' => __DIR__ . '/../..' . '/src/Signing/IssuerName.php',
         'Teran\\Sri\\Signing\\SignatureOptions' => __DIR__ . '/../..' . '/src/Signing/SignatureOptions.php',
         'Teran\\Sri\\Signing\\SystemClock' => __DIR__ . '/../..' . '/src/Signing/SystemClock.php',
         'Teran\\Sri\\Signing\\XadesSigner' => __DIR__ . '/../..' . '/src/Signing/XadesSigner.php',
@@ -1668,6 +1669,7 @@ class ComposerStaticInitc7e7ed7af6a286521e0ec75b37520526
         'Teran\\Sri\\Tests\\Unit\\Signing\\CertificateLoaderTest' => __DIR__ . '/../..' . '/tests/Unit/Signing/CertificateLoaderTest.php',
         'Teran\\Sri\\Tests\\Unit\\Signing\\CertificateTest' => __DIR__ . '/../..' . '/tests/Unit/Signing/CertificateTest.php',
         'Teran\\Sri\\Tests\\Unit\\Signing\\ClockTest' => __DIR__ . '/../..' . '/tests/Unit/Signing/ClockTest.php',
+        'Teran\\Sri\\Tests\\Unit\\Signing\\IssuerNameTest' => __DIR__ . '/../..' . '/tests/Unit/Signing/IssuerNameTest.php',
         'Teran\\Sri\\Tests\\Unit\\Signing\\SignatureOptionsTest' => __DIR__ . '/../..' . '/tests/Unit/Signing/SignatureOptionsTest.php',
         'Teran\\Sri\\Tests\\Unit\\Signing\\XadesSignerTest' => __DIR__ . '/../..' . '/tests/Unit/Signing/XadesSignerTest.php',
         'Teran\\Sri\\Tests\\Unit\\SriClientCreateTest' => __DIR__ . '/../..' . '/tests/Unit/SriClientCreateTest.php',

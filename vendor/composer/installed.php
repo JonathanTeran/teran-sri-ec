@@ -3,7 +3,7 @@
         'name' => 'amephia/sri-ec',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'de4cb1a6a3403e2feecaafcb39079d902307393c',
+        'reference' => 'bc528d652db7710a7cd0e4b3db9875ecdd84cccc',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'amephia/sri-ec' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'de4cb1a6a3403e2feecaafcb39079d902307393c',
+            'reference' => 'bc528d652db7710a7cd0e4b3db9875ecdd84cccc',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
