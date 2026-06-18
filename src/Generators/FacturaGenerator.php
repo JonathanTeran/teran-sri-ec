@@ -36,17 +36,23 @@ class FacturaGenerator extends XmlGenerator
         $root->appendChild($node);
 
         $simpleFields = [
-            'fechaEmision', 'dirEstablecimiento', 'contribuyenteEspecial', 
+            'fechaEmision', 'dirEstablecimiento', 'contribuyenteEspecial',
             'obligadoContabilidad', 'comercioExterior',
+            // Bloque de exportación (todos opcionales en el XSD: solo aparecen
+            // en facturas de exportación, en este orden estricto).
+            'incoTermFactura', 'lugarIncoTerm', 'paisOrigen', 'puertoEmbarque',
+            'puertoDestino', 'paisDestino', 'paisAdquisicion',
             'tipoIdentificacionComprador', 'guiaRemision', 'razonSocialComprador',
             'identificacionComprador', 'direccionComprador', 'totalSinImpuestos',
+            'incoTermTotalSinImpuestos',
             'totalDescuento'
         ];
 
         foreach ($simpleFields as $field) {
             if (isset($data[$field])) {
                 $value = $data[$field];
-                // Apply 2 decimals for monetary fields
+                // Apply 2 decimals for monetary fields. OJO: incoTermTotalSinImpuestos
+                // es un CÓDIGO string (xs:string, p.ej. "FOB"), no un monto.
                 if (in_array($field, ['totalSinImpuestos', 'totalDescuento'])) {
                     $value = $this->formatValue($value, 2);
                 }
@@ -85,6 +91,15 @@ class FacturaGenerator extends XmlGenerator
         }
 
         $node->appendChild($this->createTextElement('propina', $this->formatValue($data['propina'] ?? 0, 2)));
+
+        // Bloque de exportación: costos internacionales (opcionales, van entre
+        // propina e importeTotal según el XSD).
+        foreach (['fleteInternacional', 'seguroInternacional', 'gastosAduaneros', 'gastosTransporteOtros'] as $expField) {
+            if (isset($data[$expField])) {
+                $node->appendChild($this->createTextElement($expField, $this->formatValue($data[$expField], 2)));
+            }
+        }
+
         $node->appendChild($this->createTextElement('importeTotal', $this->formatValue($data['importetotal'], 2)));
         $node->appendChild($this->createTextElement('moneda', $data['moneda'] ?? 'DOLAR'));
 
