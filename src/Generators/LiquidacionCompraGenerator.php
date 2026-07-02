@@ -6,11 +6,11 @@ namespace Teran\Sri\Generators;
 
 use DOMElement;
 
-class FacturaGenerator extends XmlGenerator
+class LiquidacionCompraGenerator extends XmlGenerator
 {
     public function generate(array $data): string
     {
-        $root = $this->dom->createElement('factura');
+        $root = $this->dom->createElement('liquidacionCompra');
         $root->setAttribute('id', 'comprobante');
         $root->setAttribute('version', '1.1.0');
         $this->dom->appendChild($root);
@@ -18,8 +18,8 @@ class FacturaGenerator extends XmlGenerator
         // 1. Info Tributaria
         $this->createInfoTributaria($root, $data['infoTributaria']);
 
-        // 2. Info Factura
-        $this->createInfoFactura($root, $data['infoFactura']);
+        // 2. Info Liquidación de Compra
+        $this->createInfoLiquidacionCompra($root, $data['infoLiquidacionCompra']);
 
         // 3. Detalles
         $this->createDetalles($root, $data['detalles']);
@@ -30,30 +30,26 @@ class FacturaGenerator extends XmlGenerator
         return $this->dom->saveXML();
     }
 
-    private function createInfoFactura(DOMElement $root, array $data): void
+    private function createInfoLiquidacionCompra(DOMElement $root, array $data): void
     {
-        $node = $this->dom->createElement('infoFactura');
+        $node = $this->dom->createElement('infoLiquidacionCompra');
         $root->appendChild($node);
 
         $simpleFields = [
             'fechaEmision', 'dirEstablecimiento', 'contribuyenteEspecial',
-            'obligadoContabilidad', 'comercioExterior',
-            // Bloque de exportación (todos opcionales en el XSD: solo aparecen
-            // en facturas de exportación, en este orden estricto).
-            'incoTermFactura', 'lugarIncoTerm', 'paisOrigen', 'puertoEmbarque',
-            'puertoDestino', 'paisDestino', 'paisAdquisicion',
-            'tipoIdentificacionComprador', 'guiaRemision', 'razonSocialComprador',
-            'identificacionComprador', 'direccionComprador', 'totalSinImpuestos',
-            'incoTermTotalSinImpuestos',
-            'totalDescuento'
+            'obligadoContabilidad',
+            'tipoIdentificacionProveedor', 'razonSocialProveedor',
+            'identificacionProveedor', 'direccionProveedor',
+            'totalSinImpuestos', 'totalDescuento',
+            // Bloque de reembolso (opcional en el XSD, en este orden estricto).
+            'codDocReembolso', 'totalComprobantesReembolso',
+            'totalBaseImponibleReembolso', 'totalImpuestoReembolso',
         ];
 
         foreach ($simpleFields as $field) {
             if (isset($data[$field])) {
                 $value = $data[$field];
-                // Apply 2 decimals for monetary fields. OJO: incoTermTotalSinImpuestos
-                // es un CÓDIGO string (xs:string, p.ej. "FOB"), no un monto.
-                if (in_array($field, ['totalSinImpuestos', 'totalDescuento'])) {
+                if (in_array($field, ['totalSinImpuestos', 'totalDescuento', 'totalComprobantesReembolso', 'totalBaseImponibleReembolso', 'totalImpuestoReembolso'])) {
                     $value = $this->formatValue($value, 2);
                 }
                 $node->appendChild($this->createTextElement($field, (string)$value));
@@ -67,21 +63,17 @@ class FacturaGenerator extends XmlGenerator
             foreach ($data['totalConImpuestos'] as $imp) {
                 $item = $this->dom->createElement('totalImpuesto');
                 $totalImpNode->appendChild($item);
-                // Enforce strict XSD order: codigo, codigoPorcentaje, descuentoAdicional, baseImponible, tarifa, valor, valorDevolucionIva
+                // Enforce strict XSD order: codigo, codigoPorcentaje, descuentoAdicional, baseImponible, tarifa, valor
                 $fieldsOrder = [
-                    'codigo', 'codigoPorcentaje', 'descuentoAdicional', 
-                    'baseImponible', 'tarifa', 'valor', 'valorDevolucionIva'
+                    'codigo', 'codigoPorcentaje', 'descuentoAdicional',
+                    'baseImponible', 'tarifa', 'valor'
                 ];
 
                 foreach ($fieldsOrder as $k) {
-                    // Force descuentoAdicional to 0.00 if missing, to match reference XML structure
                     $v = $imp[$k] ?? null;
-                    if ($k === 'descuentoAdicional' && $v === null) {
-                        $v = '0.00'; // Default
-                    }
 
                     if ($v !== null) {
-                        if (in_array($k, ['baseImponible', 'valor', 'descuentoAdicional', 'tarifa', 'valorDevolucionIva'])) {
+                        if (in_array($k, ['baseImponible', 'valor', 'descuentoAdicional', 'tarifa'])) {
                             $v = $this->formatValue($v, 2);
                         }
                         $item->appendChild($this->createTextElement($k, (string)$v));
@@ -90,17 +82,7 @@ class FacturaGenerator extends XmlGenerator
             }
         }
 
-        $node->appendChild($this->createTextElement('propina', $this->formatValue($data['propina'] ?? 0, 2)));
-
-        // Bloque de exportación: costos internacionales (opcionales, van entre
-        // propina e importeTotal según el XSD).
-        foreach (['fleteInternacional', 'seguroInternacional', 'gastosAduaneros', 'gastosTransporteOtros'] as $expField) {
-            if (isset($data[$expField])) {
-                $node->appendChild($this->createTextElement($expField, $this->formatValue($data[$expField], 2)));
-            }
-        }
-
-        $node->appendChild($this->createTextElement('importeTotal', $this->formatValue($data['importetotal'], 2)));
+        $node->appendChild($this->createTextElement('importeTotal', $this->formatValue($data['importeTotal'] ?? $data['importetotal'], 2)));
         $node->appendChild($this->createTextElement('moneda', $data['moneda'] ?? 'DOLAR'));
 
         // Pagos
@@ -114,7 +96,7 @@ class FacturaGenerator extends XmlGenerator
                 $fieldsOrder = ['formaPago', 'total', 'plazo', 'unidadTiempo'];
                 foreach ($fieldsOrder as $k) {
                     $val = $pago[$k] ?? null;
-                    
+
                     // Match reference: if unit of time is missing but payment is not cash (01)
                     if ($k === 'unidadTiempo' && $val === null && ($pago['formaPago'] ?? '') !== '01') {
                         $val = 'dias';
@@ -141,7 +123,7 @@ class FacturaGenerator extends XmlGenerator
             $node->appendChild($item);
 
             $simpleFields = [
-                'codigoPrincipal', 'codigoAuxiliar', 'descripcion', 
+                'codigoPrincipal', 'codigoAuxiliar', 'descripcion',
                 'unidadMedida', 'cantidad', 'precioUnitario', 'descuento', 'precioTotalSinImpuesto'
             ];
 

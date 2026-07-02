@@ -7,6 +7,7 @@ namespace Teran\Sri\Catalogs2;
 enum TipoComprobante: string
 {
     case Factura = '01';
+    case LiquidacionCompra = '03';
     case NotaCredito = '04';
     case NotaDebito = '05';
     case GuiaRemision = '06';

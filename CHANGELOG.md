@@ -2,6 +2,23 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.2.0] - 2026-07-01
+
+### Added — Liquidación de Compra de Bienes y Prestación de Servicios (codDoc `03`)
+
+- **Nuevo documento soportado en ambas APIs**, espejando la implementación de Factura:
+  - **API 2.0:** DTO inmutable `Teran\Sri\Documents\LiquidacionCompra` (con `::fromArray()` y validación en construcción — proveedor 04–08, fecha `dd/mm/aaaa`, detalles/pagos no vacíos) + `Teran\Sri\Xml\LiquidacionCompraXmlSerializer` (raíz `<liquidacionCompra id="comprobante" version="1.1.0">`).
+  - **API 1.x:** `SRI::liquidacionCompraFromArray(array $data)` (mismo patrón que `facturaFromArray`, llave `infoLiquidacionCompra`) + `Generators\LiquidacionCompraGenerator`.
+  - Constantes/catálogos: `SRI::TIPO_LIQUIDACION_COMPRA = '03'`, `TipoComprobante::LiquidacionCompra`, y registro en el mapa XSD de `SRI::validarXml()`.
+- **XSD oficial** `resources/xsd/liquidacionCompra_v1.1.0.xsd` (LiquidacionCompra_V1.1.0 de la Ficha Técnica del SRI, esquema offline), con la misma adaptación que el de factura: la firma `ds:Signature` se acepta vía `xsd:any processContents="lax"` en lugar de importar `xmldsig-core-schema.xsd`, para validar el XML antes y después de firmar sin archivos extra. Tanto el generador 1.x como el serializador 2.0 se validan contra este XSD en tests, incluido el flujo completo de firma XAdES-BES (firma verificada criptográficamente).
+
+### Added — Factura de exportación (comercio exterior)
+
+- `FacturaGenerator` (API 1.x) soporta el bloque de comercio exterior en `infoFactura`, en el orden estricto del XSD: `comercioExterior`, `incoTermFactura`, `lugarIncoTerm`, `paisOrigen`, `puertoEmbarque`, `puertoDestino`, `paisDestino`, `paisAdquisicion`, `incoTermTotalSinImpuestos`, y los costos internacionales `fleteInternacional`, `seguroInternacional`, `gastosAduaneros`, `gastosTransporteOtros`. Sin datos de exportación la salida es idéntica a la anterior.
+
+### Calidad
+- 15 tests nuevos de liquidación (documento, generador y serializador validados contra el XSD) · PHPStan nivel máximo sin errores nuevos.
+
 ## [2.1.0] - 2026-06-11
 
 Minor retrocompatible: el rechazo de emisión ahora distingue la **etapa**.
@@ -21,7 +38,6 @@ Minor retrocompatible: el rechazo de emisión ahora distingue la **etapa**.
   `EmissionResult`; `EmissionStatus` no cambia (sin casos nuevos — los `match`
   exhaustivos existentes siguen compilando). Consumidores que no lean
   `rejectedStage` no notan ningún cambio.
-
 ## [2.0.3] - 2026-06-05
 
 Patch **crítico de correctitud de la firma** (+ autorización, rendimiento y ejemplos). Retrocompatible.
