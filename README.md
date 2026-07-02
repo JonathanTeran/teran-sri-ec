@@ -101,6 +101,7 @@ Esta librería ha sido probada y ajustada para soportar certificados de:
 | Tipo | Código | Método |
 |------|--------|--------|
 | Factura | 01 | `facturaFromArray()` |
+| Liquidación de Compra | 03 | `liquidacionCompraFromArray()` |
 | Nota de Crédito | 04 | `notaCreditoFromArray()` |
 | Nota de Débito | 05 | `notaDebitoFromArray()` |
 | Guía de Remisión | 06 | `guiaRemisionFromArray()` |
@@ -356,6 +357,7 @@ src/
 ├── SRI.php                    # Clase principal
 ├── Generators/                # Generadores de XML
 │   ├── FacturaGenerator.php
+│   ├── LiquidacionCompraGenerator.php
 │   ├── NotaCreditoGenerator.php
 │   ├── NotaDebitoGenerator.php
 │   ├── RetencionGenerator.php
