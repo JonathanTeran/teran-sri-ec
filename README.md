@@ -76,7 +76,7 @@ print_r($batch->status());   // ['AUTHORIZED' => 980, 'REJECTED' => 5, ...]
 - ✅ **Firma Electrónica Universal**: Compatible con archivos `.p12` o `.pfx` de cualquier entidad certificadora del Ecuador.
 - ✅ **Compatibilidad Avanzada**: Manejo robusto de cadenas de confianza (certificados intermedios) y números de serie de gran longitud.
 - ✅ **Algoritmos Modernos**: Soporte dinámico para llaves RSA y ECDSA.
-- ✅ **Todos los Comprobantes**: Facturas, Notas de Crédito/Débito, Retenciones y Guías de Remisión.
+- ✅ **Todos los Comprobantes**: Facturas, Liquidaciones de Compra, Notas de Crédito/Débito, Retenciones y Guías de Remisión.
 - ✅ **Validación XSD**: Validación local contra esquemas oficiales del SRI.
 - ✅ **Cliente SOAP**: Comunicación robusta con servicios web del SRI (Recepción y Autorización).
 - ✅ **Clave de Acceso**: Generación automática con algoritmo Módulo 11.

@@ -23,6 +23,7 @@ class SRI
 
     // Códigos de tipo de documento según SRI
     public const TIPO_FACTURA = '01';
+    public const TIPO_LIQUIDACION_COMPRA = '03';
     public const TIPO_NOTA_CREDITO = '04';
     public const TIPO_NOTA_DEBITO = '05';
     public const TIPO_GUIA_REMISION = '06';
@@ -65,6 +66,23 @@ class SRI
             'infoFactura',
             Generators\FacturaGenerator::class,
             'factura_v2.1.0.xsd'
+        );
+    }
+
+    /**
+     * Procesa una liquidación de compra de bienes y prestación de servicios
+     * desde un array de datos.
+     *
+     * @deprecated 2.0 Usa SriClient::emit(LiquidacionCompra::fromArray($data), $clave).
+     */
+    public function liquidacionCompraFromArray(array $data): array
+    {
+        return $this->procesarComprobante(
+            $data,
+            self::TIPO_LIQUIDACION_COMPRA,
+            'infoLiquidacionCompra',
+            Generators\LiquidacionCompraGenerator::class,
+            'liquidacionCompra_v1.1.0.xsd'
         );
     }
 
@@ -314,6 +332,7 @@ class SRI
     {
         $xsdMap = [
             self::TIPO_FACTURA => 'factura_v2.1.0.xsd',
+            self::TIPO_LIQUIDACION_COMPRA => 'liquidacionCompra_v1.1.0.xsd',
             self::TIPO_NOTA_CREDITO => 'notaCredito_v1.1.0.xsd',
             self::TIPO_NOTA_DEBITO => 'notaDebito_v1.0.0.xsd',
             self::TIPO_GUIA_REMISION => 'guiaRemision_v1.1.0.xsd',
