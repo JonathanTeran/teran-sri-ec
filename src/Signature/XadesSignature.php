@@ -55,12 +55,20 @@ class XadesSignature
     private const KEY_TYPE_RSA = OPENSSL_KEYTYPE_RSA;
     private const KEY_TYPE_EC = OPENSSL_KEYTYPE_EC;
 
+    /**
+     * Descripción por defecto del DataObjectFormat de la firma XAdES. Es un
+     * texto libre sin valor fiscal para el SRI; se deja neutral y sin marca de
+     * terceros. Puede sobreescribirse por constructor.
+     */
+    public const DEFAULT_DESCRIPTION = 'Comprobante electrónico SRI Ecuador';
+
     private string $p12Content;
     private string $password;
     private array $certs = [];
     private array $extraCerts = [];
     private string $digestAlgorithm = 'sha1';
     private bool $validated = false;
+    private string $description;
 
     /**
      * Known Ecuadorian certificate providers for debugging
@@ -75,10 +83,12 @@ class XadesSignature
         'Datilmedia' => ['datilmedia'],
     ];
 
-    public function __construct(string $p12Content, string $password)
+    public function __construct(string $p12Content, string $password, ?string $description = null)
     {
         $this->p12Content = $p12Content;
         $this->password = $password;
+        $desc = $description !== null ? trim($description) : '';
+        $this->description = $desc !== '' ? $desc : self::DEFAULT_DESCRIPTION;
         $this->loadCertificate();
     }
 
@@ -484,7 +494,7 @@ class XadesSignature
         $dataObjFormat->setAttribute('ObjectReference', "#$docRefId");
         $signedDataObjProps->appendChild($dataObjFormat);
 
-        $dataObjFormat->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:Description', 'DOCUMENTO EMITIDO CON ECUAFACT. LA FACTURACION ELECTRONICA DEL ECUADOR. Visitenos en http://www.ecuanexus.com '));
+        $dataObjFormat->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:Description', $this->description));
         $dataObjFormat->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:MimeType', 'text/xml'));
         // Removed etsi:Encoding to match reference order and structure exactly
         // $dataObjFormat->appendChild($dom->createElementNS(self::NS_XADES, 'etsi:Encoding', 'UTF-8'));

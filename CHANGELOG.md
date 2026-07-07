@@ -2,6 +2,17 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.2.2] - 2026-07-07
+
+### Changed — Descripción de firma XAdES sin marca de terceros
+
+- **`Signature\XadesSignature` (API 1.x) tenía hardcodeado** el texto `DOCUMENTO EMITIDO CON ECUAFACT ... ecuanexus.com` en el `etsi:Description` del `DataObjectFormat` de la firma. Ese texto (marca de un tercero) aparecía en el XML firmado de todos los comprobantes. Es texto libre sin valor fiscal para el SRI.
+- Ahora la descripción es **configurable** vía constructor: `new XadesSignature($p12, $pass, $descripcion)`, y en la API 1.x vía `SRI::setDescripcionFirma(?string)`. Si no se define, usa `XadesSignature::DEFAULT_DESCRIPTION` (`"Comprobante electrónico SRI Ecuador"`, neutral, sin terceros).
+- El firmador 2.0 (`Signing\XadesSigner`) ya era configurable — sin cambios.
+
+### Calidad
+- 3 tests de regresión (`tests/Unit/Signature/XadesSignatureDescriptionTest.php`): sin marca de terceros, descripción personalizada y default ante descripción vacía.
+
 ## [2.2.1] - 2026-07-07
 
 ### Fixed — Autorización reportada como 'ERROR' pese a estar AUTORIZADA (crítico)

@@ -32,6 +32,7 @@ class SRI
     private Soap\SriSoapClient $soapClient;
     private ?string $p12Content = null;
     private ?string $p12Password = null;
+    private ?string $descripcionFirma = null;
     private string $ambiente = 'pruebas';
 
     public function __construct(string $ambiente = 'pruebas')
@@ -45,6 +46,17 @@ class SRI
     {
         $this->p12Content = $p12Content;
         $this->p12Password = $password;
+        return $this;
+    }
+
+    /**
+     * Descripción libre del DataObjectFormat de la firma XAdES (etsi:Description).
+     * No tiene valor fiscal para el SRI; sirve para tu marca. Si no se define,
+     * se usa XadesSignature::DEFAULT_DESCRIPTION (texto neutral, sin terceros).
+     */
+    public function setDescripcionFirma(?string $descripcion): self
+    {
+        $this->descripcionFirma = $descripcion;
         return $this;
     }
 
@@ -236,7 +248,7 @@ class SRI
         }
 
         // 4. Firmar Digitalmente (XAdES-BES)
-        $signer = new XadesSignature($this->p12Content, $this->p12Password);
+        $signer = new XadesSignature($this->p12Content, $this->p12Password, $this->descripcionFirma);
         $xmlFirmado = $signer->sign($xml);
 
         // 4.1 Validar XML Firmado Localmente (XSD)
@@ -319,7 +331,7 @@ class SRI
             throw new SriException("Se requiere configurar la firma digital antes de firmar.");
         }
 
-        $signer = new XadesSignature($this->p12Content, $this->p12Password);
+        $signer = new XadesSignature($this->p12Content, $this->p12Password, $this->descripcionFirma);
         return $signer->sign($xml);
     }
 
