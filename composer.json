@@ -1,6 +1,6 @@
 {
     "name": "amephia/sri-ec",
-    "version": "2.2.0",
+    "version": "2.2.1",
     "description": "High-performance Ecuador SRI Electronic Billing Library",
     "type": "library",
     "license": "MIT",

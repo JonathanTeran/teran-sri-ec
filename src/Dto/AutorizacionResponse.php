@@ -17,11 +17,17 @@ class AutorizacionResponse
 
     public static function fromSoap(object $data): self
     {
+        // El SRI envuelve la respuesta en RespuestaAutorizacionComprobante
+        // (igual que recepción con RespuestaRecepcionComprobante). Sin este
+        // desenvuelto, autorizaciones->autorizacion nunca se encuentra y todo
+        // comprobante AUTORIZADO se reporta erróneamente como 'ERROR'.
+        $root = $data->RespuestaAutorizacionComprobante ?? $data;
+
         $autorizacion = null;
-        if (isset($data->autorizaciones->autorizacion)) {
-            $autorizacion = is_array($data->autorizaciones->autorizacion) 
-                ? $data->autorizaciones->autorizacion[0] 
-                : $data->autorizaciones->autorizacion;
+        if (isset($root->autorizaciones->autorizacion)) {
+            $autorizacion = is_array($root->autorizaciones->autorizacion)
+                ? $root->autorizaciones->autorizacion[0]
+                : $root->autorizaciones->autorizacion;
         }
 
         if (!$autorizacion) {

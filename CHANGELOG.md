@@ -2,6 +2,16 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.2.1] - 2026-07-07
+
+### Fixed — Autorización reportada como 'ERROR' pese a estar AUTORIZADA (crítico)
+
+- **`Dto\AutorizacionResponse::fromSoap()` no desenvolvía el nodo raíz `RespuestaAutorizacionComprobante`.** El SRI envuelve la respuesta de autorización en ese nodo (igual que recepción en `RespuestaRecepcionComprobante`, que sí se desenvolvía). Al leer `$data->autorizaciones->autorizacion` un nivel demasiado arriba, **nunca** se encontraba la autorización y **todo comprobante AUTORIZADO se reportaba como `estado = 'ERROR'`** (sin número de autorización). Corregido con `$root = $data->RespuestaAutorizacionComprobante ?? $data;`, manteniendo compatibilidad con respuestas sin wrapper.
+- Afecta a `SRI::consultarAutorizacion()` y al flujo `*FromArray()` (API 1.x).
+
+### Calidad
+- 3 tests de regresión (`tests/Unit/Dto/AutorizacionResponseTest.php`): con wrapper, sin wrapper y sin nodo de autorización.
+
 ## [2.2.0] - 2026-07-01
 
 ### Added — Liquidación de Compra de Bienes y Prestación de Servicios (codDoc `03`)
