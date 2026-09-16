@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Teran\Sri\Documents;
 
 use Teran\Sri\Exceptions\ValidationException;
+use Teran\Sri\InfoAdicional;
 
 final class Retencion
 {
@@ -24,7 +25,12 @@ final class Retencion
         public readonly ?string $obligadoContabilidad = null,
         public readonly ?string $tipoSujetoRetenido = null,
         public readonly ?string $parteRel = null,
+        /** @var array<string, string> Campos adicionales (nombre => valor). Ver {@see InfoAdicional}. */
+        public readonly array $infoAdicional = [],
     ) {
+        // Valida tope de 15 campos, longitudes y RUC del proveedor (Anexo 26, v2.34).
+        InfoAdicional::normalizar($infoAdicional);
+
         if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaEmision)) {
             throw new ValidationException("Retencion: fechaEmision inválida '$fechaEmision' (formato dd/MM/yyyy).");
         }
@@ -67,6 +73,10 @@ final class Retencion
             obligadoContabilidad: isset($c['obligadoContabilidad']) ? self::coerceStr($c['obligadoContabilidad']) : null,
             tipoSujetoRetenido: isset($c['tipoSujetoRetenido']) ? self::coerceStr($c['tipoSujetoRetenido']) : null,
             parteRel: isset($c['parteRel']) ? self::coerceStr($c['parteRel']) : null,
+            infoAdicional: InfoAdicional::normalizar(
+                $data['infoAdicional'] ?? [],
+                isset($data['rucProveedor']) && is_scalar($data['rucProveedor']) ? (string) $data['rucProveedor'] : null,
+            ),
         );
     }
 

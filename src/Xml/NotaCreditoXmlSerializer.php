@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Teran\Sri\Xml;
 
+use Teran\Sri\InfoAdicional;
 use Teran\Sri\Documents\Detalle;
 use Teran\Sri\Documents\Impuesto;
 use Teran\Sri\Documents\NotaCredito;
@@ -17,7 +18,7 @@ final class NotaCreditoXmlSerializer
     private const SCALE_MONEY = 2;
     private const SCALE_QUANTITY = 6;
 
-    public function serialize(NotaCredito $doc, string $claveAcceso): string
+    public function serialize(NotaCredito $doc, string $claveAcceso, ?string $rucProveedor = null): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->preserveWhiteSpace = false;
@@ -32,6 +33,10 @@ final class NotaCreditoXmlSerializer
         $this->infoTributaria($b, $root, $doc, $claveAcceso);
         $this->infoNotaCredito($b, $root, $doc);
         $this->detalles($b, $root, $doc);
+
+        // infoAdicional al final (orden del XSD). Con $rucProveedor agrega el campo
+        // «RUC Proveedor» de la Resolución NAC-DGERCGC26-00000027.
+        InfoAdicional::escribir($dom, $root, InfoAdicional::normalizar($doc->infoAdicional, $rucProveedor));
 
         $xml = $dom->saveXML();
         return $xml !== false ? $xml : '';

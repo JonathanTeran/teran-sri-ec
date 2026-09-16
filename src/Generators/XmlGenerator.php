@@ -7,6 +7,7 @@ namespace Teran\Sri\Generators;
 use DOMDocument;
 use DOMElement;
 use Teran\Sri\Exceptions\ValidationException;
+use Teran\Sri\InfoAdicional;
 use Teran\Sri\Utils\ClaveAcceso;
 
 abstract class XmlGenerator
@@ -51,20 +52,24 @@ abstract class XmlGenerator
         }
     }
 
-    protected function addInfoAdicional(DOMElement $root, ?array $infoAdicional): void
+    /**
+     * Escribe `<infoAdicional>`. Con `$rucProveedor` agrega el campo
+     * «RUC Proveedor» exigido por la Resolución NAC-DGERCGC26-00000027
+     * (ficha técnica v2.34, Anexo 26). Ver {@see InfoAdicional}.
+     *
+     * Acepta lo que venga en el array del comprobante (mapa o lista de pares);
+     * {@see InfoAdicional::normalizar()} valida la forma y los límites.
+     */
+    protected function addInfoAdicional(DOMElement $root, mixed $infoAdicional, mixed $rucProveedor = null): void
     {
-        if (empty($infoAdicional)) {
-            return;
-        }
-
-        $node = $this->dom->createElement('infoAdicional');
-        $root->appendChild($node);
-
-        foreach ($infoAdicional as $nombre => $valor) {
-            $campo = $this->createTextElement('campoAdicional', (string)$valor);
-            $campo->setAttribute('nombre', (string)$nombre);
-            $node->appendChild($campo);
-        }
+        InfoAdicional::escribir(
+            $this->dom,
+            $root,
+            InfoAdicional::normalizar(
+                $infoAdicional,
+                is_scalar($rucProveedor) ? (string) $rucProveedor : null,
+            ),
+        );
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Teran\Sri\Documents;
 
 use Teran\Sri\Money\Money;
 use Teran\Sri\Exceptions\ValidationException;
+use Teran\Sri\InfoAdicional;
 
 final class LiquidacionCompra
 {
@@ -31,7 +32,12 @@ final class LiquidacionCompra
         public readonly ?string $contribuyenteEspecial = null,
         public readonly ?string $direccionProveedor = null,
         public readonly string $moneda = 'DOLAR',
+        /** @var array<string, string> Campos adicionales (nombre => valor). Ver {@see InfoAdicional}. */
+        public readonly array $infoAdicional = [],
     ) {
+        // Valida tope de 15 campos, longitudes y RUC del proveedor (Anexo 26, v2.34).
+        InfoAdicional::normalizar($infoAdicional);
+
         if ($detalles === []) {
             throw new ValidationException('LiquidacionCompra: debe tener al menos un detalle.');
         }
@@ -118,6 +124,10 @@ final class LiquidacionCompra
             contribuyenteEspecial: isset($l['contribuyenteEspecial']) ? self::coerceStr($l['contribuyenteEspecial']) : null,
             direccionProveedor: isset($l['direccionProveedor']) ? self::coerceStr($l['direccionProveedor']) : null,
             moneda: self::coerceStr($l['moneda'] ?? 'DOLAR'),
+            infoAdicional: InfoAdicional::normalizar(
+                $data['infoAdicional'] ?? [],
+                isset($data['rucProveedor']) && is_scalar($data['rucProveedor']) ? (string) $data['rucProveedor'] : null,
+            ),
         );
     }
 

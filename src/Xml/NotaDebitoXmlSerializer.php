@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Teran\Sri\Xml;
 
+use Teran\Sri\InfoAdicional;
 use Teran\Sri\Documents\Impuesto;
 use Teran\Sri\Documents\Motivo;
 use Teran\Sri\Documents\NotaDebito;
@@ -17,7 +18,7 @@ final class NotaDebitoXmlSerializer
     private const COD_DOC = '05';
     private const SCALE_MONEY = 2;
 
-    public function serialize(NotaDebito $doc, string $claveAcceso): string
+    public function serialize(NotaDebito $doc, string $claveAcceso, ?string $rucProveedor = null): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->preserveWhiteSpace = false;
@@ -32,6 +33,10 @@ final class NotaDebitoXmlSerializer
         $this->infoTributaria($b, $root, $doc, $claveAcceso);
         $this->infoNotaDebito($b, $root, $doc);
         $this->motivos($b, $root, $doc);
+
+        // infoAdicional al final (orden del XSD). Con $rucProveedor agrega el campo
+        // «RUC Proveedor» de la Resolución NAC-DGERCGC26-00000027.
+        InfoAdicional::escribir($dom, $root, InfoAdicional::normalizar($doc->infoAdicional, $rucProveedor));
 
         $xml = $dom->saveXML();
         return $xml !== false ? $xml : '';

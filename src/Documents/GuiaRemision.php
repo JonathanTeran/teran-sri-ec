@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Teran\Sri\Documents;
 
 use Teran\Sri\Exceptions\ValidationException;
+use Teran\Sri\InfoAdicional;
 
 final class GuiaRemision
 {
@@ -25,7 +26,12 @@ final class GuiaRemision
         public readonly ?string $rise = null,
         public readonly ?string $obligadoContabilidad = null,
         public readonly ?string $contribuyenteEspecial = null,
+        /** @var array<string, string> Campos adicionales (nombre => valor). Ver {@see InfoAdicional}. */
+        public readonly array $infoAdicional = [],
     ) {
+        // Valida tope de 15 campos, longitudes y RUC del proveedor (Anexo 26, v2.34).
+        InfoAdicional::normalizar($infoAdicional);
+
         if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaIniTransporte)) {
             throw new ValidationException("GuiaRemision: fechaIniTransporte inválida '$fechaIniTransporte' (formato dd/MM/yyyy).");
         }
@@ -72,6 +78,10 @@ final class GuiaRemision
             rise: isset($g['rise']) ? self::coerceStr($g['rise']) : null,
             obligadoContabilidad: isset($g['obligadoContabilidad']) ? self::coerceStr($g['obligadoContabilidad']) : null,
             contribuyenteEspecial: isset($g['contribuyenteEspecial']) ? self::coerceStr($g['contribuyenteEspecial']) : null,
+            infoAdicional: InfoAdicional::normalizar(
+                $data['infoAdicional'] ?? [],
+                isset($data['rucProveedor']) && is_scalar($data['rucProveedor']) ? (string) $data['rucProveedor'] : null,
+            ),
         );
     }
 

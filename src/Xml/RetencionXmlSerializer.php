@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Teran\Sri\Xml;
 
+use Teran\Sri\InfoAdicional;
 use Teran\Sri\Documents\DocSustento;
 use Teran\Sri\Documents\Retencion;
 use DOMDocument;
@@ -14,7 +15,7 @@ final class RetencionXmlSerializer
     private const VERSION = '2.0.0';
     private const COD_DOC = '07';
 
-    public function serialize(Retencion $doc, string $claveAcceso): string
+    public function serialize(Retencion $doc, string $claveAcceso, ?string $rucProveedor = null): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->preserveWhiteSpace = false;
@@ -29,6 +30,10 @@ final class RetencionXmlSerializer
         $this->infoTributaria($b, $root, $doc, $claveAcceso);
         $this->infoCompRetencion($b, $root, $doc);
         $this->docsSustento($b, $root, $doc);
+
+        // infoAdicional al final (orden del XSD). Con $rucProveedor agrega el campo
+        // «RUC Proveedor» de la Resolución NAC-DGERCGC26-00000027.
+        InfoAdicional::escribir($dom, $root, InfoAdicional::normalizar($doc->infoAdicional, $rucProveedor));
 
         $xml = $dom->saveXML();
         return $xml !== false ? $xml : '';

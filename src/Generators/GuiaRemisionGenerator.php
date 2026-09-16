@@ -25,7 +25,7 @@ class GuiaRemisionGenerator extends XmlGenerator
         $this->createDestinatarios($root, $data['destinatarios']);
 
         // 4. Info Adicional
-        $this->addInfoAdicional($root, $data['infoAdicional'] ?? []);
+        $this->addInfoAdicional($root, $data['infoAdicional'] ?? [], $data['rucProveedor'] ?? null);
 
         return $this->dom->saveXML();
     }

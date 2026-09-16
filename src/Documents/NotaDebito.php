@@ -6,6 +6,7 @@ namespace Teran\Sri\Documents;
 
 use Teran\Sri\Money\Money;
 use Teran\Sri\Exceptions\ValidationException;
+use Teran\Sri\InfoAdicional;
 
 final class NotaDebito
 {
@@ -32,7 +33,12 @@ final class NotaDebito
         public readonly ?string $dirEstablecimiento = null,
         public readonly ?string $contribuyenteEspecial = null,
         public readonly ?string $rise = null,
+        /** @var array<string, string> Campos adicionales (nombre => valor). Ver {@see InfoAdicional}. */
+        public readonly array $infoAdicional = [],
     ) {
+        // Valida tope de 15 campos, longitudes y RUC del proveedor (Anexo 26, v2.34).
+        InfoAdicional::normalizar($infoAdicional);
+
         if (!preg_match('#^\d{2}/\d{2}/\d{4}$#', $fechaEmision)) {
             throw new ValidationException("NotaDebito: fechaEmision inválida '$fechaEmision' (formato dd/MM/yyyy).");
         }
@@ -105,6 +111,10 @@ final class NotaDebito
             dirEstablecimiento: isset($f['dirEstablecimiento']) ? self::coerceStr($f['dirEstablecimiento']) : null,
             contribuyenteEspecial: isset($f['contribuyenteEspecial']) ? self::coerceStr($f['contribuyenteEspecial']) : null,
             rise: isset($f['rise']) ? self::coerceStr($f['rise']) : null,
+            infoAdicional: InfoAdicional::normalizar(
+                $data['infoAdicional'] ?? [],
+                isset($data['rucProveedor']) && is_scalar($data['rucProveedor']) ? (string) $data['rucProveedor'] : null,
+            ),
         );
     }
 

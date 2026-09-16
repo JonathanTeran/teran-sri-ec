@@ -36,6 +36,36 @@ echo $resultado->status->value; // AUTORIZADO | RECHAZADO | EN_PROCESO
 - `->claveAcceso`, `->signedXml`, `->numeroAutorizacion`, `->fechaAutorizacion`, `->authorizedXml`
 - `->messages` — array de `Message` con los mensajes del SRI
 
+### RUC del proveedor del sistema (Resolución NAC-DGERCGC26-00000027)
+
+Desde el **26 de septiembre de 2026**, quien emite con un sistema de facturación de un tercero debe incluir en **todos** sus comprobantes (factura, notas de crédito y débito, guía de remisión, retención y liquidación de compra) el RUC del proveedor del sistema como campo adicional ([Ficha técnica offline v2.34, Anexo 26](https://www.sri.gob.ec/facturacion-electronica)):
+
+```xml
+<infoAdicional>
+    <campoAdicional nombre="RUC Proveedor">1790000000001</campoAdicional>
+</infoAdicional>
+```
+
+La librería lo agrega por ti, con el nombre exacto, validando el RUC (13 dígitos terminados en 001), sin duplicarlo si ya venía y respetando el máximo de 15 campos adicionales del XSD:
+
+```php
+// API 2.0: a nivel de cliente (todos los comprobantes que emita)…
+$sri = SriClient::create(Ambiente::Produccion, $cert, rucProveedor: '1790000000001');
+
+// …o por documento, con información adicional propia
+$factura = Factura::fromArray([
+    // ...
+    'infoAdicional' => ['Email' => 'cliente@correo.com', 'Pedido' => '9842'],
+    'rucProveedor'  => '1790000000001',
+]);
+
+// API 1.x
+$sri = (new SRI('produccion'))->setRucProveedor('1790000000001');
+// o en el array del comprobante: $data['rucProveedor'] = '1790000000001';
+```
+
+Las reglas viven en `Teran\Sri\InfoAdicional` (`normalizar()`, `validarRucProveedor()`), por si necesitas mostrar el campo en tu RIDE.
+
 ### Envío masivo (BatchEmitter)
 
 ```php

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Teran\Sri\Xml;
 
+use Teran\Sri\InfoAdicional;
 use Teran\Sri\Documents\Destinatario;
 use Teran\Sri\Documents\GuiaRemision;
 use DOMDocument;
@@ -14,7 +15,7 @@ final class GuiaRemisionXmlSerializer
     private const VERSION = '1.1.0';
     private const COD_DOC = '06';
 
-    public function serialize(GuiaRemision $doc, string $claveAcceso): string
+    public function serialize(GuiaRemision $doc, string $claveAcceso, ?string $rucProveedor = null): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->preserveWhiteSpace = false;
@@ -29,6 +30,10 @@ final class GuiaRemisionXmlSerializer
         $this->infoTributaria($b, $root, $doc, $claveAcceso);
         $this->infoGuiaRemision($b, $root, $doc);
         $this->destinatarios($b, $root, $doc);
+
+        // infoAdicional al final (orden del XSD). Con $rucProveedor agrega el campo
+        // «RUC Proveedor» de la Resolución NAC-DGERCGC26-00000027.
+        InfoAdicional::escribir($dom, $root, InfoAdicional::normalizar($doc->infoAdicional, $rucProveedor));
 
         $xml = $dom->saveXML();
         return $xml !== false ? $xml : '';

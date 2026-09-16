@@ -33,6 +33,7 @@ class SRI
     private ?string $p12Content = null;
     private ?string $p12Password = null;
     private ?string $descripcionFirma = null;
+    private ?string $rucProveedor = null;
     private string $ambiente = 'pruebas';
 
     public function __construct(string $ambiente = 'pruebas')
@@ -58,6 +59,29 @@ class SRI
     {
         $this->descripcionFirma = $descripcion;
         return $this;
+    }
+
+    /**
+     * RUC del proveedor del sistema de facturación que se agrega como campo
+     * adicional «RUC Proveedor» a todos los comprobantes que procese esta
+     * instancia (Resolución NAC-DGERCGC26-00000027, ficha técnica v2.34,
+     * Anexo 26; obligatorio desde el 26-sep-2026). Un `rucProveedor` en el
+     * array del comprobante tiene prioridad. `null` lo desactiva.
+     *
+     * @throws Exceptions\ValidationException si el RUC no tiene 13 dígitos terminados en 001.
+     */
+    public function setRucProveedor(?string $ruc): self
+    {
+        $this->rucProveedor = ($ruc === null || trim($ruc) === '')
+            ? null
+            : InfoAdicional::validarRucProveedor($ruc);
+
+        return $this;
+    }
+
+    public function getRucProveedor(): ?string
+    {
+        return $this->rucProveedor;
     }
 
     public function getAmbiente(): string
@@ -196,6 +220,10 @@ class SRI
         // Inyectar la clave de acceso y código de documento
         $data['infoTributaria']['claveAcceso'] = $claveAcceso;
         $data['infoTributaria']['codDoc'] = $tipoDoc;
+
+        if ($this->rucProveedor !== null && empty($data['rucProveedor'])) {
+            $data['rucProveedor'] = $this->rucProveedor;
+        }
 
         // Generar XML con la clave de acceso incluida
         $generator = new $generatorClass();

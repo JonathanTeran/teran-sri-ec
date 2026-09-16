@@ -25,7 +25,7 @@ class LiquidacionCompraGenerator extends XmlGenerator
         $this->createDetalles($root, $data['detalles']);
 
         // 4. Info Adicional
-        $this->addInfoAdicional($root, $data['infoAdicional'] ?? []);
+        $this->addInfoAdicional($root, $data['infoAdicional'] ?? [], $data['rucProveedor'] ?? null);
 
         return $this->dom->saveXML();
     }

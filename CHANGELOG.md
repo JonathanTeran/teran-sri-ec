@@ -2,6 +2,22 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.3.0] - 2026-09-16
+
+### Added — RUC del proveedor del sistema en la información adicional (Resolución NAC-DGERCGC26-00000027)
+
+- **Normativa:** la Resolución NAC-DGERCGC26-00000027 (R.O. 5.º Supl. 335, 28-jul-2026) y la **Ficha Técnica de Comprobantes Electrónicos Offline v2.34, Anexo 26** obligan a quien emite con un sistema de un tercero a incluir en todos sus comprobantes `<campoAdicional nombre="RUC Proveedor">RUC</campoAdicional>`. Plazo: 60 días calendario desde la publicación (**26-sep-2026**).
+- **Nueva clase `Teran\Sri\InfoAdicional`**: normaliza la información adicional (mapa o lista de pares), descarta valores vacíos, valida el máximo de 15 campos y 300 caracteres del XSD, valida el RUC del proveedor (13 dígitos terminados en 001) y lo agrega al final con el nombre exacto, sin duplicarlo.
+- **API 1.x:** `SRI::setRucProveedor(?string)` lo aplica a todos los comprobantes de la instancia; también se acepta la llave `rucProveedor` en el array de cada comprobante. Los seis generadores lo escriben.
+- **API 2.0:** los seis documentos (`Factura`, `NotaCredito`, `NotaDebito`, `GuiaRemision`, `Retencion`, `LiquidacionCompra`) aceptan ahora `infoAdicional` (y `rucProveedor` en `fromArray()`). **Antes los serializadores 2.0 no escribían `<infoAdicional>` en ningún comprobante**, así que no había forma de cumplir la norma con esta API. `SriClient::create(..., rucProveedor:)` lo aplica a lo que emita; los serializadores aceptan `$rucProveedor` como tercer argumento.
+- Compatible hacia atrás: sin `rucProveedor` ni `infoAdicional`, la salida no cambia.
+
+### Changed
+- `XmlGenerator::addInfoAdicional()` descarta campos con valor vacío (el XSD exige al menos un carácter) y lanza `ValidationException` con más de 15 campos, en vez de producir un XML que el SRI rechaza por estructura.
+
+### Calidad
+- 19 tests nuevos (`tests/Unit/InfoAdicionalTest.php`, `tests/Unit/RucProveedorComprobantesTest.php`): paridad 1.x ↔ 2.0 con el campo en NC, ND, guía y retención; validación contra el XSD oficial de factura y liquidación; inyección desde `SRI` y desde `SriClient` en el XML firmado enviado.
+
 ## [2.2.2] - 2026-07-07
 
 ### Changed — Descripción de firma XAdES sin marca de terceros

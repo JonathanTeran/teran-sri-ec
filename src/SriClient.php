@@ -14,6 +14,7 @@ use Teran\Sri\Transport\SoapClientTransport;
 use Teran\Sri\Emission\EmissionResult;
 use Teran\Sri\Emission\EmissionStatus;
 use Teran\Sri\Emission\RejectionStage;
+use Teran\Sri\InfoAdicional;
 
 /**
  * Entrada del 2.0 para emisión individual. Orquesta:
@@ -27,23 +28,32 @@ final class SriClient
         private readonly SriTransportInterface $transport,
         private readonly XadesSigner $signer = new XadesSigner(),
         private readonly FacturaXmlSerializer $facturaSerializer = new FacturaXmlSerializer(),
+        private readonly ?string $rucProveedor = null,
     ) {
+        if ($rucProveedor !== null) {
+            InfoAdicional::validarRucProveedor($rucProveedor);
+        }
     }
 
     /**
      * Crea un SriClient listo para usar con transporte zero-config (ext-soap).
      *
      * @param SriTransportInterface|null $transport Transporte explícito; por defecto SoapClientTransport.
+     * @param string|null $rucProveedor RUC del proveedor del sistema de facturación: se agrega como
+     *                                  campo adicional «RUC Proveedor» a cada comprobante
+     *                                  (Resolución NAC-DGERCGC26-00000027, obligatorio desde 26-sep-2026).
      */
     public static function create(
         Ambiente $ambiente,
         Certificate $certificate,
         ?SriTransportInterface $transport = null,
+        ?string $rucProveedor = null,
     ): self {
         return new self(
             ambiente:     $ambiente,
             certificate:  $certificate,
             transport:    $transport ?? new SoapClientTransport(),
+            rucProveedor: $rucProveedor,
         );
     }
 
@@ -61,7 +71,7 @@ final class SriClient
      */
     public function emit(Factura $factura, string $claveAcceso): EmissionResult
     {
-        $xml = $this->facturaSerializer->serialize($factura, $claveAcceso);
+        $xml = $this->facturaSerializer->serialize($factura, $claveAcceso, $this->rucProveedor);
         $signed = $this->signer->sign($xml, $this->certificate);
 
         $reception = $this->transport->enviar($signed, $this->ambiente);

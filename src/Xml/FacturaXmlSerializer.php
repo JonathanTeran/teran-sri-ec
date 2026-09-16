@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Teran\Sri\Xml;
 
+use Teran\Sri\InfoAdicional;
 use Teran\Sri\Documents\Factura;
 use Teran\Sri\Documents\Impuesto;
 use Teran\Sri\Documents\Detalle;
@@ -19,7 +20,7 @@ final class FacturaXmlSerializer
     private const SCALE_MONEY = 2;
     private const SCALE_QUANTITY = 6;
 
-    public function serialize(Factura $factura, string $claveAcceso): string
+    public function serialize(Factura $factura, string $claveAcceso, ?string $rucProveedor = null): string
     {
         $dom = new DOMDocument('1.0', 'UTF-8');
         $dom->formatOutput = true;
@@ -33,6 +34,10 @@ final class FacturaXmlSerializer
         $this->infoTributaria($b, $root, $factura, $claveAcceso);
         $this->infoFactura($b, $root, $factura);
         $this->detalles($b, $root, $factura);
+
+        // infoAdicional al final (orden del XSD). Con $rucProveedor agrega el campo
+        // «RUC Proveedor» de la Resolución NAC-DGERCGC26-00000027.
+        InfoAdicional::escribir($dom, $root, InfoAdicional::normalizar($factura->infoAdicional, $rucProveedor));
 
         $xml = $dom->saveXML();
         return $xml !== false ? $xml : '';

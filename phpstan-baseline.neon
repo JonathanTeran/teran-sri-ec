@@ -289,12 +289,6 @@ parameters:
 			path: src/Generators/FacturaGenerator.php
 
 		-
-			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Generators/FacturaGenerator.php
-
-		-
 			message: '#^Parameter \#2 \$value of method DOMElement\:\:setAttribute\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -392,12 +386,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$destinatarios of method Teran\\Sri\\Generators\\GuiaRemisionGenerator\:\:createDestinatarios\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Generators/GuiaRemisionGenerator.php
-
-		-
-			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Generators/GuiaRemisionGenerator.php
@@ -523,12 +511,6 @@ parameters:
 			path: src/Generators/LiquidacionCompraGenerator.php
 
 		-
-			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Generators/LiquidacionCompraGenerator.php
-
-		-
 			message: '#^Parameter \#2 \$value of method DOMElement\:\:setAttribute\(\) expects string, mixed given\.$#'
 			identifier: argument.type
 			count: 2
@@ -613,12 +595,6 @@ parameters:
 			path: src/Generators/NotaCreditoGenerator.php
 
 		-
-			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Generators/NotaCreditoGenerator.php
-
-		-
 			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
 			identifier: foreach.nonIterable
 			count: 4
@@ -680,12 +656,6 @@ parameters:
 
 		-
 			message: '#^Parameter \#2 \$data of method Teran\\Sri\\Generators\\XmlGenerator\:\:createInfoTributaria\(\) expects array, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Generators/NotaDebitoGenerator.php
-
-		-
-			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Generators/NotaDebitoGenerator.php
@@ -799,20 +769,8 @@ parameters:
 			path: src/Generators/RetencionGenerator.php
 
 		-
-			message: '#^Parameter \#2 \$infoAdicional of method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) expects array\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Generators/RetencionGenerator.php
-
-		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
-			count: 2
-			path: src/Generators/XmlGenerator.php
-
-		-
-			message: '#^Method Teran\\Sri\\Generators\\XmlGenerator\:\:addInfoAdicional\(\) has parameter \$infoAdicional with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
 			count: 1
 			path: src/Generators/XmlGenerator.php
 

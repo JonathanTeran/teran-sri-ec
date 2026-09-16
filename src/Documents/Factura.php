@@ -6,6 +6,7 @@ namespace Teran\Sri\Documents;
 
 use Teran\Sri\Money\Money;
 use Teran\Sri\Exceptions\ValidationException;
+use Teran\Sri\InfoAdicional;
 
 final class Factura
 {
@@ -27,7 +28,12 @@ final class Factura
         public readonly array $detalles,
         public readonly array $pagos,
         public readonly string $obligadoContabilidad = 'NO',
+        /** @var array<string, string> Campos adicionales (nombre => valor). Ver {@see InfoAdicional}. */
+        public readonly array $infoAdicional = [],
     ) {
+        // Valida tope de 15 campos, longitudes y RUC del proveedor (Anexo 26, v2.34).
+        InfoAdicional::normalizar($infoAdicional);
+
         if ($detalles === []) {
             throw new ValidationException('Factura: debe tener al menos un detalle.');
         }
@@ -98,6 +104,10 @@ final class Factura
             detalles: $detalles,
             pagos: $pagos,
             obligadoContabilidad: self::coerceStr($f['obligadoContabilidad'] ?? 'NO'),
+            infoAdicional: InfoAdicional::normalizar(
+                $data['infoAdicional'] ?? [],
+                isset($data['rucProveedor']) && is_scalar($data['rucProveedor']) ? (string) $data['rucProveedor'] : null,
+            ),
         );
     }
 

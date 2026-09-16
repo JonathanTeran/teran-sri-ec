@@ -25,7 +25,7 @@ class NotaDebitoGenerator extends XmlGenerator
         $this->createMotivos($root, $data['motivos']);
 
         // 4. Info Adicional
-        $this->addInfoAdicional($root, $data['infoAdicional'] ?? []);
+        $this->addInfoAdicional($root, $data['infoAdicional'] ?? [], $data['rucProveedor'] ?? null);
 
         return $this->dom->saveXML();
     }
