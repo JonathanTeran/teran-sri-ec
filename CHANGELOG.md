@@ -2,6 +2,21 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.3.1] - 2026-09-23
+
+### Fixed — `contribuyenteRimpe` en el XSD de factura: solo las dos leyendas oficiales
+
+- **`resources/xsd/factura_v2.1.0.xsd` declaraba `contribuyenteRimpe` como `maxLength 40`**, distinto del XSD oficial del SRI, que admite solo dos valores exactos: `CONTRIBUYENTE RÉGIMEN RIMPE` y `CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE` (guion corto). Dos efectos:
+  - **Toda factura de un negocio popular fallaba la validación local** (`[facet 'maxLength'] The value has a length of '45'`) aunque fuera correcta, y no llegaba a enviarse.
+  - **Las leyendas inventadas que caben en 40 caracteres pasaban** (p. ej. `CONTRIBUYENTE RÉGIMEN RIMPE EMPRENDEDOR`) y el SRI las devolvía con «ARCHIVO NO CUMPLE ESTRUCTURA XML».
+- Ahora el tipo es una enumeración con esas dos leyendas: la validación local acepta lo mismo que el SRI y el error nombra los valores válidos. El XSD de liquidación de compra ya las restringía con el patrón oficial; sin cambios.
+
+### Changed
+- `Dto\AutorizacionResponse::fromSoap()` desenvuelve `RespuestaAutorizacionComprobante` solo si es un objeto. Mismo comportamiento con respuestas reales del SRI; deja PHPStan (nivel máximo) sin errores, que tenía el CI en rojo desde 2.2.1.
+
+### Calidad
+- 14 tests nuevos (`tests/Unit/Schema/ContribuyenteRimpeXsdTest.php`): factura y liquidación generadas con cada leyenda oficial validan contra su XSD; cinco leyendas inventadas (sufijo «EMPRENDEDOR», guion largo, sin tilde, minúsculas, espacio al final) se rechazan en `contribuyenteRimpe`.
+
 ## [2.3.0] - 2026-09-16
 
 ### Added — RUC del proveedor del sistema en la información adicional (Resolución NAC-DGERCGC26-00000027)

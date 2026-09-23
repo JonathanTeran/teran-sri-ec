@@ -21,7 +21,8 @@ class AutorizacionResponse
         // (igual que recepción con RespuestaRecepcionComprobante). Sin este
         // desenvuelto, autorizaciones->autorizacion nunca se encuentra y todo
         // comprobante AUTORIZADO se reporta erróneamente como 'ERROR'.
-        $root = $data->RespuestaAutorizacionComprobante ?? $data;
+        $wrapper = $data->RespuestaAutorizacionComprobante ?? null;
+        $root = is_object($wrapper) ? $wrapper : $data;
 
         $autorizacion = null;
         if (isset($root->autorizaciones->autorizacion)) {

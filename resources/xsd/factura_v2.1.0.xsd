@@ -344,9 +344,11 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <!-- Solo las dos leyendas del XSD oficial del SRI, exactas (guion corto, con tilde). -->
     <xs:simpleType name="contribuyenteRimpe">
         <xs:restriction base="xs:string">
-            <xs:maxLength value="40"/>
+            <xs:enumeration value="CONTRIBUYENTE RÉGIMEN RIMPE"/>
+            <xs:enumeration value="CONTRIBUYENTE NEGOCIO POPULAR - RÉGIMEN RIMPE"/>
         </xs:restriction>
     </xs:simpleType>
 
