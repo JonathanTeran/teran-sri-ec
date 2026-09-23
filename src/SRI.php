@@ -300,7 +300,8 @@ class SRI
         $respuestaRecepcion = Dto\RecepcionResponse::fromSoap($soapRecepcion);
 
         if ($respuestaRecepcion->estado === 'DEVUELTA') {
-            $errores = array_map(fn($m) => $m->mensaje, $respuestaRecepcion->mensajes);
+            // Con la información adicional: ahí viene el motivo concreto.
+            $errores = array_map(fn($m) => $m->texto(), $respuestaRecepcion->mensajes);
 
             // Log PSR-3 sin volcar el XML firmado ni la respuesta SOAP completa (datos sensibles).
             $this->getLogger()->warning('El SRI devolvió el comprobante en recepción.', [

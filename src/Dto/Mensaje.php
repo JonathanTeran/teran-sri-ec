@@ -22,4 +22,20 @@ class Mensaje
             (string)($data->tipo ?? 'ERROR')
         );
     }
+
+    /**
+     * El mensaje con su información adicional, que es donde el SRI dice el
+     * motivo concreto («ARCHIVO NO CUMPLE ESTRUCTURA XML: No existe un
+     * contribuyente registrado con el RUC …»).
+     */
+    public function texto(): string
+    {
+        $detalle = trim((string) $this->informacionAdicional);
+
+        if ($detalle === '' || str_contains($this->mensaje, $detalle)) {
+            return $this->mensaje;
+        }
+
+        return $this->mensaje . ': ' . $detalle;
+    }
 }

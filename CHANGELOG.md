@@ -2,6 +2,16 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.3.2] - 2026-09-23
+
+### Fixed — el motivo real de una devolución en recepción se perdía
+
+- Cuando el SRI devolvía el comprobante en recepción (`DEVUELTA`), la `ValidationException` llevaba solo el título de cada mensaje y descartaba `informacionAdicional`, que es donde el SRI dice el motivo concreto. Caso real: «ARCHIVO NO CUMPLE ESTRUCTURA XML» cuyo detalle era «No existe un contribuyente registrado con el RUC …» — quien emitía buscaba un error de estructura que no existía.
+- Nuevo `Dto\Mensaje::texto()`: el mensaje con su información adicional (`mensaje: detalle`), sin repetirla si ya está en el mensaje. `SRI::procesar()` lo usa para los errores de la devolución. Los consumidores que buscan un texto dentro del error (p. ej. «CLAVE ACCESO REGISTRADA») siguen funcionando.
+
+### Calidad
+- 3 tests nuevos (`tests/Unit/Dto/MensajeTest.php`).
+
 ## [2.3.1] - 2026-09-23
 
 ### Fixed — `contribuyenteRimpe` en el XSD de factura: solo las dos leyendas oficiales
