@@ -24,6 +24,12 @@ class FacturaGenerator extends XmlGenerator
         // 3. Detalles
         $this->createDetalles($root, $data['detalles']);
 
+        // 3b. Reembolsos (opcional; el XSD los ubica entre detalles e infoAdicional)
+        $reembolsos = $data['reembolsos'] ?? null;
+        if (is_array($reembolsos) && $reembolsos !== []) {
+            $this->createReembolsos($root, $reembolsos);
+        }
+
         // 4. Info Adicional
         $this->addInfoAdicional($root, $data['infoAdicional'] ?? [], $data['rucProveedor'] ?? null);
 
@@ -45,7 +51,12 @@ class FacturaGenerator extends XmlGenerator
             'tipoIdentificacionComprador', 'guiaRemision', 'razonSocialComprador',
             'identificacionComprador', 'direccionComprador', 'totalSinImpuestos',
             'incoTermTotalSinImpuestos',
-            'totalDescuento'
+            'totalDescuento',
+            // Reembolso de gastos (factura del intermediario, ficha técnica:
+            // codDocReembolso 41). Van después de totalDescuento y antes de
+            // totalConImpuestos, en este orden estricto del XSD.
+            'codDocReembolso', 'totalComprobantesReembolso',
+            'totalBaseImponibleReembolso', 'totalImpuestoReembolso',
         ];
 
         foreach ($simpleFields as $field) {
@@ -53,7 +64,7 @@ class FacturaGenerator extends XmlGenerator
                 $value = $data[$field];
                 // Apply 2 decimals for monetary fields. OJO: incoTermTotalSinImpuestos
                 // es un CÓDIGO string (xs:string, p.ej. "FOB"), no un monto.
-                if (in_array($field, ['totalSinImpuestos', 'totalDescuento'])) {
+                if (in_array($field, ['totalSinImpuestos', 'totalDescuento', 'totalComprobantesReembolso', 'totalBaseImponibleReembolso', 'totalImpuestoReembolso'])) {
                     $value = $this->formatValue($value, 2);
                 }
                 $node->appendChild($this->createTextElement($field, (string)$value));
@@ -129,6 +140,79 @@ class FacturaGenerator extends XmlGenerator
                 }
             }
         }
+    }
+
+    /**
+     * Bloque <reembolsos> de la factura de reembolso de gastos (codDocReembolso
+     * 41): un <reembolsoDetalle> por comprobante reembolsado, con sus impuestos,
+     * en el orden estricto del XSD factura_v2.1.0. Ojo: el elemento del número
+     * de autorización se llama `numeroautorizacionDocReemb` (así, truncado).
+     *
+     * @param array<mixed> $reembolsos
+     */
+    private function createReembolsos(DOMElement $root, array $reembolsos): void
+    {
+        $node = $this->dom->createElement('reembolsos');
+        $root->appendChild($node);
+
+        $fields = [
+            'tipoIdentificacionProveedorReembolso', 'identificacionProveedorReembolso',
+            'codPaisPagoProveedorReembolso', 'tipoProveedorReembolso', 'codDocReembolso',
+            'estabDocReembolso', 'ptoEmiDocReembolso', 'secuencialDocReembolso',
+            'fechaEmisionDocReembolso', 'numeroautorizacionDocReemb',
+        ];
+
+        foreach ($reembolsos as $reembolso) {
+            if (! is_array($reembolso)) {
+                continue;
+            }
+            $item = $this->dom->createElement('reembolsoDetalle');
+            $node->appendChild($item);
+
+            foreach ($fields as $f) {
+                $value = $this->scalarToString($reembolso[$f] ?? null);
+                if ($value !== '') {
+                    $item->appendChild($this->createTextElement($f, $value));
+                }
+            }
+
+            $impuestosNode = $this->dom->createElement('detalleImpuestos');
+            $item->appendChild($impuestosNode);
+            $impuestos = $reembolso['detalleImpuestos'] ?? [];
+            foreach (is_array($impuestos) ? $impuestos : [] as $imp) {
+                if (! is_array($imp)) {
+                    continue;
+                }
+                $impItem = $this->dom->createElement('detalleImpuesto');
+                $impuestosNode->appendChild($impItem);
+                foreach (['codigo', 'codigoPorcentaje', 'tarifa', 'baseImponibleReembolso', 'impuestoReembolso'] as $k) {
+                    $raw = $imp[$k] ?? null;
+                    if ($raw === null) {
+                        continue;
+                    }
+                    $value = in_array($k, ['tarifa', 'baseImponibleReembolso', 'impuestoReembolso'], true)
+                        ? $this->formatValue($this->scalarToString($raw), 2)
+                        : $this->scalarToString($raw);
+                    $impItem->appendChild($this->createTextElement($k, $value));
+                }
+            }
+        }
+    }
+
+    /** Texto de un valor escalar del payload; lo que no sea escalar se ignora (''). */
+    private function scalarToString(mixed $value): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        return '';
     }
 
     private function createDetalles(DOMElement $root, array $detalles): void

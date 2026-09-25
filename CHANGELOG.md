@@ -2,6 +2,16 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.4.0] - 2026-09-25
+
+### Added — factura de reembolso de gastos (codDocReembolso 41)
+
+- `FacturaGenerator` (API 1.x) serializa el bloque de reembolso: en `infoFactura` los totales `codDocReembolso`, `totalComprobantesReembolso`, `totalBaseImponibleReembolso` y `totalImpuestoReembolso` (entre `totalDescuento` y `totalConImpuestos`, como exige el XSD), y el elemento `<reembolsos>` con un `<reembolsoDetalle>` por comprobante reembolsado (`tipoIdentificacionProveedorReembolso`, `identificacionProveedorReembolso`, `codPaisPagoProveedorReembolso`, `tipoProveedorReembolso`, `codDocReembolso`, `estabDocReembolso`, `ptoEmiDocReembolso`, `secuencialDocReembolso`, `fechaEmisionDocReembolso`, `numeroautorizacionDocReemb` y `detalleImpuestos`). Antes esas claves se descartaban en silencio y la factura salía como venta ordinaria.
+- Ojo con el nombre oficial del elemento del número de autorización: `numeroautorizacionDocReemb` (así, truncado, en el XSD del SRI).
+
+### Calidad
+- `tests/Unit/Generators/FacturaGeneratorReembolsoTest.php`: la factura con reembolsos valida contra `factura_v2.1.0.xsd`, el orden de los totales es el del XSD y una factura sin reembolsos no cambia.
+
 ## [2.3.2] - 2026-09-23
 
 ### Fixed — el motivo real de una devolución en recepción se perdía
