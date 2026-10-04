@@ -2,6 +2,14 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.4.1] - 2026-10-04
+
+### Changed — fallas de comunicación con el SRI en español
+
+- `CommunicationException` ya no repite el texto crudo de `SoapClient`/libxml/cURL ("Could not connect to host", "Error Fetching http headers", "failed to load external entity"…). El nuevo `Support\MensajeSri` lo traduce a una frase que dice qué pasó con el SRI (sin conexión, sin respuesta a tiempo, WSDL inaccesible, DNS, SSL, 502/503/504, página de mantenimiento en vez de XML) y conserva el texto original sólo cuando no lo reconoce. Formato: `Error de comunicación con el SRI tras N intentos: <explicación>.`
+- La excepción encadena el `SoapFault` original como `previous`, así el texto crudo sigue disponible para diagnosticar.
+- Aplica a los dos transportes: `Transport\SoapClientTransport` (API 2.x) y `Soap\SriSoapClient` (API 1.x).
+
 ## [2.4.0] - 2026-09-25
 
 ### Added — factura de reembolso de gastos (codDocReembolso 41)

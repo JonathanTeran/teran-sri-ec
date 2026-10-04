@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Teran\Sri\Soap;
 
 use Teran\Sri\Exceptions\CommunicationException;
+use Teran\Sri\Support\MensajeSri;
 use SoapClient;
 use SoapFault;
 
@@ -59,7 +60,7 @@ class SriSoapClient
             } catch (SoapFault $e) {
                 $attempt++;
                 if ($attempt >= $this->retries) {
-                    throw new CommunicationException("Error de comunicación SRI después de {$this->retries} intentos: " . $e->getMessage());
+                    throw new CommunicationException(MensajeSri::trasReintentos($this->retries, $e->getMessage()), 0, $e);
                 }
                 usleep(500000); // Wait 0.5s between retries
             }

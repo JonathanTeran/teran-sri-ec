@@ -6,6 +6,7 @@ namespace Teran\Sri\Transport;
 
 use Teran\Sri\Catalogs2\Ambiente;
 use Teran\Sri\Exceptions\CommunicationException;
+use Teran\Sri\Support\MensajeSri;
 use SoapClient;
 use SoapFault;
 
@@ -85,7 +86,9 @@ final class SoapClientTransport implements SriTransportInterface
             } catch (SoapFault $e) {
                 if (++$attempt >= $this->retries) {
                     throw new CommunicationException(
-                        "Error de comunicación SRI tras {$this->retries} intentos: " . $e->getMessage()
+                        MensajeSri::trasReintentos($this->retries, $e->getMessage()),
+                        0,
+                        $e,
                     );
                 }
                 usleep(500000);

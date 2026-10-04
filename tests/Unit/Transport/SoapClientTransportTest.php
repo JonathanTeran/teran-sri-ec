@@ -7,6 +7,7 @@ namespace Teran\Sri\Tests\Unit\Transport;
 use PHPUnit\Framework\TestCase;
 use Teran\Sri\Transport\SoapClientTransport;
 use Teran\Sri\Catalogs2\Ambiente;
+use Teran\Sri\Exceptions\CommunicationException;
 
 class SoapClientTransportTest extends TestCase
 {
@@ -147,5 +148,27 @@ class SoapClientTransportTest extends TestCase
         $this->assertSame('2601...819', $captured['params']['claveAccesoComprobante']);
         $this->assertStringContainsString('cel.sri.gob.ec', $captured['wsdl']);
         $this->assertStringNotContainsString('celcer', $captured['wsdl']);
+    }
+
+    public function test_soapfault_agota_reintentos_con_mensaje_en_espanol(): void
+    {
+        $intentos = 0;
+        $transport = new SoapClientTransport(retries: 2, soapCaller: function () use (&$intentos): \stdClass {
+            $intentos++;
+            throw new \SoapFault('HTTP', 'Could not connect to host');
+        });
+
+        try {
+            $transport->enviar('<factura/>', Ambiente::Produccion);
+            $this->fail('Debía lanzar CommunicationException');
+        } catch (CommunicationException $e) {
+            $this->assertSame(2, $intentos);
+            $this->assertSame(
+                'Error de comunicación con el SRI tras 2 intentos: no se pudo conectar con el servidor del SRI.',
+                $e->getMessage(),
+            );
+            $this->assertInstanceOf(\SoapFault::class, $e->getPrevious());
+            $this->assertSame('Could not connect to host', $e->getPrevious()->getMessage());
+        }
     }
 }
