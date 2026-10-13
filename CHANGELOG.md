@@ -2,6 +2,15 @@
 
 All notable changes to `teran-sri-ec` will be documented in this file.
 
+## [2.4.2] - 2026-10-13
+
+### Fixed — razón social y direcciones con paréntesis rechazadas por el XSD local
+
+- `factura_v2.1.0.xsd` declaraba `[^(\r?\n)]*` para `razonSocial`, `nombreComercial` y `direccion`. Dentro de una clase de caracteres los paréntesis y el `?` son literales, así que la validación local rechazaba cualquier texto con `(`, `)` o `?` antes de enviarlo: «HAID (ECUADOR) FEED CIA. LTDA.» (factura real bloqueada el 2026-10-13), direcciones como «Av. Quito (frente al parque)». Ahora es `[^\n]*`, el patrón del XSD oficial del SRI (el mismo que ya usa `liquidacionCompra_v1.1.0.xsd`). Afecta a `razonSocial`, `nombreComercial`, `dirMatriz`, `dirEstablecimiento`, `razonSocialComprador` y `direccionComprador`.
+
+### Calidad
+- `tests/Unit/Schema/TextoLibreXsdTest.php`: los seis campos aceptan paréntesis y `?`, y siguen rechazando el salto de línea.
+
 ## [2.4.1] - 2026-10-04
 
 ### Changed — fallas de comunicación con el SRI en español
